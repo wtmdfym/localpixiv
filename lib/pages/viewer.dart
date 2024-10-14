@@ -162,7 +162,7 @@ class _ViewerState extends State<Viewer> {
     }
     workInfos = result;
     _isLoading.value = false;
-    page = 18;
+    //page = 18;
     changePage();
   }
 
@@ -238,6 +238,7 @@ class _ViewerState extends State<Viewer> {
               ),*/
                 SizedBox(
                     width: 300,
+                    height: 1080,
                     child: Column(
                       //mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -271,6 +272,7 @@ class _ViewerState extends State<Viewer> {
                           ],
                         ),
                         InfoContainer(workInfo: showingInfo),
+                        Spacer(),
                       ],
                     )),
                 Flex(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:localpixiv/pages/viewer.dart';
+import 'package:localpixiv/pages/settings.dart';
 import 'package:mongo_dart/mongo_dart.dart' as abab;
 import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 
@@ -83,8 +84,7 @@ class MyApp extends StatelessWidget {
                                       preload: true), // 预加载的页面
                                   IndexedStackChild(
                                       child: const Icon(Icons.directions_bike)),
-                                  IndexedStackChild(
-                                      child: const Icon(Icons.downloading)),
+                                  IndexedStackChild(child: Settings()),
                                 ],
                               );
                             }))))
