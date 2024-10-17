@@ -30,27 +30,24 @@ class InfoContainerState extends State<InfoContainer> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-        width: 300,
-        height: 600,
-        child: ValueListenableBuilder(
-          valueListenable: widget.workInfo,
-          builder: (context, value, child) {
-            return Text.rich(
-                style: TextStyle(fontSize: 18),
+    return ValueListenableBuilder(
+      valueListenable: widget.workInfo,
+      builder: (context, value, child) {
+        return Text.rich(
+            style: TextStyle(fontSize: 18),
+            TextSpan(
+              text: 'Title: ${value.title}\n',
+              children: [
                 TextSpan(
-                  text: 'Title: ${value.title}\n',
-                  children: [
-                    TextSpan(
-                      text:
-                          'UserId: ${value.userId}\nUserName: ${value.userName}\n',
-                      style: TextStyle(color: Colors.lightBlue),
-                      recognizer: TapGestureRecognizer(),
-                    )
-                  ],
-                ));
-          },
-        ));
+                  text:
+                      'UserId: ${value.userId}\nUserName: ${value.userName}\n',
+                  style: TextStyle(color: Colors.lightBlue),
+                  recognizer: TapGestureRecognizer(),
+                )
+              ],
+            ));
+      },
+    );
   }
 }
 
@@ -78,29 +75,22 @@ class _ImageContainerState extends State<ImageContainer>
   late AnimationController _mouseEOAnimationController;
   late AnimationController _mouseClickAnimationController;
 
-  Future<ResizeImage> _getImageFile() async {
-    List<dynamic> imagePath = widget.workInfoNotifier.value.imagePath!;
-    if (imagePath.isNotEmpty) {
-      var file = File('E://pixiv/${imagePath[0]}');
-      var exists = await file.exists();
-      if (exists) {
-        ResizeImage img = ResizeImage(FileImage(file),
-            width: widget.width * 2,
-            height: widget.height * 2,
-            policy: ResizeImagePolicy.fit);
-        return img;
-      } else {
-        return ResizeImage(FileImage(File('images\\test.png')),
-            width: widget.width * 2,
-            height: widget.height * 2,
-            policy: ResizeImagePolicy.fit);
-      }
-    } else {
-      // 若图片不存在就加载默认图片
-      return ResizeImage(FileImage(File('images\\test.png')),
-          width: widget.width * 2,
-          height: widget.height * 2,
-          policy: ResizeImagePolicy.fit);
+  void showWorkDetail() {
+    List<dynamic>? imagePaths = widget.workInfoNotifier.value.imagePath;
+    if (imagePaths != null) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  WorkDetialDisplayer(imagePath: imagePaths)));
+      /*/
+      ProductsImageProvider productsImageProvider =
+          ProductsImageProvider(products: imagePaths);
+
+      showImageViewerPager(context, productsImageProvider,
+          onPageChanged: (page) {}, onViewerDismissed: (page) {
+        //print("dismissed while on page $page");
+      });*/
     }
   }
 
@@ -140,6 +130,7 @@ class _ImageContainerState extends State<ImageContainer>
             onTapDown: (details) => _mouseClickAnimationController.forward(),
             onTapUp: (details) => _mouseClickAnimationController.reverse(),
             onTapCancel: () => _mouseClickAnimationController.reverse(),
+            onDoubleTap: () => showWorkDetail(),
             child: //InkWell(
                 //onTap: () => print('object'),
                 //splashColor: Colors.blue.withAlpha(30), // 水波纹颜色
@@ -160,11 +151,15 @@ class _ImageContainerState extends State<ImageContainer>
                                   alignment: Alignment.center,
                                   children: [
                                     // 异步加载图片
-                                    FutureBuilder<ResizeImage>(
-                                        future: _getImageFile(),
+                                    FutureBuilder<dynamic>(
+                                        future: _imageFile(
+                                          widget.workInfoNotifier.value
+                                              .imagePath![0],
+                                          widget.width,
+                                          widget.height,
+                                        ),
                                         builder: (BuildContext context,
-                                            AsyncSnapshot<ResizeImage>
-                                                snapshot) {
+                                            AsyncSnapshot<dynamic> snapshot) {
                                           if (snapshot.connectionState ==
                                               ConnectionState.done) {
                                             if (snapshot.hasData) {
@@ -216,8 +211,138 @@ class _ImageContainerState extends State<ImageContainer>
                     .animate(
                         controller: _mouseClickAnimationController,
                         autoPlay: false)
-                    .color(duration: 80.ms, blendMode: BlendMode.darken))
-        //)
-        );
+                    .color(duration: 80.ms, blendMode: BlendMode.darken)));
   }
+}
+
+class WorkDetialDisplayer extends StatefulWidget {
+  const WorkDetialDisplayer({super.key, required this.imagePath});
+  final List<dynamic> imagePath;
+
+  @override
+  State<StatefulWidget> createState() => _WorkDetialDisplayerState();
+}
+
+class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
+  //TODO 小说
+  ValueNotifier<int> index = ValueNotifier<int>(0);
+  @override
+  Widget build(BuildContext context) {
+    return FittedBox(
+        child: Stack(
+      fit: StackFit.passthrough,
+      children: [
+        InteractiveViewer(
+            maxScale: 12,
+            child: ValueListenableBuilder(
+                valueListenable: index,
+                builder: (context, index, child) => SizedBox(
+                    width: 2560,
+                    height: 1440,
+                    child:
+                        // 异步加载图片
+                        FutureBuilder<dynamic>(
+                            initialData: CircularProgressIndicator(
+                              color: Colors.white,
+                            ),
+                            future: _imageFile(widget.imagePath[index]),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<dynamic> snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.done) {
+                                if (snapshot.hasError) {
+                                  String error = snapshot.error.toString();
+                                  return Center(
+                                      child:
+                                          Text('Error loading image:$error'));
+                                }
+                                if (snapshot.hasData) {
+                                  return Image(
+                                    key: Key('value'),
+                                    image: snapshot.data,
+                                    width: 2560,
+                                    height: 1440,
+                                  ).animate().fade(duration: 700.ms);
+                                } else {
+                                  return const Center(
+                                      child: Text('Error loading image'));
+                                }
+                              } else {
+                                return const Center(
+                                    child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ));
+                              }
+                            })))),
+        Positioned(
+            top: 10,
+            left: 10,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.pop(context);
+                //setState(() {});
+              },
+              label: Text(
+                'Back',
+                style: TextStyle(fontSize: 30, color: Colors.grey),
+              ),
+              icon: Icon(Icons.arrow_back, size: 30, color: Colors.grey),
+            )),
+        Positioned(
+            top: 650,
+            left: 10,
+            child: IconButton(
+                onPressed: () {
+                  if (index.value > 0) {
+                    index.value -= 1;
+                  }
+                },
+                icon: Icon(Icons.navigate_before),
+                iconSize: 80,
+                color: Colors.white,
+                style: IconButton.styleFrom(backgroundColor: Colors.grey))),
+        Positioned(
+            top: 650,
+            right: 10,
+            child: IconButton(
+                onPressed: () {
+                  if (index.value < widget.imagePath.length - 1) {
+                    index.value += 1;
+                  }
+                },
+                icon: Icon(Icons.navigate_next),
+                iconSize: 80,
+                color: Colors.white,
+                style: IconButton.styleFrom(backgroundColor: Colors.grey))),
+      ],
+    ));
+  }
+}
+
+// 异步加载图片
+Future<dynamic> _imageFile(String? imagePath, [int? width, int? height]) async {
+  ImageProvider image;
+  //try {
+  if (imagePath != null) {
+    var file = File('E://pixiv/$imagePath');
+    var exists = await file.exists();
+    if (exists) {
+      image = FileImage(file);
+    } else {
+      image = AssetImage('assets/images/test.png');
+    }
+  } else {
+    // 若图片不存在就加载默认图片
+    image = AssetImage('assets/images/test.png');
+  }
+  if (width != null && height != null) {
+    return ResizeImage(image,
+        width: width * 2, height: height * 2, policy: ResizeImagePolicy.fit);
+  } else {
+    return image;
+  }
+  //} catch (e) {
+  //  return ResizeImage(AssetImage('assets/images/test.png'),
+  //      policy: ResizeImagePolicy.fit);
+  //}
 }

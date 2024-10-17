@@ -1,8 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/widgets/work_displayer.dart';
-import 'package:localpixiv/tools/custom_notifier.dart';
-import 'package:mongo_dart/mongo_dart.dart' as abab;
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -47,7 +43,7 @@ class _SettingsState extends State<Settings> {
                   ),
                   onSubmitted: (value) {
                     // 处理输入的文本
-                    print('输入的文本是: $value');
+                    // print('输入的文本是: $value');
                     Navigator.of(context).pop(); // 关闭对话框
                   },
                 ),
@@ -66,7 +62,7 @@ class _SettingsState extends State<Settings> {
                   ),
                   onSubmitted: (value) {
                     // 处理输入的文本
-                    print('输入的文本是: $value');
+                    //print('输入的文本是: $value');
                     Navigator.of(context).pop(); // 关闭对话框
                   },
                 ),

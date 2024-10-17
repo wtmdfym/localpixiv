@@ -144,8 +144,8 @@ class _ViewerState extends State<Viewer> {
         cancelevent = false;
         return;
       }
-      var tresult = collection
-          .find(abab.where.exists('id')
+      var tresult = collection.find(abab.where
+          .exists('id')
           // wrong .notExists('{"tags":{"R-18": null}}')
           .sortBy('id', descending: true));
       if (cancelevent) {
@@ -224,9 +224,11 @@ class _ViewerState extends State<Viewer> {
               showingInfo.setInfo(notification.msg);
               return true;
             },
-            child: Stack(children: [
-              Row(spacing: 20, children: [
-                /*
+            child: Padding(
+                padding: EdgeInsetsDirectional.all(30),
+                child: Stack(children: [
+                  Row(spacing: 20, children: [
+                    /*
               StreamBuilder(
                 stream: widget.channel.stream,
                 builder: (context, snapshot) {
@@ -236,164 +238,172 @@ class _ViewerState extends State<Viewer> {
                   }
                 },
               ),*/
-                SizedBox(
-                    width: 300,
-                    height: 1080,
-                    child: Column(
-                      //mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        TextField(
-                          controller: _searchController,
-                          maxLength: 100,
-                          decoration: InputDecoration(
-                            labelText: "搜索",
-                            icon: Icon(Icons.search),
-                          ),
-                        ),
-                        Flex(
-                          direction: Axis.horizontal,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          spacing: 50,
+                    SizedBox(
+                        width: 400,
+                        height: 1080,
+                        child: Column(
+                          //mainAxisSize: MainAxisSize.min,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
-                            ElevatedButton(
-                                onPressed: searchAnalyzer,
-                                child: Text('abab',
-                                    style: TextStyle(fontSize: 20))),
-                            ElevatedButton.icon(
-                              onPressed: searchAnalyzer,
-                              icon: Icon(
-                                Icons.search,
-                                size: 30,
+                            TextField(
+                              controller: _searchController,
+                              maxLength: 100,
+                              decoration: InputDecoration(
+                                labelText: "搜索",
+                                icon: Icon(Icons.search),
                               ),
-                              label: Text('Search',
-                                  style: TextStyle(fontSize: 20)),
-                            )
+                            ),
+                            Flex(
+                              direction: Axis.horizontal,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              spacing: 50,
+                              children: [
+                                ElevatedButton(
+                                    onPressed: searchAnalyzer,
+                                    child: Text('abab',
+                                        style: TextStyle(fontSize: 20))),
+                                ElevatedButton.icon(
+                                  onPressed: searchAnalyzer,
+                                  icon: Icon(
+                                    Icons.search,
+                                    size: 30,
+                                  ),
+                                  label: Text('Search',
+                                      style: TextStyle(fontSize: 20)),
+                                )
+                              ],
+                            ),
+                            InfoContainer(workInfo: showingInfo),
+                            Spacer(),
                           ],
-                        ),
-                        InfoContainer(workInfo: showingInfo),
-                        Spacer(),
-                      ],
-                    )),
-                Flex(
-                    direction: Axis.vertical,
-                    spacing: 8,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxHeight: 1080,
-                            //maxWidth: 1920,
-                            //minHeight: 400
-                          ),
-                          child: GridView.count(
-                            scrollDirection: Axis.horizontal,
-                            //clipBehavior: Clip.antiAlias,
-                            shrinkWrap: true,
-                            crossAxisCount: 2,
-                            childAspectRatio: 11 / 10, //高比宽
-                            mainAxisSpacing: 16,
-                            crossAxisSpacing: 16,
-                            physics: const NeverScrollableScrollPhysics(),
-                            children: <Widget>[
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[0])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[4])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[1])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[5])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[2])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[6])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[3])),
-                              FittedBox(
-                                  child: ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[7])),
-                            ],
-                          )),
-                      Row(
-                        spacing: 200,
+                        )),
+                    Flex(
+                        direction: Axis.vertical,
+                        spacing: 8,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
-                              width: 200,
-                              child: ElevatedButton.icon(
-                                onPressed: prevPage,
-                                icon: Icon(
-                                  Icons.navigate_before,
-                                  size: 30,
-                                ),
-                                label: Text('Prev',
-                                    style: TextStyle(fontSize: 20)),
+                          ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: 1080,
+                                //maxWidth: 1920,
+                                //minHeight: 400
+                              ),
+                              child: GridView.count(
+                                scrollDirection: Axis.horizontal,
+                                //clipBehavior: Clip.antiAlias,
+                                shrinkWrap: true,
+                                crossAxisCount: 2,
+                                childAspectRatio: 11 / 10, //高比宽
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: <Widget>[
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[0])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[4])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[1])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[5])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[2])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[6])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[3])),
+                                  FittedBox(
+                                      child: ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[7])),
+                                ],
                               )),
-                          SizedBox(
-                              width: 200,
-                              child: TextField(
-                                controller: _pageController,
-                                maxLength: 10,
-                                decoration: InputDecoration(
-                                  labelText: "页码",
-                                  //icon: Icon(Icons.search),
+                          Row(
+                            spacing: 200,
+                            children: [
+                              SizedBox(
+                                  width: 200,
+                                  child: ElevatedButton.icon(
+                                    onPressed: prevPage,
+                                    icon: Icon(
+                                      Icons.navigate_before,
+                                      size: 30,
+                                    ),
+                                    label: Text('Prev',
+                                        style: TextStyle(fontSize: 20)),
+                                  )),
+                              SizedBox(
+                                  width: 200,
+                                  child: TextField(
+                                    controller: _pageController,
+                                    maxLength: 10,
+                                    decoration: InputDecoration(
+                                      labelText: "页码",
+                                      //icon: Icon(Icons.search),
+                                    ),
+                                  )),
+                              SizedBox(
+                                  width: 200,
+                                  //height: 30,
+                                  child: ElevatedButton.icon(
+                                      onPressed: jumpToPage,
+                                      icon: Icon(
+                                        Icons.next_plan_outlined,
+                                        size: 30,
+                                      ),
+                                      label: Text("Jump",
+                                          style: TextStyle(fontSize: 20)))),
+                              SizedBox(
+                                  width: 200,
+                                  child: ElevatedButton.icon(
+                                      onPressed: nextPage,
+                                      icon: Icon(
+                                        Icons.navigate_next,
+                                        size: 30,
+                                      ),
+                                      iconAlignment: IconAlignment.end,
+                                      label: Text("Next",
+                                          style: TextStyle(fontSize: 20)))),
+                            ],
+                          )
+                        ])
+                  ]),
+                  // 加载指示器的蒙层
+                  ValueListenableBuilder(
+                      valueListenable: _isLoading,
+                      builder: (context, value, child) {
+                        return value
+                            ? Positioned.fill(
+                                child: Stack(children: [
+                                ModalBarrier(
+                                  color: const Color.fromARGB(153, 91, 84, 84),
+                                  dismissible: true,
+                                  onDismiss: () => {
+                                    cancelevent = true,
+                                    _isLoading.value = false
+                                  },
                                 ),
-                              )),
-                          SizedBox(
-                              width: 200,
-                              //height: 30,
-                              child: ElevatedButton.icon(
-                                  onPressed: jumpToPage,
-                                  icon: Icon(
-                                    Icons.next_plan_outlined,
-                                    size: 30,
-                                  ),
-                                  label: Text("Jump",
-                                      style: TextStyle(fontSize: 20)))),
-                          SizedBox(
-                              width: 200,
-                              child: ElevatedButton.icon(
-                                  onPressed: nextPage,
-                                  icon: Icon(
-                                    Icons.navigate_next,
-                                    size: 30,
-                                  ),
-                                  iconAlignment: IconAlignment.end,
-                                  label: Text("Next",
-                                      style: TextStyle(fontSize: 20)))),
-                        ],
-                      )
-                    ])
-              ]),
-              // 加载指示器的蒙层
-              ValueListenableBuilder(
-                  valueListenable: _isLoading,
-                  builder: (context, value, child) {
-                    return value
-                        ? Positioned.fill(
-                            child: Stack(children: [
-                            ModalBarrier(
-                              color: const Color.fromARGB(124, 91, 84, 84),
-                              dismissible: true,
-                              onDismiss: () => {
-                                cancelevent = true,
-                                _isLoading.value = false
-                              },
-                            ),
-                            Center(
-                              child: CircularProgressIndicator(),
-                            ),
-                          ]))
-                        : Container();
-                  }), // 当不加载时不显示蒙层
-            ])));
+                                Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ]))
+                            : Container();
+                      }), // 当不加载时不显示蒙层
+                ]))));
   }
 }
 
