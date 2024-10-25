@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localpixiv/pages/viewer.dart';
 import 'package:localpixiv/pages/settings.dart';
+import 'package:localpixiv/widgets/userdisplayer.dart';
 import 'package:mongo_dart/mongo_dart.dart' as abab;
 import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
           // This works for code too, not just values: Most code changes can be
           // tested with just a hot reload.
           colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color.fromARGB(255, 0, 255, 247)),
+              seedColor: const Color.fromARGB(255, 88, 253, 247)),
           useMaterial3: true,
         ),
         home: DefaultTabController(
@@ -83,7 +84,7 @@ class MyApp extends StatelessWidget {
                                       child: Viewer(db: db),
                                       preload: true), // 预加载的页面
                                   IndexedStackChild(
-                                      child: const Icon(Icons.directions_bike)),
+                                      child: const FollowingsDisplayer()),
                                   IndexedStackChild(child: Settings()),
                                 ],
                               );

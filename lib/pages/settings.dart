@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localpixiv/widgets/dialogs.dart';
 
 class Settings extends StatefulWidget {
   const Settings({super.key});
@@ -14,94 +15,6 @@ class _SettingsState extends State<Settings> {
   bool _useClientPool = true;
   List<bool> dowmloadStyle = [true, true, true, true, false];
   final List<String> _items = [];
-  int _nextItemIndex = 1;
-
-  // 添加Client
-  void _addClient() {
-    Map<String, String> cliengInfo = {};
-    final accountNameController = TextEditingController();
-    final accountCookieController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('输入框'),
-          content: SizedBox(
-              height: 640,
-              width: 1080,
-              child: Column(spacing: 30, children: [
-                TextField(
-                  controller: accountNameController,
-                  style: TextStyle(
-                    fontSize: 25,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '输入账号名或E-mail地址',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                  ),
-                  onSubmitted: (value) {
-                    // 处理输入的文本
-                    // print('输入的文本是: $value');
-                    Navigator.of(context).pop(); // 关闭对话框
-                  },
-                ),
-                TextField(
-                  controller: accountCookieController,
-                  minLines: 10,
-                  maxLines: 10,
-                  style: TextStyle(
-                    fontSize: 25,
-                  ),
-                  decoration: InputDecoration(
-                    hintText: '输入账号的Cookies',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
-                    ),
-                  ),
-                  onSubmitted: (value) {
-                    // 处理输入的文本
-                    //print('输入的文本是: $value');
-                    Navigator.of(context).pop(); // 关闭对话框
-                  },
-                ),
-              ])),
-          actions: <Widget>[
-            TextButton(
-              child: Text('取消',
-                  style: TextStyle(
-                    fontSize: 25,
-                  )),
-              onPressed: () {
-                Navigator.of(context).pop(); // 关闭对话框
-              },
-            ),
-            TextButton(
-              child: Text('确定',
-                  style: TextStyle(
-                    fontSize: 25,
-                  )),
-              onPressed: () {
-                String cookies = cookiesFormater(accountCookieController.text);
-                cliengInfo.addAll({
-                  'Name': accountNameController.text,
-                  'Cookies': cookies
-                });
-                // TODO 检测
-                setState(() {
-                  _items.add('$cliengInfo');
-                  _nextItemIndex++;
-                });
-                // print('输入的文本是: $cliengInfo');
-                Navigator.of(context).pop(); // 关闭对话框
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   // 删除Client
   void _removeClient(int index) {
@@ -362,6 +275,7 @@ class _SettingsState extends State<Settings> {
                             height: 200,
                             //使用 ListView.builder 来构建列表
                             child: ListView.builder(
+                              itemExtent: 60,
                               itemCount: _items.length,
                               itemBuilder: (context, index) {
                                 return ListTile(
@@ -379,7 +293,15 @@ class _SettingsState extends State<Settings> {
                           ),
                           // 添加按钮
                           ElevatedButton(
-                            onPressed: _addClient,
+                            onPressed: () => addClient(context).then((value) {
+                              setState(() {
+                                //print(value);
+                                String clientInfo = value;
+                                if (clientInfo.isNotEmpty) {
+                                  _items.add(clientInfo);
+                                }
+                              });
+                            }),
                             child: Text('Add Client',
                                 style: TextStyle(
                                   fontSize: 25,
@@ -420,21 +342,4 @@ InputDecoration getInputDecoration(String tip) {
       borderRadius: BorderRadius.all(Radius.circular(5)),
     ),
   );
-}
-
-String cookiesFormater(String orgcookies) {
-  Map<String, String> cookies = {};
-  for (String cookie in orgcookies.split(";")) {
-    List<String> temp = cookie.split("=");
-    String key = temp[0];
-    String value = '';
-    for (String _temp in temp.sublist(1)) {
-      value += _temp;
-    }
-    RegExp re = RegExp(r' ');
-    key = key.replaceAll(re, '');
-    value = value.replaceAll(re, '');
-    cookies[key] = value;
-  }
-  return cookies.toString();
 }

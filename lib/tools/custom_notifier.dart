@@ -67,7 +67,7 @@ class WorkInfo {
   }
 }
 
-//自定义的作品信息变更捕捉器(但是用处不大)
+//自定义的作品信息变更捕捉器
 class WorkInfoNotifier extends ValueNotifier<WorkInfo> {
   WorkInfoNotifier(super.workInfo);
 
@@ -118,10 +118,64 @@ class WorkInfoNotifier extends ValueNotifier<WorkInfo> {
     value.imagePath = imagePath;
     notifyListeners();
   }
+
+  void bookmark(bool isliked) {
+    value.isLiked = isliked;
+  }
 }
 
 // 作品信息显示通知器
 class ShowInfoNotification extends Notification {
   ShowInfoNotification(this.msg);
   final WorkInfo msg;
+}
+
+//作者信息数据
+class UserInfo {
+  // 作者Id
+  String userId;
+  // 作者名字
+  String userName;
+  // 作品标签及翻译
+  //Map<String, dynamic> tags;
+  // 作品描述
+  String description;
+  // 图片路径
+  List<dynamic> imagePath;
+
+  UserInfo({
+    required this.userId,
+    required this.userName,
+    //required this.tags,
+    required this.description,
+    required this.imagePath,
+  });
+
+  factory UserInfo.fromJson(Map<String, dynamic> json) {
+    return UserInfo(
+      userId: json['userId'],
+      userName: json['title'],
+      //tags: json['tags'],
+      description: json['description'],
+      imagePath: json['relative_path'],
+    );
+  }
+}
+
+//自定义的作者信息变更捕捉器
+class UserInfoNotifier extends ValueNotifier<UserInfo> {
+  UserInfoNotifier(super.workInfo);
+
+  void setInfo(UserInfo newinfo) {
+    value = newinfo;
+    notifyListeners();
+  }
+
+  void setInfoJson(Map<String, dynamic> json) {
+    value.userId = json['userId'];
+    value.userName = json['username'];
+    value.description = json['description'];
+    value.imagePath = json['relative_path'];
+    notifyListeners();
+  }
 }

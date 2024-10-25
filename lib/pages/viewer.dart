@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/widgets/work_displayer.dart';
+import 'package:localpixiv/widgets/workdisplayer.dart';
+import 'package:localpixiv/widgets/dialogs.dart';
 import 'package:localpixiv/tools/custom_notifier.dart';
 import 'package:mongo_dart/mongo_dart.dart' as abab;
 
@@ -95,6 +96,8 @@ class _ViewerState extends State<Viewer> {
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _pageController =
       TextEditingController(text: '1/1');
+  /*ValueNotifier<List<bool>> searchType =
+      ValueNotifier([true, false, false]); //id  uid tag*/
   List<dynamic> workInfos = [];
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
 
@@ -205,8 +208,12 @@ class _ViewerState extends State<Viewer> {
     } else {
       info = workInfos.sublist((page - 1) * 8, workInfos.length);
     }
-    for (int i = 0; i < info.length; i++) {
-      workInfoNotifers[i].setInfoJson(info[i]);
+    for (int i = 0; i < 8; i++) {
+      try {
+        workInfoNotifers[i].setInfoJson(info[i]);
+      } on RangeError {
+        workInfoNotifers[i].setInfoJson(jsonDecode((defaultdata)));
+      }
     }
     _pageController.text = '$page/$maxpage';
     //print(page);
@@ -228,22 +235,11 @@ class _ViewerState extends State<Viewer> {
                 padding: EdgeInsetsDirectional.all(30),
                 child: Stack(children: [
                   Row(spacing: 20, children: [
-                    /*
-              StreamBuilder(
-                stream: widget.channel.stream,
-                builder: (context, snapshot) {
-                  if (snapshot.hasData) {
-                    var data = jsonDecode(snapshot.data);
-                    dataHander(data);
-                  }
-                },
-              ),*/
                     SizedBox(
                         width: 400,
                         height: 1080,
-                        child: Column(
-                          //mainAxisSize: MainAxisSize.min,
-                          mainAxisAlignment: MainAxisAlignment.start,
+                        child: ListView(
+                          shrinkWrap: true,
                           children: [
                             TextField(
                               controller: _searchController,
@@ -253,28 +249,63 @@ class _ViewerState extends State<Viewer> {
                                 icon: Icon(Icons.search),
                               ),
                             ),
-                            Flex(
-                              direction: Axis.horizontal,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              spacing: 50,
-                              children: [
-                                ElevatedButton(
-                                    onPressed: searchAnalyzer,
-                                    child: Text('abab',
-                                        style: TextStyle(fontSize: 20))),
-                                ElevatedButton.icon(
-                                  onPressed: searchAnalyzer,
-                                  icon: Icon(
-                                    Icons.search,
-                                    size: 30,
-                                  ),
-                                  label: Text('Search',
-                                      style: TextStyle(fontSize: 20)),
-                                )
-                              ],
+                            Divider(),
+                            /*ValueListenableBuilder(
+                                valueListenable: searchType,
+                                builder: (context, _searchType, child) => Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Expanded(
+                                              child: CheckboxListTile(
+                                            title: Text('Id'),
+                                            value: _searchType[0],
+                                            onChanged: (value) {
+                                              List<bool> temp =
+                                                  searchType.value;
+                                              temp[0] = value!;
+                                              searchType.value = temp;
+                                            },
+                                          )),
+                                          Expanded(
+                                              child: CheckboxListTile(
+                                            title: Text('Uid'),
+                                            value: _searchType[1],
+                                            onChanged: (value) {
+                                              List<bool> temp =
+                                                  searchType.value;
+                                              temp[0] = value!;
+                                              searchType.value = temp;
+                                            },
+                                          )),
+                                          Expanded(
+                                              child: CheckboxListTile(
+                                            title: Text('Tag'),
+                                            value: _searchType[2],
+                                            onChanged: (value) {
+                                              List<bool> temp =
+                                                  searchType.value;
+                                              temp[0] = value!;
+                                              searchType.value = temp;
+                                            },
+                                          )),
+                                        ])),*/
+                            Divider(),
+                            ElevatedButton.icon(
+                              onPressed: searchAnalyzer,
+                              icon: Icon(
+                                Icons.search,
+                                size: 30,
+                              ),
+                              label: Text('Search',
+                                  style: TextStyle(fontSize: 20)),
                             ),
+                            Divider(),
+                            ElevatedButton(
+                                onPressed: () => advancedSearch(context),
+                                child: Text('Advanced Search',
+                                    style: TextStyle(fontSize: 20))),
+                            Divider(),
                             InfoContainer(workInfo: showingInfo),
-                            Spacer(),
                           ],
                         )),
                     Flex(
@@ -298,38 +329,22 @@ class _ViewerState extends State<Viewer> {
                                 crossAxisSpacing: 16,
                                 physics: const NeverScrollableScrollPhysics(),
                                 children: <Widget>[
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[0])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[4])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[1])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[5])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[2])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[6])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[3])),
-                                  FittedBox(
-                                      child: ImageContainer(
-                                          workInfoNotifier:
-                                              workInfoNotifers[7])),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[0]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[4]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[1]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[5]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[2]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[6]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[3]),
+                                  ImageContainer(
+                                      workInfoNotifier: workInfoNotifers[7]),
                                 ],
                               )),
                           Row(
