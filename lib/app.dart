@@ -1,13 +1,19 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/pages/viewer.dart';
-import 'package:localpixiv/pages/settings.dart';
-import 'package:localpixiv/widgets/userdisplayer.dart';
+import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as abab;
 import 'package:proste_indexed_stack/proste_indexed_stack.dart';
+//import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:localpixiv/states/home.dart';
+import 'package:localpixiv/states/viewer.dart';
+import 'package:localpixiv/states/settings.dart';
+import 'package:localpixiv/widgets/userdisplayer.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.db});
+  const MyApp({super.key, required this.db, required this.process, required this.configs});
   final abab.Db db;
+  final Process process;
+  final Configs configs;
 
   // This widget is the root of your application.
   @override
@@ -44,6 +50,17 @@ class MyApp extends StatelessWidget {
               seedColor: const Color.fromARGB(255, 88, 253, 247)),
           useMaterial3: true,
         ),
+        /*
+        localizationsDelegates: [
+          // 本地化的代理类
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+        ],
+        supportedLocales: [
+          const Locale('en', 'US'), // 美国英语
+          const Locale('zh', 'CN'), // 中文简体
+          //其他Locales
+        ],*/
         home: DefaultTabController(
             length: 4,
             child: Scaffold(
@@ -79,13 +96,13 @@ class MyApp extends StatelessWidget {
                                 index: value,
                                 children: [
                                   IndexedStackChild(
-                                      child: const Icon(Icons.directions_car)),
+                                      child: MyHomePage(process: process)),
                                   IndexedStackChild(
                                       child: Viewer(db: db),
                                       preload: true), // 预加载的页面
                                   IndexedStackChild(
                                       child: const FollowingsDisplayer()),
-                                  IndexedStackChild(child: Settings()),
+                                  IndexedStackChild(child: Settings(configs: configs,)),
                                 ],
                               );
                             }))))

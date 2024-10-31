@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
+import 'package:localpixiv/common/tools.dart';
 
 class Settings extends StatefulWidget {
-  const Settings({super.key});
-
+  const Settings({super.key, required this.configs});
+  final Configs configs;
   @override
   State<StatefulWidget> createState() {
     return _SettingsState();
@@ -11,20 +14,16 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  bool _useProxy = true;
-  bool _useClientPool = true;
-  List<bool> dowmloadStyle = [true, true, true, true, false];
-  final List<String> _items = [];
-
   // 删除Client
   void _removeClient(int index) {
     setState(() {
-      _items.removeAt(index);
+      widget.configs.clientPool!.removeAt(index);
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    //Configs newConfigs = Configs();
     return SingleChildScrollView(
         //spacing: 100,
         //children: [
@@ -39,10 +38,10 @@ class _SettingsState extends State<Settings> {
                 spacing: 20,
                 children: [
                   TextFormField(
-                    initialValue: 'C://pixiv',
+                    initialValue: widget.configs.savePath,
                     maxLength: 100,
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                     ),
                     decoration: getInputDecoration('Save Path'),
                     onChanged: (value) {
@@ -54,10 +53,10 @@ class _SettingsState extends State<Settings> {
                       } else {}
                       return null;
                     },
-                    onSaved: (newValue) => print(newValue),
+                    onSaved: (newValue) => widget.configs.savePath = newValue,
                   ),
                   TextFormField(
-                    //initialValue: 'C://pixiv',
+                    initialValue: widget.configs.cookies.toString(),
                     //maxLength: 100,
                     minLines: 5,
                     maxLines: 5,
@@ -66,7 +65,7 @@ class _SettingsState extends State<Settings> {
                       fontSize: 20,
                     ),
                     decoration: InputDecoration(
-                      labelStyle: TextStyle(fontSize: 30),
+                      labelStyle: TextStyle(fontSize: 24),
                       labelText: 'Cookies',
                       hintText: '请输入你要爬取的账号的Cookies',
                       border: OutlineInputBorder(
@@ -80,98 +79,119 @@ class _SettingsState extends State<Settings> {
                       if (value == null || value.isEmpty) {
                         return '请输入Cookies';
                       } else {
-                        // TODO验证
+                        if (value != widget.configs.cookies.toString()) {
+                          if (cookiesFormater(value)['PHPSESSID'] == null) {
+                            return 'Cookies值错误';
+                          }
+                        }
                       }
                       return null;
                     },
-                    onSaved: (newValue) => print(newValue),
+                    onSaved: (newValue) {
+                      if (newValue != widget.configs.cookies.toString()) {
+                        widget.configs.cookies =
+                            Cookies.fromJson(cookiesFormater(newValue!));
+                      }
+                    },
                   ),
                   SwitchListTile(
                     title: Text(
                       'Enable Proxy',
-                      style: TextStyle(fontSize: 25),
+                      style: TextStyle(fontSize: 20),
                     ),
-                    value: _useProxy, //当前状态
+                    value: widget.configs.enableProxy, //当前状态
                     onChanged: (value) {
                       // TODO 储存信息
                       //重新构建页面
                       setState(() {
-                        _useProxy = value;
+                        widget.configs.enableProxy = value;
                       });
                     },
                   ),
                   TextFormField(
-                    initialValue: 'http://localhost:12334',
+                    initialValue: widget.configs.httpProxies,
                     maxLength: 30,
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                     ),
                     decoration: getInputDecoration('Http Proxy'),
-                    enabled: _useProxy,
+                    enabled: widget.configs.enableProxy,
                     onChanged: (value) {
                       // 处理文本变化
                     },
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '请输入Http Proxy';
-                      } else {
-                        var ipv4re = RegExp(
-                            r'http://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
-                        var localhostre = RegExp(r'http://localhost:\d{1,5}');
-                        // TODO ipv6 (?<=]:).*\w+
-                        if (value.replaceAll(ipv4re, '').isNotEmpty &&
-                            value.replaceAll(localhostre, '').isNotEmpty) {
-                          return 'Http Proxy 格式错误';
+                      if (widget.configs.enableProxy) {
+                        if (value == null || value.isEmpty) {
+                          return '请输入Http Proxy';
+                        } else {
+                          var ipv4re = RegExp(
+                              r'http://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
+                          var localhostre = RegExp(r'http://localhost:\d{1,5}');
+                          // TODO ipv6 (?<=]:).*\w+
+                          if (value.replaceAll(ipv4re, '').isNotEmpty &&
+                              value.replaceAll(localhostre, '').isNotEmpty) {
+                            return 'Http Proxy 格式错误';
+                          }
                         }
                       }
                       return null;
                     },
-                    onSaved: (newValue) => print(newValue),
+                    onSaved: (newValue) {
+                      if (widget.configs.enableProxy) {
+                        widget.configs.httpProxies = newValue;
+                      }
+                    },
                   ),
                   TextFormField(
-                    initialValue: 'https://localhost:12334',
+                    initialValue: widget.configs.httpsProxies,
                     maxLength: 30,
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                     ),
                     decoration: getInputDecoration('Https Proxy'),
-                    enabled: _useProxy,
+                    enabled: widget.configs.enableProxy,
                     onChanged: (value) {
                       // 处理文本变化
                     },
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return '请输入Https Proxy';
-                      } else {
-                        var regExp1 = RegExp(
-                            r'https://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
-                        var localhostre = RegExp(r'https://localhost:\d{1,5}');
-                        if (value.replaceAll(regExp1, '').isNotEmpty &&
-                            value.replaceAll(localhostre, '').isNotEmpty) {
-                          return 'Https Proxy 格式错误';
+                      if (widget.configs.enableProxy) {
+                        if (value == null || value.isEmpty) {
+                          return '请输入Https Proxy';
+                        } else {
+                          var regExp1 = RegExp(
+                              r'http://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
+                          var localhostre = RegExp(r'http://localhost:\d{1,5}');
+                          if (value.replaceAll(regExp1, '').isNotEmpty &&
+                              value.replaceAll(localhostre, '').isNotEmpty) {
+                            return 'Https Proxy 格式错误';
+                          }
                         }
                       }
                       return null;
                     },
-                    onSaved: (newValue) => print(newValue),
+                    onSaved: (newValue) {
+                      if (widget.configs.enableProxy) {
+                        widget.configs.httpsProxies = newValue;
+                      }
+                    },
                   ),
                   Text(
                     'Download Style',
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                     ),
                   ),
                   CheckboxListTile(
                     title: Text(
                       'Illust',
                       style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                       ),
                     ),
-                    value: dowmloadStyle[0],
+                    value: widget.configs.downloadType!.illust, //[0],
                     onChanged: (value) {
                       setState(() {
-                        dowmloadStyle[0] = value!;
+                        widget.configs.downloadType!.illust = value!;
                       });
                     },
                   ),
@@ -179,13 +199,13 @@ class _SettingsState extends State<Settings> {
                     title: Text(
                       'Manga',
                       style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                       ),
                     ),
-                    value: dowmloadStyle[1],
+                    value: widget.configs.downloadType!.manga, //[1],
                     onChanged: (value) {
                       setState(() {
-                        dowmloadStyle[1] = value!;
+                        widget.configs.downloadType!.manga = value!;
                       });
                     },
                   ),
@@ -193,13 +213,13 @@ class _SettingsState extends State<Settings> {
                     title: Text(
                       'Novel',
                       style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                       ),
                     ),
-                    value: dowmloadStyle[2],
+                    value: widget.configs.downloadType!.novel,
                     onChanged: (value) {
                       setState(() {
-                        dowmloadStyle[2] = value!;
+                        widget.configs.downloadType!.novel = value!;
                       });
                     },
                   ),
@@ -207,13 +227,13 @@ class _SettingsState extends State<Settings> {
                     title: Text(
                       'Ugoira',
                       style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                       ),
                     ),
-                    value: dowmloadStyle[3],
+                    value: widget.configs.downloadType!.ugoira,
                     onChanged: (value) {
                       setState(() {
-                        dowmloadStyle[3] = value!;
+                        widget.configs.downloadType!.ugoira = value!;
                       });
                     },
                   ),
@@ -221,13 +241,13 @@ class _SettingsState extends State<Settings> {
                     title: Text(
                       'Series',
                       style: TextStyle(
-                        fontSize: 25,
+                        fontSize: 20,
                       ),
                     ),
-                    value: dowmloadStyle[4],
+                    value: widget.configs.downloadType!.series,
                     onChanged: (value) {
                       setState(() {
-                        dowmloadStyle[4] = value!;
+                        widget.configs.downloadType!.series = value!;
                       });
                     },
                   ),
@@ -235,7 +255,7 @@ class _SettingsState extends State<Settings> {
                     initialValue: '2',
                     maxLength: 2,
                     style: TextStyle(
-                      fontSize: 25,
+                      fontSize: 20,
                     ),
                     decoration: getInputDecoration('Concurrency'),
                     onChanged: (value) {
@@ -251,24 +271,25 @@ class _SettingsState extends State<Settings> {
                       }
                       return null;
                     },
-                    onSaved: (newValue) => print(newValue),
+                    onSaved: (newValue) =>
+                        widget.configs.semaphore = int.tryParse(newValue!),
                   ),
                   SwitchListTile(
                     title: Text(
                       'Enable Client Pool',
-                      style: TextStyle(fontSize: 25),
+                      style: TextStyle(fontSize: 20),
                     ),
-                    value: _useClientPool, //当前状态
+                    value: widget.configs.enableClientPool, //当前状态
                     onChanged: (value) {
                       // TODO 储存信息
                       //重新构建页面
                       setState(() {
-                        _useClientPool = value;
+                        widget.configs.enableClientPool = value;
                       });
                     },
                   ),
                   Offstage(
-                      offstage: !_useClientPool,
+                      offstage: !widget.configs.enableClientPool,
                       child: Column(
                         children: <Widget>[
                           SizedBox(
@@ -276,16 +297,21 @@ class _SettingsState extends State<Settings> {
                             //使用 ListView.builder 来构建列表
                             child: ListView.builder(
                               itemExtent: 60,
-                              itemCount: _items.length,
+                              itemCount: widget.configs.clientPool!.length,
                               itemBuilder: (context, index) {
                                 return ListTile(
-                                  title: Text(_items[index],
+                                  title: Text(
+                                      'Email: ${widget.configs.clientPool![index].email}  ||  Cookies: ${widget.configs.clientPool![index].cookies.toString()}',
                                       style: TextStyle(
-                                        fontSize: 25,
+                                        fontSize: 16,
                                       )),
                                   trailing: IconButton(
                                     icon: Icon(Icons.delete),
-                                    onPressed: () => _removeClient(index),
+                                    onPressed: () {
+                                      _removeClient(index);
+                                      widget.configs.clientPool!
+                                          .removeAt(index);
+                                    },
                                   ),
                                 );
                               },
@@ -298,13 +324,15 @@ class _SettingsState extends State<Settings> {
                                 //print(value);
                                 String clientInfo = value;
                                 if (clientInfo.isNotEmpty) {
-                                  _items.add(clientInfo);
+                                  widget.configs.clientPool!.add(
+                                      ClientPool.fromJson(
+                                          jsonDecode(clientInfo)));
                                 }
                               });
                             }),
                             child: Text('Add Client',
                                 style: TextStyle(
-                                  fontSize: 25,
+                                  fontSize: 20,
                                 )),
                           ),
                         ],
@@ -314,15 +342,22 @@ class _SettingsState extends State<Settings> {
                       onPressed: () {
                         // 使用 Form.of(context) 来验证表单
                         if (Form.of(context).validate()) {
-                          // 保存表单数据
-                          Form.of(context).save();
-                          // 处理表单提交
+                          setState(() {
+                            // 保存表单数据
+                            Form.of(context).save();
+                            // 写入配置文件
+                            //File jsonFile = File('jsons/test.json');
+                            configManger(
+                                    'jsons/config.json', 'w', widget.configs)
+                                ? resultDialog(context, 'Save configs', true)
+                                : resultDialog(context, 'Save configs', false);
+                          });
                         }
                       },
                       child: Text(
                         'Save',
                         style: TextStyle(
-                          fontSize: 25,
+                          fontSize: 20,
                         ),
                       ),
                     );
@@ -335,7 +370,7 @@ class _SettingsState extends State<Settings> {
 
 InputDecoration getInputDecoration(String tip) {
   return InputDecoration(
-    labelStyle: TextStyle(fontSize: 30),
+    labelStyle: TextStyle(fontSize: 24),
     labelText: tip,
     hintText: '请输入$tip',
     border: OutlineInputBorder(

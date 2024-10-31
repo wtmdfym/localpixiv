@@ -1,7 +1,8 @@
 import 'dart:io';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/tools/custom_notifier.dart';
+import 'package:localpixiv/common/custom_notifier.dart';
+import 'package:localpixiv/models.dart';
 
 UserInfoNotifier abuserInfo = UserInfoNotifier(UserInfo(
     userId: '1',

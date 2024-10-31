@@ -2,7 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:localpixiv/widgets/workdisplayer.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
-import 'package:localpixiv/tools/custom_notifier.dart';
+import 'package:localpixiv/common/custom_notifier.dart';
+import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as abab;
 
 const String defaultdata = '''
@@ -226,15 +227,15 @@ class _ViewerState extends State<Viewer> {
   Widget build(BuildContext context) {
     return FittedBox(
         // showinfo信号监听
-        child: NotificationListener<ShowInfoNotification>(
-            onNotification: (notification) {
-              showingInfo.setInfo(notification.msg);
-              return true;
-            },
-            child: Padding(
-                padding: EdgeInsetsDirectional.all(30),
-                child: Stack(children: [
-                  Row(spacing: 20, children: [
+        child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Stack(children: [
+              NotificationListener<ShowInfoNotification>(
+                  onNotification: (notification) {
+                    showingInfo.setInfo(notification.msg);
+                    return true;
+                  },
+                  child: Row(spacing: 20, children: [
                     SizedBox(
                         width: 400,
                         height: 1080,
@@ -245,12 +246,12 @@ class _ViewerState extends State<Viewer> {
                               controller: _searchController,
                               maxLength: 100,
                               decoration: InputDecoration(
-                                labelText: "搜索",
+                                labelText: "Ciallo~(∠・ω< )⌒☆",
                                 icon: Icon(Icons.search),
                               ),
                             ),
-                            Divider(),
-                            /*ValueListenableBuilder(
+                            /*Divider(),
+                            ValueListenableBuilder(
                                 valueListenable: searchType,
                                 builder: (context, _searchType, child) => Row(
                                         mainAxisSize: MainAxisSize.min,
@@ -396,29 +397,29 @@ class _ViewerState extends State<Viewer> {
                             ],
                           )
                         ])
-                  ]),
-                  // 加载指示器的蒙层
-                  ValueListenableBuilder(
-                      valueListenable: _isLoading,
-                      builder: (context, value, child) {
-                        return value
-                            ? Positioned.fill(
-                                child: Stack(children: [
-                                ModalBarrier(
-                                  color: const Color.fromARGB(153, 91, 84, 84),
-                                  dismissible: true,
-                                  onDismiss: () => {
-                                    cancelevent = true,
-                                    _isLoading.value = false
-                                  },
-                                ),
-                                Center(
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ]))
-                            : Container();
-                      }), // 当不加载时不显示蒙层
-                ]))));
+                  ])),
+              // 加载指示器的蒙层
+              ValueListenableBuilder(
+                  valueListenable: _isLoading,
+                  builder: (context, value, child) {
+                    return value
+                        ? Positioned.fill(
+                            child: Stack(children: [
+                            ModalBarrier(
+                              color: const Color.fromARGB(153, 91, 84, 84),
+                              dismissible: true,
+                              onDismiss: () => {
+                                cancelevent = true,
+                                _isLoading.value = false
+                              },
+                            ),
+                            Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          ]))
+                        : Container();
+                  }), // 当不加载时不显示蒙层
+            ])));
   }
 }
 

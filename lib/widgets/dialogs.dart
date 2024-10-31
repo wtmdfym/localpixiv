@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:localpixiv/common/tools.dart';
+import 'package:toastification/toastification.dart';
 
 //高级搜索输入框
 void advancedSearch(BuildContext context) {
@@ -193,7 +198,7 @@ void _selectDate(BuildContext context) {
 Future<String> addClient(
   BuildContext context,
 ) async {
-  Map<String, String> clientInfo = {};
+  Map<String, dynamic> clientInfo = {};
   final accountNameController = TextEditingController();
   final accountCookieController = TextEditingController();
   await showDialog(
@@ -249,11 +254,12 @@ Future<String> addClient(
                   fontSize: 25,
                 )),
             onPressed: () {
-              String cookies = cookiesFormater(accountCookieController.text);
+              Map<String, String> cookies =
+                  cookiesFormater(accountCookieController.text);
               if (accountNameController.text.isNotEmpty && cookies.isNotEmpty) {
                 clientInfo = {
-                  'Name': accountNameController.text,
-                  'Cookies': cookies
+                  'email': accountNameController.text,
+                  'cookies': cookies
                 };
               }
               Navigator.of(context).pop(); // 关闭对话框
@@ -274,25 +280,31 @@ Future<String> addClient(
   );
   //TODO 检查是否可用
   if (clientInfo.isNotEmpty) {
-    return clientInfo.toString();
+    return jsonEncode(clientInfo);
   } else {
     return '';
   }
 }
 
-String cookiesFormater(String orgcookies) {
-  Map<String, String> cookies = {};
-  for (String cookie in orgcookies.split(";")) {
-    List<String> temp = cookie.split("=");
-    String key = temp[0];
-    String value = '';
-    for (String ttemp in temp.sublist(1)) {
-      value += ttemp;
-    }
-    RegExp re = RegExp(r' ');
-    key = key.replaceAll(re, '');
-    value = value.replaceAll(re, '');
-    cookies[key] = value;
-  }
-  return cookies.toString();
+void resultDialog(BuildContext context, String operation, bool success) {
+  toastification.show(
+      context: context,
+      type: success ? ToastificationType.success : ToastificationType.error,
+      style: ToastificationStyle.flatColored,
+      alignment: Alignment.bottomLeft,
+      autoCloseDuration: Duration(seconds: 3),
+      title: Text(
+        success ? '$operation successful' : '$operation failed',
+      ));
+  /*
+  showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+            title: Text(
+              success ? '$operation successful' : '$operation failed',
+              textAlign: TextAlign.center,
+            ),
+            titleTextStyle: TextStyle(
+                color: success ? Colors.black : Colors.redAccent, fontSize: 20),
+          ));*/
 }

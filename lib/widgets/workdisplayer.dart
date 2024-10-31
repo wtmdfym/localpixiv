@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:localpixiv/tools/custom_notifier.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/gestures.dart';
-import 'dart:io';
+
+import 'package:localpixiv/common/custom_notifier.dart';
+import 'package:localpixiv/common/functions.dart';
 
 ////////////////////////////////
 //    用于显示作品信息的容器    //
@@ -35,23 +36,21 @@ class InfoContainerState extends State<InfoContainer> {
       builder: (context, value, child) {
         List<Widget> tags = [];
         value.tags.forEach((key, value) {
-          tags.add(Text.rich(
-              style: TextStyle(fontSize: 20),
+          tags.add(SelectableText.rich(
+              style: TextStyle(fontSize: 20, backgroundColor: const Color.fromARGB(150, 255, 193, 7)),
               TextSpan(
-                  text: '$key ($value) ',
-                  style: TextStyle(backgroundColor: Colors.amber),
-                  recognizer: TapGestureRecognizer())));
+                  text: '$key ($value)', recognizer: TapGestureRecognizer())));
         });
         return //SizedBox(
             //height: 800,
             //child:
             Column(children: [
-          Text.rich(
+          SelectableText.rich(
               style: TextStyle(fontSize: 20),
-              TextSpan(text: 'Title: ', children: [
+              TextSpan(children: [
                 TextSpan(
-                    text: '${value.title}\n',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                    text: 'Title: ${value.title}\n',
+                    style: TextStyle(fontSize: 25)),
                 TextSpan(
                   text:
                       'UserId: ${value.userId}\nUserName: ${value.userName}\n',
@@ -183,9 +182,8 @@ class _ImageContainerState extends State<ImageContainer>
                                     child:
                                         // 异步加载图片
                                         FutureBuilder<dynamic>(
-                                            future: _imageFile(
-                                              widget.workInfoNotifier.value
-                                                  .imagePath![0],
+                                            future: imageFileLoader(
+                                              'E://pixiv/${widget.workInfoNotifier.value.imagePath![0]}',
                                               widget.width,
                                               widget.height,
                                             ),
@@ -302,7 +300,8 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                             initialData: CircularProgressIndicator(
                               color: Colors.white,
                             ),
-                            future: _imageFile(widget.imagePath[index]),
+                            future: imageFileLoader(
+                                'E://pixiv/${widget.imagePath[index]}'),
                             builder: (BuildContext context,
                                 AsyncSnapshot<dynamic> snapshot) {
                               if (snapshot.connectionState ==
@@ -394,33 +393,4 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
       ],
     ));
   }
-}
-
-// 异步加载图片
-Future<dynamic> _imageFile(String? imagePath, [int? width, int? height]) async {
-  ImageProvider image;
-  //try {
-  if (imagePath != null) {
-    //TODO文件路径
-    var file = File('E://pixiv/$imagePath');
-    var exists = await file.exists();
-    if (exists) {
-      image = FileImage(file);
-    } else {
-      image = AssetImage('assets/images/test.png');
-    }
-  } else {
-    // 若图片不存在就加载默认图片
-    image = AssetImage('assets/images/test.png');
-  }
-  if (width != null && height != null) {
-    return ResizeImage(image,
-        width: width * 2, height: height * 2, policy: ResizeImagePolicy.fit);
-  } else {
-    return image;
-  }
-  //} catch (e) {
-  //  return ResizeImage(AssetImage('assets/images/test.png'),
-  //      policy: ResizeImagePolicy.fit);
-  //}
 }
