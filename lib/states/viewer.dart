@@ -1,10 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:localpixiv/widgets/workdisplayer.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
 import 'package:localpixiv/common/custom_notifier.dart';
 import 'package:localpixiv/models.dart';
-import 'package:mongo_dart/mongo_dart.dart' as abab;
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
 const String defaultdata = '''
 {
@@ -32,39 +34,20 @@ const String defaultdata = '''
   ]
 }
 ''';
-/*{
-  "type": "illust",
-  "id": 119867734,
-  "title": "海開きらりんっ！✨🌊",
-  "description": "お久しぶりです！これからも頑張って描いていきます！",
-  "tags": {
-    "ロリ": "萝莉",
-    "水着": "泳装",
-    "女の子": "女孩子",
-    "ケモミミ": "兽耳",
-    "オリジナル": "原创",
-    "太もも": "大腿",
-    "猫耳": "cat ears",
-    "海": "sea",
-    "浮き輪": "游泳圈",
-    "イラスト": "插画"
-  },
-  "userId": "17596327",
-  "username": "ことりーふ",
-  "uploadDate": "2024-06-22T10:05:00+00:00",
-  "likeData": false,
-  "isOriginal": true,
-  "imageCount": 1,
-  "relative_path": [
-    "picture/17596327/119867734_p0.jpg"
-  ]
-}*/
 
 class Viewer extends StatefulWidget {
-  const Viewer({super.key, required this.db
-      //required this.channel,
-      });
-  final abab.Db db;
+  const Viewer({
+    super.key,
+    required this.pixivDb,
+    required this.backupcollection,
+    required this.process,
+    required this.configs,
+    //required this.channel,
+  });
+  final mongo.Db pixivDb;
+  final mongo.DbCollection backupcollection;
+  final Process process;
+  final Configs configs;
   //final WebSocketChannel channel;
 
   @override
@@ -79,9 +62,10 @@ class _ViewerState extends State<Viewer> {
   ///************************///
   int page = 1;
   int maxpage = 1;
+  final int pagesize = 8;
   bool cancelevent = false;
-  List<dynamic> searchedInfos = [];
-  List<WorkInfoNotifier> workInfoNotifers = [
+  final List<dynamic> searchedInfos = [];
+  final List<WorkInfoNotifier> workInfoNotifers = [
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
@@ -90,84 +74,187 @@ class _ViewerState extends State<Viewer> {
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    //WorkInfoNotifier(WorkInfo(id: 1,imagePath: ['images/test.png'],imageInfo: {'imagecount':1}))
   ];
-  WorkInfoNotifier showingInfo =
+  //WorkInfoNotifier(WorkInfo(id: 1,imagePath: ['images/test.png'],imageInfo: {'imagecount':1}))
+  final WorkInfoNotifier showingInfo =
       WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata)));
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _pageController =
       TextEditingController(text: '1/1');
   /*ValueNotifier<List<bool>> searchType =
       ValueNotifier([true, false, false]); //id  uid tag*/
-  List<dynamic> workInfos = [];
+  final List<dynamic> workInfos = [];
+  int reslength = 0;
+  final int buffer = 200;
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
-
-  changeImage() {
-    if (page == 1) {
-      page +=
-          1; //C:\\Users\\Administrator\\Desktop\\New folder\\b4fa79cb-d8ca-47dd-9d5a-b1f39bb1212b.jpeg
-      _pageController.text = page.toString();
-      workInfoNotifers[0].setimagepath(['E:/pixiv/picture/24838/44382341.gif']);
-      workInfoNotifers[0].setimageCount(23);
-      workInfoNotifers[0].settitle('ababab');
-      //workInfoNotifers[1].setimagepath(['E:/pixiv/picture/89357/105314582_p2.png']);
-    } else {
-      page -= 1;
-      _pageController.text = page.toString();
-      workInfoNotifers[0].setimagepath([
-        'C:\\Users\\Administrator\\Desktop\\New folder\\daf9fd58289eefc1be.png'
-      ]);
-      workInfoNotifers[0].setimageCount(5);
-      workInfoNotifers[0].settitle('海開きらりんっ！✨🌊');
-      //workInfoNotifers[1].setimagepath(['E:/pixiv/picture/89357/105367593_p0.png']);
-    }
-  }
+  bool onsearching = false;
 
   /// ************************* ///
   /// *********搜索控制********* ///
   /// ************************* ///
-  void searchAnalyzer() {
+  void searchAnalyzer(
+      [Map<String, dynamic>? advancedtext,
+      mongo.SelectorBuilder? finishedselector]) {
+    if (onsearching) {
+      resultDialog(context, 'Search', false,
+          'Searching operation not complete!\nPlease wait.');
+      return;
+    }
     _isLoading.value = true;
-    String text = _searchController.text;
+    mongo.SelectorBuilder selector = mongo.SelectorBuilder().exists('id');
+    if (advancedtext != null) {
+      if (advancedtext.isNotEmpty) {
+        bool searchtag = true;
+        bool partly = true;
+        if (advancedtext['searchRange'] == 'tag(partly)') {
+        } else if (advancedtext['searchRange'] == 'tag(absolutely)') {
+          partly = false;
+        } else {
+          searchtag = false;
+        }
+        //tag search
+        if (searchtag) {
+          //匹配tag
+          if (!partly) {
+            for (String keyword in advancedtext['AND']) {
+              if (keyword.isNotEmpty) {
+                selector.and(mongo.where.exists('tags.$keyword'));
+              }
+            }
+            for (String keyword in advancedtext['NOT']) {
+              if (keyword.isNotEmpty) {
+                selector.and(mongo.where.notExists('tags.$keyword'));
+              }
+            }
+            for (String keyword in advancedtext['OR']) {
+              if (keyword.isNotEmpty) {
+                selector.or(mongo.where.exists('tags.$keyword'));
+              }
+            }
+          }
+          //匹配tag和翻译
+          else {
+            for (String keyword in advancedtext['AND']) {
+              if (keyword.isNotEmpty) {
+                selector.match('tags', keyword, multiLine: true);
+              }
+            }
+            for (String keyword in advancedtext['NOT']) {
+              if (keyword.isNotEmpty) {
+                selector.raw({
+                  'tags': {'\$not': RegExp(keyword, multiLine: true)}
+                });
+              }
+            }
+
+            for (String keyword in advancedtext['OR']) {
+              if (keyword.isNotEmpty) {
+                selector
+                    .or(mongo.where.match('tags', keyword, multiLine: true));
+              }
+            }
+          }
+        }
+        //title and description search
+        else {
+          /*
+          TODO 聚合查询
+          var title = mongo.SelectorBuilder();
+          var description = mongo.SelectorBuilder();
+          for (String keyword in advancedtext['AND']) {
+            if (keyword.isNotEmpty) {
+              title.match('title', keyword, multiLine: true);
+              description.match('description', keyword, multiLine: true);
+            }
+          }
+          title.or(description);
+          selector.and(title);
+          
+          for (String keyword in advancedtext['NOT']) {
+            if (keyword.isNotEmpty) {
+              selector.match('title', keyword, multiLine: true);
+              selector.match('description', keyword, multiLine: true);
+            }
+          }
+
+          for (String keyword in advancedtext['OR']) {
+            if (keyword.isNotEmpty) {
+              selector.or(mongo.where.match('title', keyword, multiLine: true));
+              selector.or(
+                  mongo.where..match('description', keyword, multiLine: true));
+            }
+          }*/
+        }
+        /*var macth = {
+        {'\$all': advancedtext['AND']},
+        {'\$all': 'values'},
+        {'\$in': advancedtext['OR']}
+      };*/
+
+        selector.oneFrom('type', advancedtext['searchType']);
+        advancedtext['originalOnly'] ? selector.eq('isOriginal', true) : {};
+        advancedtext['R-18'] ? {} : selector.notExists("tags.R-18");
+        advancedtext['likedOnly'] ? selector.eq('likeData', true) : {};
+      } else {
+        _isLoading.value = false;
+        return;
+      }
+    } else if (finishedselector != null) {
+      selector = finishedselector;
+    } else {
+      if (_searchController.text.isNotEmpty) {
+        selector.eq('id', int.parse(_searchController.text));
+      }
+    }
     if (cancelevent) {
       cancelevent = false;
       return;
     }
-    searchWork(text);
+    searchWork(selector);
   }
 
-  void searchWork(String searchText) async {
-    List<dynamic> result = [];
-    if (cancelevent) {
-      cancelevent = false;
-      return;
-    }
-    if (searchText.isEmpty) {
-      var collection = widget.db.collection('backup of pixiv infos');
-      if (cancelevent) {
-        cancelevent = false;
-        return;
+  void searchWork(mongo.SelectorBuilder selector) async {
+    onsearching = true;
+    //widget.process.stdin.write('DATA||\n');
+    //workInfos = await
+    reslength = await widget.backupcollection.count(selector);
+    if (reslength == 0) {
+      _isLoading.value = false;
+      if (context.mounted) {
+        resultDialog(context, 'Search', false, 'No matching results found!');
       }
-      var tresult = collection.find(abab.where
-          .exists('id')
-          // wrong .notExists('{"tags":{"R-18": null}}')
-          .sortBy('id', descending: true));
-      if (cancelevent) {
-        cancelevent = false;
-        return;
+    } else {
+      workInfos.clear();
+      page = 1;
+      widget.backupcollection
+          .find(selector.sortBy('id', descending: true))
+          .forEach((info) {
+        if (cancelevent) {
+          cancelevent = false;
+          return;
+        }
+        workInfos.add(info);
+      }).then((_) => onsearching = false);
+      //.toList();
+
+      //print(result.length);
+      /*int index = 0;
+    List<dynamic> infos = [];
+    searchResults.forEach((info) {
+      if (index < pagesize) {
+        infos.add(info);
+      } else {
+        workInfos.addEntries({page: infos}.entries);
+        index = 0;
+        infos.clear();
       }
-      result = await tresult.toList();
-    } else {}
-    //print(result.length);
-    maxpage = (result.length / 8).ceil();
-    if (cancelevent) {
-      cancelevent = false;
-      return;
+    });*/
+      if (context.mounted) {
+        resultDialog(context, 'Search', true, 'Found $reslength results!');
+      }
+      maxpage = (reslength / pagesize).ceil();
+      changePage();
     }
-    workInfos = result;
-    _isLoading.value = false;
-    //page = 18;
-    changePage();
   }
 
   // 通信信息处理
@@ -202,21 +289,36 @@ class _ViewerState extends State<Viewer> {
     }
   }
 
-  void changePage() {
-    List<dynamic> info;
-    if (page * 8 < workInfos.length) {
-      info = workInfos.sublist((page - 1) * 8, page * 8);
-    } else {
-      info = workInfos.sublist((page - 1) * 8, workInfos.length);
-    }
-    for (int i = 0; i < 8; i++) {
-      try {
-        workInfoNotifers[i].setInfoJson(info[i]);
-      } on RangeError {
-        workInfoNotifers[i].setInfoJson(jsonDecode((defaultdata)));
+  void changePage() async {
+    Timer.periodic(Durations.short2, (timer) {
+      if (page * 8 < reslength) {
+        if (workInfos.length >= 8) {
+          _isLoading.value = false;
+          List<dynamic> info = workInfos.sublist((page - 1) * 8, page * 8);
+          for (int i = 0; i < 8; i++) {
+            workInfoNotifers[i].setInfoJson(info[i]);
+          }
+          timer.cancel();
+        }
+      } else {
+        if (workInfos.length == reslength) {
+          _isLoading.value = false;
+          List<dynamic> info = workInfos.sublist((page - 1) * 8, reslength);
+          for (int i = 0; i < 8; i++) {
+            try {
+              workInfoNotifers[i].setInfoJson(info[i]);
+            } on RangeError {
+              workInfoNotifers[i].value =
+                  WorkInfo.fromJson(jsonDecode(defaultdata));
+            }
+          }
+          timer.cancel();
+        }
       }
-    }
-    _pageController.text = '$page/$maxpage';
+
+      _pageController.text = '$page/$maxpage';
+    });
+
     //print(page);
   }
 
@@ -242,6 +344,7 @@ class _ViewerState extends State<Viewer> {
                         child: ListView(
                           shrinkWrap: true,
                           children: [
+                            //搜索控件
                             TextField(
                               controller: _searchController,
                               maxLength: 100,
@@ -302,58 +405,107 @@ class _ViewerState extends State<Viewer> {
                             ),
                             Divider(),
                             ElevatedButton(
-                                onPressed: () => advancedSearch(context),
+                                onPressed: () {
+                                  advancedSearch(context).then((context) {
+                                    //TODO 高级搜索
+                                    searchAnalyzer(context);
+                                  });
+                                },
                                 child: Text('Advanced Search',
                                     style: TextStyle(fontSize: 20))),
                             Divider(),
-                            InfoContainer(workInfo: showingInfo),
+                            //信息显示部件
+                            NotificationListener<TagSearchNotification>(
+                              onNotification: (notification) {
+                                searchAnalyzer(
+                                    null,
+                                    mongo.where
+                                        .exists('tags.${notification.tag}'));
+                                return true;
+                              },
+                              child: InfoContainer(
+                                workInfo: showingInfo,
+                                config: widget.configs,
+                              ),
+                            )
                           ],
                         )),
-                    Flex(
-                        direction: Axis.vertical,
-                        spacing: 8,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxHeight: 1080,
-                                //maxWidth: 1920,
-                                //minHeight: 400
-                              ),
-                              child: GridView.count(
-                                scrollDirection: Axis.horizontal,
-                                //clipBehavior: Clip.antiAlias,
-                                shrinkWrap: true,
-                                crossAxisCount: 2,
-                                childAspectRatio: 11 / 10, //高比宽
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                physics: const NeverScrollableScrollPhysics(),
-                                children: <Widget>[
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[0]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[4]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[1]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[5]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[2]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[6]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[3]),
-                                  ImageContainer(
-                                      workInfoNotifier: workInfoNotifers[7]),
-                                ],
-                              )),
-                          Row(
-                            spacing: 200,
+                    //收藏操作捕捉
+                    NotificationListener<WorkBookMarkNotification>(
+                        onNotification: (notification) {
+                          if (notification.id != 114514 &&
+                              notification.userName != 'Man') {
+                            // 更新数据库
+                            widget.pixivDb
+                                .collection(notification.userName)
+                                .updateOne(
+                                    mongo.where.eq('id', notification.id),
+                                    mongo.modify.set(
+                                        'likeData', notification.bookmarked))
+                                .then((res) =>
+                                    res.isSuccess ? {} : throw 'update failed');
+                            widget.backupcollection
+                                .updateOne(
+                                    mongo.where.eq('id', notification.id),
+                                    mongo.modify.set(
+                                        'likeData', notification.bookmarked))
+                                .then((res) =>
+                                    res.isSuccess ? {} : throw 'update failed');
+                          }
+                          return true;
+                        },
+                        // 作品展示网格
+                        child: Flex(
+                            direction: Axis.vertical,
+                            spacing: 8,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              SizedBox(
-                                  width: 200,
-                                  child: ElevatedButton.icon(
+                              ConstrainedBox(
+                                  constraints: const BoxConstraints(
+                                    maxHeight: 1080,
+                                    //maxWidth: 1920,
+                                  ),
+                                  child: GridView.count(
+                                    scrollDirection: Axis.horizontal,
+                                    shrinkWrap: true,
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 11 / 10, //高比宽
+                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: 16,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    children: <Widget>[
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[0]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[4]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[1]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[5]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[2]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[6]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[3]),
+                                      ImageContainer(
+                                          workInfoNotifier:
+                                              workInfoNotifers[7]),
+                                    ],
+                                  )),
+                              //翻页控件
+                              Row(
+                                spacing: 300,
+                                children: [
+                                  ElevatedButton.icon(
                                     onPressed: prevPage,
                                     icon: Icon(
                                       Icons.navigate_before,
@@ -361,31 +513,26 @@ class _ViewerState extends State<Viewer> {
                                     ),
                                     label: Text('Prev',
                                         style: TextStyle(fontSize: 20)),
-                                  )),
-                              SizedBox(
-                                  width: 200,
-                                  child: TextField(
-                                    controller: _pageController,
-                                    maxLength: 10,
-                                    decoration: InputDecoration(
-                                      labelText: "页码",
-                                      //icon: Icon(Icons.search),
-                                    ),
-                                  )),
-                              SizedBox(
-                                  width: 200,
-                                  //height: 30,
-                                  child: ElevatedButton.icon(
+                                  ),
+                                  SizedBox(
+                                      width: 300,
+                                      child: TextField(
+                                        controller: _pageController,
+                                        maxLength: 10,
+                                        decoration: InputDecoration(
+                                          labelText: "页码",
+                                          //icon: Icon(Icons.search),
+                                        ),
+                                      )),
+                                  ElevatedButton.icon(
                                       onPressed: jumpToPage,
                                       icon: Icon(
                                         Icons.next_plan_outlined,
                                         size: 30,
                                       ),
                                       label: Text("Jump",
-                                          style: TextStyle(fontSize: 20)))),
-                              SizedBox(
-                                  width: 200,
-                                  child: ElevatedButton.icon(
+                                          style: TextStyle(fontSize: 20))),
+                                  ElevatedButton.icon(
                                       onPressed: nextPage,
                                       icon: Icon(
                                         Icons.navigate_next,
@@ -393,12 +540,12 @@ class _ViewerState extends State<Viewer> {
                                       ),
                                       iconAlignment: IconAlignment.end,
                                       label: Text("Next",
-                                          style: TextStyle(fontSize: 20)))),
-                            ],
-                          )
-                        ])
+                                          style: TextStyle(fontSize: 20))),
+                                ],
+                              )
+                            ]))
                   ])),
-              // 加载指示器的蒙层
+              // 加载指示器
               ValueListenableBuilder(
                   valueListenable: _isLoading,
                   builder: (context, value, child) {
@@ -406,7 +553,7 @@ class _ViewerState extends State<Viewer> {
                         ? Positioned.fill(
                             child: Stack(children: [
                             ModalBarrier(
-                              color: const Color.fromARGB(153, 91, 84, 84),
+                              color: const Color.fromARGB(150, 158, 158, 158),
                               dismissible: true,
                               onDismiss: () => {
                                 cancelevent = true,
@@ -414,11 +561,16 @@ class _ViewerState extends State<Viewer> {
                               },
                             ),
                             Center(
-                              child: CircularProgressIndicator(),
+                              child: CircularProgressIndicator(
+                                color: Colors.blueAccent,
+                                strokeWidth: 6,
+                                semanticsLabel: 'Loading......',
+                              ),
                             ),
                           ]))
+                        // 当不加载时不显示
                         : Container();
-                  }), // 当不加载时不显示蒙层
+                  }),
             ])));
   }
 }

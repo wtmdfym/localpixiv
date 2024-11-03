@@ -109,18 +109,21 @@ class Configs {
   String? lastRecordTime;
   bool enableClientPool = false;
   List<ClientPool>? clientPool;
+  bool autoSearch = true;
 
-  Configs(
-      {this.savePath,
-      this.cookies,
-      required this.enableProxy,
-      this.httpProxies,
-      this.httpsProxies,
-      this.semaphore,
-      this.downloadType,
-      this.lastRecordTime,
-      required this.enableClientPool,
-      this.clientPool});
+  Configs({
+    this.savePath,
+    this.cookies,
+    required this.enableProxy,
+    this.httpProxies,
+    this.httpsProxies,
+    this.semaphore,
+    this.downloadType,
+    this.lastRecordTime,
+    required this.enableClientPool,
+    this.clientPool,
+    required this.autoSearch,
+  });
 
   Configs.fromJson(Map<String, dynamic> json) {
     savePath = json['save_path'];
@@ -141,6 +144,7 @@ class Configs {
         clientPool!.add(ClientPool.fromJson(v));
       });
     }
+    autoSearch = json['autoSearch'];
   }
 
   Map<String, dynamic> toJson() {
@@ -161,6 +165,7 @@ class Configs {
     if (clientPool != null) {
       data['client_pool'] = clientPool!.map((v) => v.toJson()).toList();
     }
+    data['autoSearch'] = autoSearch;
     return data;
   }
 }

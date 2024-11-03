@@ -3,7 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/gestures.dart';
 
 import 'package:localpixiv/common/custom_notifier.dart';
-import 'package:localpixiv/common/functions.dart';
+import 'package:localpixiv/common/tools.dart';
+import 'package:localpixiv/models.dart';
 
 ////////////////////////////////
 //    用于显示作品信息的容器    //
@@ -12,9 +13,10 @@ class InfoContainer extends StatefulWidget {
   const InfoContainer({
     super.key,
     required this.workInfo,
+    required this.config,
   });
   final WorkInfoNotifier workInfo;
-
+  final Configs config;
   @override
   State<StatefulWidget> createState() {
     return InfoContainerState();
@@ -37,9 +39,15 @@ class InfoContainerState extends State<InfoContainer> {
         List<Widget> tags = [];
         value.tags.forEach((key, value) {
           tags.add(SelectableText.rich(
-              style: TextStyle(fontSize: 20, backgroundColor: const Color.fromARGB(150, 255, 193, 7)),
+              style: TextStyle(
+                  fontSize: 20,
+                  backgroundColor: const Color.fromARGB(150, 255, 193, 7)),
               TextSpan(
-                  text: '$key ($value)', recognizer: TapGestureRecognizer())));
+                  text: '$key ($value)',
+                  recognizer: (TapGestureRecognizer()
+                    ..onTap = () => widget.config.autoSearch
+                        ? TagSearchNotification(key).dispatch(context)
+                        : {}))));
         });
         return //SizedBox(
             //height: 800,
@@ -160,12 +168,12 @@ class _ImageContainerState extends State<ImageContainer>
                                       widget.workInfoNotifier.value)
                                   .dispatch(context);
                             },
-                            onTapDown: (details) =>
-                                _mouseClickAnimationController.forward(),
-                            onTapUp: (details) =>
-                                _mouseClickAnimationController.reverse(),
-                            onTapCancel: () =>
-                                _mouseClickAnimationController.reverse(),
+                            //onTapDown: (details) =>
+                            //    _mouseClickAnimationController.forward(),
+                            //onTapUp: (details) =>
+                            //    _mouseClickAnimationController.reverse(),
+                            //onTapCancel: () =>
+                            //    _mouseClickAnimationController.reverse(),
                             onDoubleTap: () => showWorkDetail(),
                             /*
                       onDoubleTapDown: (details) =>
@@ -243,16 +251,30 @@ class _ImageContainerState extends State<ImageContainer>
                                 builder: (context, iconvalue, child) =>
                                     IconButton(
                                       onPressed: () {
-                                        //TODO 通信更新信息
+                                        //通信更新信息
                                         if (widget
                                             .workInfoNotifier.value.isLiked) {
                                           _icon.value = Icons.favorite_border;
                                           widget.workInfoNotifier
                                               .bookmark(false);
+                                          WorkBookMarkNotification(
+                                                  widget.workInfoNotifier.value
+                                                      .id,
+                                                  widget.workInfoNotifier.value
+                                                      .userName,
+                                                  false)
+                                              .dispatch(context);
                                         } else {
                                           _icon.value = Icons.favorite;
                                           widget.workInfoNotifier
                                               .bookmark(true);
+                                          WorkBookMarkNotification(
+                                                  widget.workInfoNotifier.value
+                                                      .id,
+                                                  widget.workInfoNotifier.value
+                                                      .userName,
+                                                  true)
+                                              .dispatch(context);
                                         }
                                       },
                                       icon: Icon(iconvalue),

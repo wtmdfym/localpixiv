@@ -101,7 +101,6 @@ class _SettingsState extends State<Settings> {
                     ),
                     value: widget.configs.enableProxy, //当前状态
                     onChanged: (value) {
-                      // TODO 储存信息
                       //重新构建页面
                       setState(() {
                         widget.configs.enableProxy = value;
@@ -274,20 +273,46 @@ class _SettingsState extends State<Settings> {
                     onSaved: (newValue) =>
                         widget.configs.semaphore = int.tryParse(newValue!),
                   ),
-                  SwitchListTile(
-                    title: Text(
-                      'Enable Client Pool',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    value: widget.configs.enableClientPool, //当前状态
-                    onChanged: (value) {
-                      // TODO 储存信息
-                      //重新构建页面
-                      setState(() {
-                        widget.configs.enableClientPool = value;
-                      });
-                    },
-                  ),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 400,
+                      children: [
+                        SizedBox(
+                            width: 400,
+                            child: SwitchListTile(
+                              title: Text(
+                                'Enable Client Pool',
+                                style: TextStyle(fontSize: 20),
+                              ),
+                              value: widget.configs.enableClientPool, //当前状态
+                              onChanged: (value) {
+                                //重新构建页面
+                                setState(() {
+                                  widget.configs.enableClientPool = value;
+                                });
+                              },
+                            )),
+                        // 添加按钮
+                        ElevatedButton(
+                          onPressed: () => widget.configs.enableClientPool
+                              ? addClient(context).then((value) {
+                                  setState(() {
+                                    //print(value);
+                                    String clientInfo = value;
+                                    if (clientInfo.isNotEmpty) {
+                                      widget.configs.clientPool!.add(
+                                          ClientPool.fromJson(
+                                              jsonDecode(clientInfo)));
+                                    }
+                                  });
+                                })
+                              : {},
+                          child: Text('Add Client',
+                              style: TextStyle(
+                                fontSize: 20,
+                              )),
+                        ),
+                      ]),
                   Offstage(
                       offstage: !widget.configs.enableClientPool,
                       child: Column(
@@ -317,26 +342,34 @@ class _SettingsState extends State<Settings> {
                               },
                             ),
                           ),
-                          // 添加按钮
-                          ElevatedButton(
-                            onPressed: () => addClient(context).then((value) {
-                              setState(() {
-                                //print(value);
-                                String clientInfo = value;
-                                if (clientInfo.isNotEmpty) {
-                                  widget.configs.clientPool!.add(
-                                      ClientPool.fromJson(
-                                          jsonDecode(clientInfo)));
-                                }
-                              });
-                            }),
-                            child: Text('Add Client',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                )),
-                          ),
                         ],
                       )),
+                  /*Row(
+                      spacing: 50,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [*/
+                  Divider(),
+                  //UI 相关设置
+                  Text(
+                    'UI Settings',
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                   SwitchListTile(
+                    title: Text(
+                      'Auto search when click tag',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    value: widget.configs.autoSearch, //当前状态
+                    onChanged: (value) {
+                      //重新构建页面
+                      setState(() {
+                        widget.configs.autoSearch = value;
+                      });
+                    },
+                  ),
+                  // 保存button
                   Builder(builder: (context) {
                     return ElevatedButton(
                       onPressed: () {
@@ -361,7 +394,16 @@ class _SettingsState extends State<Settings> {
                         ),
                       ),
                     );
-                  }),
+                  }), /*
+                        ElevatedButton(
+                            onPressed: () => setState(() {}),
+                            child: Text(
+                              'Cancle',
+                              style: TextStyle(
+                                fontSize: 20,
+                              ),
+                            ))
+                      ])*/
                 ],
               ))),
     ));

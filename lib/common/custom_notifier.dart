@@ -64,7 +64,6 @@ class ShowInfoNotification extends Notification {
   final WorkInfo msg;
 }
 
-
 //自定义的作者信息变更捕捉器
 class UserInfoNotifier extends ValueNotifier<UserInfo> {
   UserInfoNotifier(super.workInfo);
@@ -82,3 +81,50 @@ class UserInfoNotifier extends ValueNotifier<UserInfo> {
     notifyListeners();
   }
 }
+
+// 作品收藏操作通知器
+class WorkBookMarkNotification extends Notification {
+  WorkBookMarkNotification(this.id, this.userName, this.bookmarked);
+  final int id;
+  final String userName;
+  final bool bookmarked;
+}
+
+// 标签搜索操作通知器
+class TagSearchNotification extends Notification {
+  TagSearchNotification(this.tag);
+  final String tag;
+}
+/*
+class CmdData extends InheritedWidget {
+  const CmdData({
+    super.key,
+    required this.data,
+    required super.child,
+  });
+  
+  final Map<String,String> data;
+
+  static CmdData? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<CmdData>();
+  }
+
+  static CmdData of(BuildContext context) {
+    final CmdData? result = maybeOf(context);
+    assert(result != null, 'No data found in context');
+    return result!;
+  }
+
+  @override
+  bool updateShouldNotify(CmdData oldWidget) => data != oldWidget.data;
+}
+class DataModel with ChangeNotifier {
+  Map<String, String> _data = {};
+
+  Map<String, String> get data => _data;
+
+  void increment(newdata) {
+    _data = newdata;
+    notifyListeners(); // 通知监听者数据已改变
+  }
+}*/

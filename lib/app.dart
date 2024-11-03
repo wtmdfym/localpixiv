@@ -1,17 +1,25 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+//import 'package:localpixiv/common/custom_notifier.dart';
 import 'package:localpixiv/models.dart';
-import 'package:mongo_dart/mongo_dart.dart' as abab;
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 //import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localpixiv/states/home.dart';
 import 'package:localpixiv/states/viewer.dart';
 import 'package:localpixiv/states/settings.dart';
 import 'package:localpixiv/widgets/userdisplayer.dart';
+//import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key, required this.db, required this.process, required this.configs});
-  final abab.Db db;
+  const MyApp(
+      {super.key,
+      required this.pixivDb,
+      required this.backupcollection,
+      required this.process,
+      required this.configs});
+  final mongo.Db pixivDb;
+  final mongo.DbCollection backupcollection;
   final Process process;
   final Configs configs;
 
@@ -65,8 +73,7 @@ class MyApp extends StatelessWidget {
             length: 4,
             child: Scaffold(
                 backgroundColor: const Color.fromARGB(255, 212, 252, 255),
-                appBar: AppBar(
-                    bottom: TabBar(
+                appBar: TabBar(
                   onTap: (value) {
                     currentIndex.value = value;
                   },
@@ -76,7 +83,7 @@ class MyApp extends StatelessWidget {
                     Tab(text: 'Followings', icon: Icon(Icons.view_list)),
                     Tab(text: 'Settings', icon: Icon(Icons.settings)),
                   ],
-                )),
+                ),
                 body: /*TabBarView(
                 children: [
                   const Icon(Icons.directions_car),
@@ -92,18 +99,30 @@ class MyApp extends StatelessWidget {
                         child: ValueListenableBuilder(
                             valueListenable: currentIndex,
                             builder: (context, value, child) {
-                              return ProsteIndexedStack(
+                              return //ChangeNotifierProvider(
+                                  //create: (context) => DataModel(), // 创建数据模型的实例
+                                  //child:
+                                  ProsteIndexedStack(
                                 index: value,
                                 children: [
                                   IndexedStackChild(
                                       child: MyHomePage(process: process)),
                                   IndexedStackChild(
-                                      child: Viewer(db: db),
+                                      child: Viewer(
+                                        pixivDb: pixivDb,
+                                        backupcollection: backupcollection,
+                                        process: process,
+                                        configs: configs,
+                                      ),
                                       preload: true), // 预加载的页面
                                   IndexedStackChild(
                                       child: const FollowingsDisplayer()),
-                                  IndexedStackChild(child: Settings(configs: configs,)),
+                                  IndexedStackChild(
+                                      child: Settings(
+                                    configs: configs,
+                                  )),
                                 ],
+                                //)
                               );
                             }))))
         /*

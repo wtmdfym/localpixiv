@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+//import 'package:localpixiv/common/custom_notifier.dart';
 import 'dart:io';
+//import 'package:provider/provider.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
@@ -19,6 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double maxScroll = 1;
   int getType = 0;
   bool isstart = false;
+  //bool needprint = true;
   List<String> hittexts = [
     '( ･ω･)☞   (:3 」∠)',
     'Enter work Id',
@@ -30,19 +33,44 @@ class _MyHomePageState extends State<MyHomePage> {
   // 2->uid
   // 3->tag
   ValueNotifier<String> outputs = ValueNotifier('');
+  String addata = '';
 
   void _startProcessListen() async {
     Utf8Decoder utf8decoder = Utf8Decoder(allowMalformed: true);
     // 监听命令的标准输出
     widget.process.stdout.transform(utf8decoder).listen((data) {
+      /*if (data.trim() == 'SENDSTART') {
+        //print('start');
+        needprint = false;
+        return;
+      } else if (data.trim() == 'SENDEND') {
+        //print('end');
+        needprint = true;
+        Provider.of<DataModel>(context, listen: false).increment({'viewer':addata});
+        addata = '';
+        return;
+      }
+      if (needprint) {
+        //outputs += 'OUTPUT: $data';
+        outputs.value += data; //gbk.decode(data);
+        if (_scrollController.hasClients) {
+          _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: Durations.medium1,
+              curve: Curves.linear);
+        }
+      } else {
+        addata += data;
+      }
+    });*/
+
       //outputs += 'OUTPUT: $data';
       outputs.value += data; //gbk.decode(data);
       if (_scrollController.hasClients) {
         _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-            duration: Durations.medium1, curve: Curves.bounceOut);
+            duration: Durations.medium1, curve: Curves.linear);
       }
     });
-
     // 监听命令的标准错误
     widget.process.stderr.transform(utf8decoder).listen((data) {
       outputs.value += 'ERROR: $data [ERROR]';
@@ -53,8 +81,12 @@ class _MyHomePageState extends State<MyHomePage> {
               builder: (context) {
                 return AlertDialog(
                   title: Text('ConnectError:\nProxy inaccessible'),
-                  titleTextStyle: TextStyle(color: Colors.redAccent,fontSize: 25),
-                  content: Text('请检查代理设置是否正确',textAlign: TextAlign.center,),
+                  titleTextStyle:
+                      TextStyle(color: Colors.redAccent, fontSize: 25),
+                  content: Text(
+                    '请检查代理设置是否正确',
+                    textAlign: TextAlign.center,
+                  ),
                 );
               });
         }
@@ -64,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       if (_scrollController.hasClients) {
         _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-            duration: Durations.medium1, curve: Curves.bounceOut);
+            duration: Durations.medium1, curve: Curves.linear);
       }
     });
     // 监听命令的返回代码
@@ -73,13 +105,14 @@ class _MyHomePageState extends State<MyHomePage> {
     // 自动滚动至底部
     if (_scrollController.hasClients) {
       _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-          duration: Durations.medium1, curve: Curves.bounceOut);
+          duration: Durations.medium1, curve: Curves.linear);
     }
   }
 
-  void _sendCommand(String command) async {
+  void _sendCommand(String command) {
     //TODO different getType
     widget.process.stdin.write('$command\n');
+    widget.process.stdin.flush();
   }
 
   @override
@@ -121,7 +154,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         String location =
                             'c:/Users/Administrator/Desktop/pixiv-crawler';
                         _sendCommand(
-                            '$location/.venv/Scripts/python.exe $location/cmdapp/cmd_app.py');
+                            '$location/.venv/Scripts/python.exe -u lib/pythonapp/cmd_app.py  --configfile jsons/config.json'
+                            //'cd asset/lib/pythonapp/build/exe.win-amd64-3.12/'
+                            );
+                        //_sendCommand(
+                        //    'cmd_app.exe --configfile jsons/config.json');
                       }
                       setState(() => isstart = true);
                     },

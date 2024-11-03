@@ -1,36 +1,37 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:localpixiv/common/tools.dart';
 import 'package:toastification/toastification.dart';
 
 //高级搜索输入框
-void advancedSearch(BuildContext context) {
+Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
   Map<String, dynamic> submitContent = {};
   final andkeywords = TextEditingController();
   final notkeywords = TextEditingController();
   final orkeywords = TextEditingController();
-  ValueNotifier<String> searchType = ValueNotifier('illust,manga,ugiroa');
+  ValueNotifier<String> searchType = ValueNotifier('illust,manga,ugoira');
   ValueNotifier<String> searchRange = ValueNotifier('tag(partly)');
   ValueNotifier<bool> originalOnly = ValueNotifier(false);
   ValueNotifier<bool> r18 = ValueNotifier(false);
-  showDialog(
+  ValueNotifier<bool> likedOnly = ValueNotifier(false);
+  await showDialog(
     context: context,
     builder: (context) {
       return AlertDialog(
         title: Text('Advanced Search'),
         content: SizedBox(
-            height: 640,
+            height: 560,
             width: 1080,
-            child: Column(spacing: 30, children: [
+            child: Column(spacing: 20, children: [
               TextField(
                 controller: andkeywords,
                 style: TextStyle(
-                  fontSize: 25,
+                  fontSize: 20,
                 ),
                 decoration: InputDecoration(
-                  hintText: '必须含有的关键词(使用空格分开)',
+                  hintText:
+                      'Keywords that must be included (separated by spaces)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -39,10 +40,10 @@ void advancedSearch(BuildContext context) {
               TextField(
                 controller: notkeywords,
                 style: TextStyle(
-                  fontSize: 25,
+                  fontSize: 20,
                 ),
                 decoration: InputDecoration(
-                  hintText: '不含有的关键词(使用空格分开)',
+                  hintText: 'Keywords not contained (separated by spaces)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -51,10 +52,11 @@ void advancedSearch(BuildContext context) {
               TextField(
                 controller: orkeywords,
                 style: TextStyle(
-                  fontSize: 25,
+                  fontSize: 20,
                 ),
                 decoration: InputDecoration(
-                  hintText: '可含有的关键词(使用空格分开)',
+                  hintText:
+                      'Keywords that may be included (separated by spaces)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -66,7 +68,7 @@ void advancedSearch(BuildContext context) {
                   children: [
                     Text(
                       'Search Range',
-                      style: TextStyle(fontSize: 25),
+                      style: TextStyle(fontSize: 20),
                     ),
                     ValueListenableBuilder(
                         valueListenable: searchType,
@@ -80,17 +82,17 @@ void advancedSearch(BuildContext context) {
                                   '插画',
                                   '漫画',
                                   '动图'*/
-                                'illust,manga,ugiroa',
+                                'illust,manga,ugoira',
                                 'illust,manga',
                                 'illust',
                                 'manga',
-                                'ugiroa',
+                                'ugoira',
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
                                   child: Text(
                                     value,
-                                    style: TextStyle(fontSize: 25),
+                                    style: TextStyle(fontSize: 20),
                                   ),
                                 );
                               }).toList(),
@@ -113,7 +115,7 @@ void advancedSearch(BuildContext context) {
                                   value: value,
                                   child: Text(
                                     value,
-                                    style: TextStyle(fontSize: 25),
+                                    style: TextStyle(fontSize: 20),
                                   ),
                                 );
                               }).toList(),
@@ -124,7 +126,7 @@ void advancedSearch(BuildContext context) {
                   builder: (context, value, child) => SwitchListTile(
                         title: Text(
                           'original only',
-                          style: TextStyle(fontSize: 25),
+                          style: TextStyle(fontSize: 20),
                         ),
                         value: value, //当前状态
                         onChanged: (value) {
@@ -136,38 +138,51 @@ void advancedSearch(BuildContext context) {
                   builder: (context, value, child) => SwitchListTile(
                         title: Text(
                           'R-18',
-                          style: TextStyle(fontSize: 25),
+                          style: TextStyle(fontSize: 20),
                         ),
                         value: value, //当前状态
                         onChanged: (value) {
                           r18.value = value;
                         },
                       )),
+              ValueListenableBuilder(
+                  valueListenable: likedOnly,
+                  builder: (context, value, child) => SwitchListTile(
+                        title: Text(
+                          'liked only',
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        value: value, //当前状态
+                        onChanged: (value) {
+                          likedOnly.value = value;
+                        },
+                      )),
             ])),
         actions: <Widget>[
           TextButton(
-            child: Text('apply',
+            child: Text('Apply',
                 style: TextStyle(
-                  fontSize: 25,
+                  fontSize: 20,
                 )),
             onPressed: () {
               submitContent.addAll({
                 'AND': andkeywords.text.split(RegExp(r'\s+')),
                 'NOT': notkeywords.text.split(RegExp(r'\s+')),
                 'OR': orkeywords.text.split(RegExp(r'\s+')),
-                'searchType': searchType.value,
+                'searchType': searchType.value.split(','),
                 'searchRange': searchRange.value,
                 'originalOnly': originalOnly.value,
                 'R-18': r18.value,
+                'likedOnly': likedOnly.value
               });
-              print('输入的文本是: $submitContent');
+              // print('输入的文本是: $submitContent');
               Navigator.of(context).pop(); // 关闭对话框
             },
           ),
           TextButton(
-            child: Text('cancel',
+            child: Text('Cancel',
                 style: TextStyle(
-                  fontSize: 25,
+                  fontSize: 20,
                 )),
             onPressed: () {
               Navigator.of(context).pop(); // 关闭对话框
@@ -177,6 +192,7 @@ void advancedSearch(BuildContext context) {
       );
     },
   );
+  return submitContent;
 }
 /*
 可不要
@@ -286,16 +302,23 @@ Future<String> addClient(
   }
 }
 
-void resultDialog(BuildContext context, String operation, bool success) {
+void resultDialog(BuildContext context, String operation, bool success,
+    [String? description]) async {
   toastification.show(
-      context: context,
-      type: success ? ToastificationType.success : ToastificationType.error,
-      style: ToastificationStyle.flatColored,
-      alignment: Alignment.bottomLeft,
-      autoCloseDuration: Duration(seconds: 3),
-      title: Text(
-        success ? '$operation successful' : '$operation failed',
-      ));
+    context: context,
+    type: success ? ToastificationType.success : ToastificationType.error,
+    style: ToastificationStyle.flatColored,
+    alignment: Alignment.bottomLeft,
+    autoCloseDuration: Duration(seconds: 3),
+    title: Text(
+      success ? '$operation successful' : '$operation failed',
+      style: TextStyle(fontSize: 18),
+    ),
+    description: Text(
+      description ?? '',
+      style: TextStyle(fontSize: 16),
+    ),
+  );
   /*
   showDialog(
       context: context,
