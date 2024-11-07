@@ -265,7 +265,11 @@ class _SettingsState extends State<Settings> {
                         return '请输入并发数';
                       } else {
                         if (RegExp(r'\d{1,2}').matchAsPrefix(value) == null) {
-                          return '请输入并发数';
+                          return '请输入数字';
+                        } else {
+                          if (int.parse(value) < 1) {
+                            return '并发数不能小于1';
+                          }
                         }
                       }
                       return null;
@@ -356,7 +360,7 @@ class _SettingsState extends State<Settings> {
                       fontSize: 20,
                     ),
                   ),
-                   SwitchListTile(
+                  SwitchListTile(
                     title: Text(
                       'Auto search when click tag',
                       style: TextStyle(fontSize: 20),

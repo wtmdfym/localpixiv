@@ -46,6 +46,7 @@ class WorkInfo {
   });
 
   factory WorkInfo.fromJson(Map<String, dynamic> json) {
+    int imageCount = json['relative_path']?.length ?? 0;
     return WorkInfo(
       id: json['id'],
       title: json['title'],
@@ -57,7 +58,7 @@ class WorkInfo {
       uploadDate: json['uploadDate'],
       userId: json['userId'],
       userName: json['username'],
-      imageCount: json['imageCount'],
+      imageCount: imageCount,
       imagePath: json['relative_path'],
       coverImagePath: json['coverImagePath'],
       content: json['content'],
@@ -71,28 +72,28 @@ class UserInfo {
   String userId;
   // 作者名字
   String userName;
-  // 作品标签及翻译
-  //Map<String, dynamic> tags;
-  // 作品描述
-  String description;
-  // 图片路径
-  List<dynamic> imagePath;
+  // 作者头像
+  String profileImage;
+  // 作者描述
+  String userComment;
+  // 作者作品路径
+  List<WorkInfo> workInfos;
 
   UserInfo({
     required this.userId,
     required this.userName,
-    //required this.tags,
-    required this.description,
-    required this.imagePath,
+    required this.profileImage,
+    required this.userComment,
+    required this.workInfos,
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return UserInfo(
       userId: json['userId'],
-      userName: json['title'],
-      //tags: json['tags'],
-      description: json['description'],
-      imagePath: json['relative_path'],
+      userName: json['userName'],
+      profileImage: json['profileImage'],
+      userComment: json['userComment'],
+      workInfos: json['workInfos'],
     );
   }
 }

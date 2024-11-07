@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/widgets/workdisplayer.dart';
+import 'package:localpixiv/widgets/workcontainer.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
-import 'package:localpixiv/common/custom_notifier.dart';
+import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
@@ -75,7 +75,7 @@ class _ViewerState extends State<Viewer> {
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
     WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
   ];
-  //WorkInfoNotifier(WorkInfo(id: 1,imagePath: ['images/test.png'],imageInfo: {'imagecount':1}))
+  //WorkInfoNotifier(WorkInfo(id: 1,imagePath: ['images/default\.png'],imageInfo: {'imagecount':1}))
   final WorkInfoNotifier showingInfo =
       WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata)));
   final TextEditingController _searchController = TextEditingController();
@@ -220,6 +220,7 @@ class _ViewerState extends State<Viewer> {
     reslength = await widget.backupcollection.count(selector);
     if (reslength == 0) {
       _isLoading.value = false;
+      onsearching = false;
       if (context.mounted) {
         resultDialog(context, 'Search', false, 'No matching results found!');
       }
@@ -227,7 +228,7 @@ class _ViewerState extends State<Viewer> {
       workInfos.clear();
       page = 1;
       widget.backupcollection
-          .find(selector.sortBy('id', descending: true))
+          .find(selector.sortBy('id', descending: true).excludeFields(['_id']))
           .forEach((info) {
         if (cancelevent) {
           cancelevent = false;
@@ -291,11 +292,12 @@ class _ViewerState extends State<Viewer> {
 
   void changePage() async {
     Timer.periodic(Durations.short2, (timer) {
-      if (page * 8 < reslength) {
+      if (page * pagesize < reslength) {
         if (workInfos.length >= 8) {
           _isLoading.value = false;
-          List<dynamic> info = workInfos.sublist((page - 1) * 8, page * 8);
-          for (int i = 0; i < 8; i++) {
+          List<dynamic> info =
+              workInfos.sublist((page - 1) * pagesize, page * pagesize);
+          for (int i = 0; i < pagesize; i++) {
             workInfoNotifers[i].setInfoJson(info[i]);
           }
           timer.cancel();
@@ -303,8 +305,9 @@ class _ViewerState extends State<Viewer> {
       } else {
         if (workInfos.length == reslength) {
           _isLoading.value = false;
-          List<dynamic> info = workInfos.sublist((page - 1) * 8, reslength);
-          for (int i = 0; i < 8; i++) {
+          List<dynamic> info =
+              workInfos.sublist((page - 1) * pagesize, reslength);
+          for (int i = 0; i < pagesize; i++) {
             try {
               workInfoNotifers[i].setInfoJson(info[i]);
             } on RangeError {
@@ -469,34 +472,42 @@ class _ViewerState extends State<Viewer> {
                                     scrollDirection: Axis.horizontal,
                                     shrinkWrap: true,
                                     crossAxisCount: 2,
-                                    childAspectRatio: 11 / 10, //高比宽
+                                    childAspectRatio: 12 / 10, //高比宽
                                     mainAxisSpacing: 16,
                                     crossAxisSpacing: 16,
                                     physics:
                                         const NeverScrollableScrollPhysics(),
                                     children: <Widget>[
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[0]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[4]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[1]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[5]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[2]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[6]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[3]),
                                       ImageContainer(
+                                          hostPath: widget.configs.savePath!,
                                           workInfoNotifier:
                                               workInfoNotifers[7]),
                                     ],
@@ -587,7 +598,7 @@ class _ImageContainerState extends State<ImageContainer>{
   // include: islike
   var tags = {};
   // tags of this work
-  var image = FileImage(File('images/test.png'));
+  var image = FileImage(File('images/default\.png'));
   void updateImage(List infos){
     imagePath = infos[0];
     imageInfo = infos[1];

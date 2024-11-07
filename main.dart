@@ -32,9 +32,9 @@ void main() async {
     await windowManager.focus();
   });
   mongo.Db pixivDb = mongo.Db('mongodb://localhost:27017/pixiv');
-  pixivDb.open();
+  await  pixivDb.open();
   mongo.Db backupdb = mongo.Db('mongodb://localhost:27017/backup');
-  backupdb.open();
+  await backupdb.open();
   mongo.DbCollection backupcollection =
       backupdb.collection('backup of pixiv infos');
   // 异步执行外部命令

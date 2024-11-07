@@ -76,8 +76,9 @@ class UserInfoNotifier extends ValueNotifier<UserInfo> {
   void setInfoJson(Map<String, dynamic> json) {
     value.userId = json['userId'];
     value.userName = json['username'];
-    value.description = json['description'];
-    value.imagePath = json['relative_path'];
+    value.profileImage = json['profileImage'];
+    value.userComment = json['userComment'];
+    value.workInfos = json['workInfos'];
     notifyListeners();
   }
 }
@@ -95,6 +96,7 @@ class TagSearchNotification extends Notification {
   TagSearchNotification(this.tag);
   final String tag;
 }
+
 /*
 class CmdData extends InheritedWidget {
   const CmdData({
@@ -126,5 +128,14 @@ class DataModel with ChangeNotifier {
   void increment(newdata) {
     _data = newdata;
     notifyListeners(); // 通知监听者数据已改变
+  }
+}
+class LoadDataModel with ChangeNotifier {
+  List<dynamic> _workInfos = [];
+  List<dynamic> get workInfos => _workInfos;
+
+  void increment(List<dynamic> newworkInfos) {
+    _workInfos = newworkInfos;
+    notifyListeners();
   }
 }*/

@@ -20,3 +20,5 @@ Optimised the project structure, improved the setting, added a homepage, impleme
 version 1.0.2
 Implemented running pyapp in cmd, smooth search function (but advanced search is not completed), home, viewer interface is basically perfect, setting interface and configuration file is completed.
 Add auto search when click tag in infoshower and can manually close this function.
+version 1.0.3
+Optimised the project structure, fixed bugs, improved the followings state, added the test drag and drop function state

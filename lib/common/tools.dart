@@ -47,7 +47,7 @@ dynamic configManger(String configfilepath, String operation,
 }
 
 // 异步加载图片
-Future<dynamic> imageFileLoader(String? imagePath,
+Future<ImageProvider> imageFileLoader(String? imagePath,
     [int? width, int? height]) async {
   ImageProvider image;
   //try {
@@ -57,11 +57,11 @@ Future<dynamic> imageFileLoader(String? imagePath,
     if (exists) {
       image = FileImage(file);
     } else {
-      image = AssetImage('images/test.png');
+      image = AssetImage('images/default.png');
     }
   } else {
     // 若图片不存在就加载默认图片
-    image = AssetImage('images/test.png');
+    image = AssetImage('images/default.png');
   }
   if (width != null && height != null) {
     return ResizeImage(image,
@@ -70,7 +70,7 @@ Future<dynamic> imageFileLoader(String? imagePath,
     return image;
   }
   //} catch (e) {
-  //  return ResizeImage(AssetImage('assets/images/test.png'),
+  //  return ResizeImage(AssetImage('assets/images/default\.png'),
   //      policy: ResizeImagePolicy.fit);
   //}
 }

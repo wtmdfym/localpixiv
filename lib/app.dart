@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:localpixiv/common/customwidgets.dart';
 //import 'package:localpixiv/common/custom_notifier.dart';
 import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
@@ -7,8 +8,9 @@ import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 //import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:localpixiv/states/home.dart';
 import 'package:localpixiv/states/viewer.dart';
+import 'package:localpixiv/states/followings.dart';
 import 'package:localpixiv/states/settings.dart';
-import 'package:localpixiv/widgets/userdisplayer.dart';
+
 //import 'package:provider/provider.dart';
 
 class MyApp extends StatelessWidget {
@@ -70,7 +72,7 @@ class MyApp extends StatelessWidget {
           //其他Locales
         ],*/
         home: DefaultTabController(
-            length: 4,
+            length: 5,
             child: Scaffold(
                 backgroundColor: const Color.fromARGB(255, 212, 252, 255),
                 appBar: TabBar(
@@ -82,6 +84,7 @@ class MyApp extends StatelessWidget {
                     Tab(text: 'Viewer', icon: Icon(Icons.view_quilt_rounded)),
                     Tab(text: 'Followings', icon: Icon(Icons.view_list)),
                     Tab(text: 'Settings', icon: Icon(Icons.settings)),
+                    Tab(text: 'Test', icon: Icon(Icons.build))
                   ],
                 ),
                 body: /*TabBarView(
@@ -116,11 +119,18 @@ class MyApp extends StatelessWidget {
                                       ),
                                       preload: true), // 预加载的页面
                                   IndexedStackChild(
-                                      child: const FollowingsDisplayer()),
+                                      child: FollowingsDisplayer(
+                                        hostPath: configs.savePath!,
+                                        pixivDb: pixivDb,
+                                      ),
+                                      preload: true),
                                   IndexedStackChild(
                                       child: Settings(
                                     configs: configs,
                                   )),
+                                  IndexedStackChild(
+                                    child: MyDraggable(),
+                                  ),
                                 ],
                                 //)
                               );

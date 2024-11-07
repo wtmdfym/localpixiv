@@ -1,10 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter/gestures.dart';
+import 'dart:io';
 
-import 'package:localpixiv/common/custom_notifier.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+
+import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/common/tools.dart';
 import 'package:localpixiv/models.dart';
+import 'package:toastification/toastification.dart';
 
 ////////////////////////////////
 //    用于显示作品信息的容器    //
@@ -62,7 +65,7 @@ class InfoContainerState extends State<InfoContainer> {
                 TextSpan(
                   text:
                       'UserId: ${value.userId}\nUserName: ${value.userName}\n',
-                  style: TextStyle(color: Colors.lightBlue),
+                  style: TextStyle(color: Colors.lightBlue, fontSize: 25),
                   //TODO跳转
                   recognizer: TapGestureRecognizer(),
                 ),
@@ -86,13 +89,17 @@ class InfoContainerState extends State<InfoContainer> {
 class ImageContainer extends StatefulWidget {
   const ImageContainer({
     super.key,
+    required this.hostPath,
     this.width = 400,
-    this.height = 440,
+    this.height = 480,
     required this.workInfoNotifier,
+    this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
   });
+  final String hostPath;
   final int width;
   final int height;
   final WorkInfoNotifier workInfoNotifier;
+  final Color backgroundColor;
   @override
   State<StatefulWidget> createState() {
     return _ImageContainerState();
@@ -112,8 +119,8 @@ class _ImageContainerState extends State<ImageContainer>
           context,
           MaterialPageRoute(
               maintainState: false,
-              builder: (context) =>
-                  WorkDetialDisplayer(imagePath: imagePaths)));
+              builder: (context) => WorkDetialDisplayer(
+                  hostPath: widget.hostPath, imagePath: imagePaths)));
     }
   }
 
@@ -135,6 +142,7 @@ class _ImageContainerState extends State<ImageContainer>
   @override
   void dispose() {
     _mouseEOAnimationController.dispose();
+    _mouseClickAnimationController.dispose();
     super.dispose();
   }
 
@@ -147,84 +155,100 @@ class _ImageContainerState extends State<ImageContainer>
         onExit: (details) => _mouseEOAnimationController.reverse(),
         // onHover: (event) => print('object'),
         child: FittedBox(
-            //InkWell(
-            //onTap: () => print('object'),
-            //splashColor: Colors.blue.withAlpha(30), // 水波纹颜色
-            //highlightColor: Colors.blue.withAlpha(90), // 按下时的颜色
-            //child:
-
             // 监听workinfo改变
             child: ValueListenableBuilder(
                     valueListenable: widget.workInfoNotifier,
-                    builder: (context, value, child) {
-                      _icon.value = widget.workInfoNotifier.value.isLiked
+                    builder: (context, workInfo, child) {
+                      _icon.value = workInfo.isLiked
                           ? Icons.favorite
                           : Icons.favorite_border;
                       return Stack(alignment: Alignment.center, children: [
                         GestureDetector(
-                            // 点击事件监听
-                            onTap: () {
-                              ShowInfoNotification(
-                                      widget.workInfoNotifier.value)
-                                  .dispatch(context);
-                            },
-                            //onTapDown: (details) =>
-                            //    _mouseClickAnimationController.forward(),
-                            //onTapUp: (details) =>
-                            //    _mouseClickAnimationController.reverse(),
-                            //onTapCancel: () =>
-                            //    _mouseClickAnimationController.reverse(),
-                            onDoubleTap: () => showWorkDetail(),
-                            /*
-                      onDoubleTapDown: (details) =>
-                          _mouseClickAnimationController.forward(),
-                      onDoubleTapCancel: () => _mouseClickAnimationController.reverse(),
-                      */
-                            child: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(12),
-                                        color: Colors.grey[350]),
-                                    width: widget.width + 8,
-                                    height: widget.height + 8,
-                                    child:
-                                        // 异步加载图片
-                                        FutureBuilder<dynamic>(
-                                            future: imageFileLoader(
-                                              'E://pixiv/${widget.workInfoNotifier.value.imagePath![0]}',
-                                              widget.width,
-                                              widget.height,
-                                            ),
-                                            builder:
-                                                (BuildContext context,
-                                                    AsyncSnapshot<dynamic>
-                                                        snapshot) {
-                                              if (snapshot.connectionState ==
-                                                  ConnectionState.done) {
-                                                if (snapshot.hasData) {
-                                                  return Image(
-                                                          key: Key('value'),
-                                                          image: snapshot.data!)
-                                                      .animate()
-                                                      .fadeIn(duration: 500.ms);
-                                                } else {
-                                                  return const Center(
-                                                      child: Text(
-                                                          'Error loading image'));
+                          // 点击事件监听
+                          onTap: () {
+                            ShowInfoNotification(workInfo).dispatch(context);
+                          },
+                          //onTapDown: (details) =>
+                          //    _mouseClickAnimationController.forward(),
+                          //onTapUp: (details) =>
+                          //    _mouseClickAnimationController.reverse(),
+                          //onTapCancel: () =>
+                          //    _mouseClickAnimationController.reverse(),
+                          onDoubleTap: () => showWorkDetail(),
+                          //onDoubleTapDown: (details) =>
+                          //    _mouseClickAnimationController.forward(),
+                          //onDoubleTapCancel: () => _mouseClickAnimationController.reverse(),
+                          child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: widget.backgroundColor),
+                              //child: Column(children: [
+                              //  SizedBox(
+                              width: widget.width + 8,
+                              height: widget.height + 8,
+                              child:
+                                  // 异步加载图片
+                                  FutureBuilder<ImageProvider>(
+                                      future: imageFileLoader(
+                                        '${widget.hostPath}${workInfo.imagePath![0]}',
+                                        widget.width,
+                                        widget.height,
+                                      ),
+                                      builder: (BuildContext context,
+                                          AsyncSnapshot<ImageProvider>
+                                              snapshot) {
+                                        if (snapshot.connectionState ==
+                                            ConnectionState.done) {
+                                          if (snapshot.hasData) {
+                                            return Image(
+                                              image: snapshot.data!,
+                                              errorBuilder:
+                                                  (context, error, stackTrace) {
+                                                if (error.toString() ==
+                                                    'Exception: Codec failed to produce an image, possibly due to invalid image data.') {
+                                                  File('${widget.hostPath}${workInfo.imagePath![0]}')
+                                                      .delete();
                                                 }
-                                              } else {
-                                                return const Center(
-                                                    child:
-                                                        //Text('Loading......')
-                                                        CircularProgressIndicator());
-                                              }
-                                            }))
-                                .animate(
-                                    controller: _mouseClickAnimationController,
-                                    autoPlay: false)
-                                .color(
-                                    duration: 50.ms,
-                                    blendMode: BlendMode.darken)),
+                                                return Center(
+                                                    child: Text(
+                                                  '${error.toString()} It will be deleted automatically.',
+                                                  style: TextStyle(
+                                                      color: errorColor,
+                                                      fontSize: 20),
+                                                ));
+                                              },
+                                            )
+                                                .animate()
+                                                .fadeIn(duration: 500.ms);
+                                          } else {
+                                            return const Center(
+                                                child: Text(
+                                                    'Error loading image'));
+                                          }
+                                        } else {
+                                          return const Center(
+                                              child:
+                                                  //Text('Loading......')
+                                                  CircularProgressIndicator());
+                                        }
+                                      })),
+                          /*SizedBox(
+                                          width: widget.width - 100,
+                                          child: Text(
+                                            workInfo.title,
+                                            style: TextStyle(fontSize: 16),
+                                            maxLines: 1,
+                                          ))
+                                    ])*/
+                        )
+                            .animate(
+                                controller: _mouseClickAnimationController,
+                                autoPlay: false)
+                            .color(duration: 50.ms, blendMode: BlendMode.darken
+                                //)
+                                ),
+                        //图片数量显示
                         Positioned(
                             top: 5,
                             right: 5,
@@ -234,15 +258,14 @@ class _ImageContainerState extends State<ImageContainer>
                                   color: Colors.grey[500],
                                   borderRadius: BorderRadius.circular(8)),
                               child: Text(
-                                widget.workInfoNotifier.value.imageCount
-                                    .toString(),
+                                workInfo.imageCount.toString(),
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                     color: Colors.white,
-                                    //backgroundColor: Colors.grey[600],
                                     decorationStyle: TextDecorationStyle.wavy),
                               ),
                             )),
+                        //收藏作品
                         Positioned(
                             bottom: 5,
                             left: 5,
@@ -252,30 +275,16 @@ class _ImageContainerState extends State<ImageContainer>
                                     IconButton(
                                       onPressed: () {
                                         //通信更新信息
-                                        if (widget
-                                            .workInfoNotifier.value.isLiked) {
-                                          _icon.value = Icons.favorite_border;
-                                          widget.workInfoNotifier
-                                              .bookmark(false);
-                                          WorkBookMarkNotification(
-                                                  widget.workInfoNotifier.value
-                                                      .id,
-                                                  widget.workInfoNotifier.value
-                                                      .userName,
-                                                  false)
-                                              .dispatch(context);
-                                        } else {
-                                          _icon.value = Icons.favorite;
-                                          widget.workInfoNotifier
-                                              .bookmark(true);
-                                          WorkBookMarkNotification(
-                                                  widget.workInfoNotifier.value
-                                                      .id,
-                                                  widget.workInfoNotifier.value
-                                                      .userName,
-                                                  true)
-                                              .dispatch(context);
-                                        }
+                                        _icon.value = workInfo.isLiked
+                                            ? Icons.favorite_border
+                                            : Icons.favorite;
+                                        widget.workInfoNotifier
+                                            .bookmark(!workInfo.isLiked);
+                                        WorkBookMarkNotification(
+                                                workInfo.id,
+                                                workInfo.userName,
+                                                !workInfo.isLiked)
+                                            .dispatch(context);
                                       },
                                       icon: Icon(iconvalue),
                                       iconSize: 30,
@@ -293,7 +302,9 @@ class _ImageContainerState extends State<ImageContainer>
 }
 
 class WorkDetialDisplayer extends StatefulWidget {
-  const WorkDetialDisplayer({super.key, required this.imagePath});
+  const WorkDetialDisplayer(
+      {super.key, required this.hostPath, required this.imagePath});
+  final String hostPath;
   final List<dynamic> imagePath;
 
   @override
@@ -301,16 +312,16 @@ class WorkDetialDisplayer extends StatefulWidget {
 }
 
 class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
-  //TODO 小说 键盘翻页
   ValueNotifier<int> index = ValueNotifier<int>(0);
   @override
   Widget build(BuildContext context) {
-    return FittedBox(
-        child: Stack(
-      fit: StackFit.passthrough,
+    return Material(
+        child: FittedBox(
+            child: Stack(
       children: [
         InteractiveViewer(
             maxScale: 12,
+            //boundaryMargin: const EdgeInsets.all(8),
             child: ValueListenableBuilder(
                 valueListenable: index,
                 builder: (context, index, child) => SizedBox(
@@ -318,29 +329,32 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                     height: 1440,
                     child:
                         // 异步加载图片
-                        FutureBuilder<dynamic>(
-                            initialData: CircularProgressIndicator(
-                              color: Colors.white,
-                            ),
+                        FutureBuilder<ImageProvider>(
                             future: imageFileLoader(
-                                'E://pixiv/${widget.imagePath[index]}'),
+                                '${widget.hostPath}${widget.imagePath[index]}'),
                             builder: (BuildContext context,
-                                AsyncSnapshot<dynamic> snapshot) {
+                                AsyncSnapshot<ImageProvider> snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.done) {
-                                if (snapshot.hasError) {
-                                  String error = snapshot.error.toString();
-                                  return Center(
-                                      child:
-                                          Text('Error loading image:$error'));
-                                }
                                 if (snapshot.hasData) {
                                   return Image(
-                                    key: Key('value'),
-                                    image: snapshot.data,
-                                    width: 2560,
-                                    height: 1440,
-                                  ).animate().fade(duration: 700.ms);
+                                      image: snapshot.data!,
+                                      width: 2560,
+                                      height: 1440,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        if (error.toString() ==
+                                            'Exception: Codec failed to produce an image, possibly due to invalid image data.') {
+                                          File('${widget.hostPath}${widget.imagePath[index]}')
+                                              .delete();
+                                        }
+                                        return Center(
+                                            child: Text(
+                                          '${error.toString()} It will be deleted automatically.',
+                                          style: TextStyle(
+                                              color: errorColor, fontSize: 20),
+                                        ));
+                                      }).animate().fade(duration: 700.ms);
                                 } else {
                                   return const Center(
                                       child: Text('Error loading image'));
@@ -413,6 +427,6 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                       ),
                     ))))
       ],
-    ));
+    )));
   }
 }
