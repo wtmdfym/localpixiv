@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 //import 'package:localpixiv/common/custom_notifier.dart';
@@ -7,10 +8,8 @@ import 'dart:io';
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
     super.key,
-    required this.process,
   });
 
-  final Process process;
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
@@ -18,6 +17,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final Process process;
+  late final StreamSubscription<String> s1;
+  late final StreamSubscription<String> s2;
   double maxScroll = 1;
   int getType = 0;
   bool isstart = false;
@@ -37,8 +39,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _startProcessListen() async {
     Utf8Decoder utf8decoder = Utf8Decoder(allowMalformed: true);
+    // 异步执行外部命令
+    process = await Process.start('cmd', ['/k', 'chcp 65001']);
     // 监听命令的标准输出
-    widget.process.stdout.transform(utf8decoder).listen((data) {
+    s1 = process.stdout.transform(utf8decoder).listen((data) {
       /*if (data.trim() == 'SENDSTART') {
         //print('start');
         needprint = false;
@@ -72,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
     // 监听命令的标准错误
-    widget.process.stderr.transform(utf8decoder).listen((data) {
+    s2 = process.stderr.transform(utf8decoder).listen((data) {
       outputs.value += 'ERROR: $data [ERROR]';
       if (data.contains('httpx.ConnectError')) {
         if (context.mounted) {
@@ -100,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
     // 监听命令的返回代码
-    int exitCode = await widget.process.exitCode;
+    int exitCode = await process.exitCode;
     outputs.value += 'Process exited with code: $exitCode\n';
     // 自动滚动至底部
     if (_scrollController.hasClients) {
@@ -111,14 +115,22 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _sendCommand(String command) {
     //TODO different getType
-    widget.process.stdin.write('$command\n');
-    widget.process.stdin.flush();
+    process.stdin.write('$command\n');
+    process.stdin.flush();
   }
 
   @override
   void initState() {
     super.initState();
     _startProcessListen();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    s1.cancel();
+    s2.cancel();
+    //widget.process.
   }
 
   @override

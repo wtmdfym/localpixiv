@@ -1,10 +1,11 @@
 import 'dart:io';
 import 'package:localpixiv/common/tools.dart';
+import 'package:window_manager/window_manager.dart';
 
-import 'lib/app.dart';
+import 'app.dart';
 import 'package:flutter/material.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
-import 'package:window_manager/window_manager.dart';
+//import 'package:window_manager_plus/window_manager_plus.dart';
 import 'package:localpixiv/models.dart';
 
 void main() async {
@@ -32,17 +33,14 @@ void main() async {
     await windowManager.focus();
   });
   mongo.Db pixivDb = mongo.Db('mongodb://localhost:27017/pixiv');
-  await  pixivDb.open();
+  await pixivDb.open();
   mongo.Db backupdb = mongo.Db('mongodb://localhost:27017/backup');
   await backupdb.open();
   mongo.DbCollection backupcollection =
       backupdb.collection('backup of pixiv infos');
-  // 异步执行外部命令
-  Process process = await Process.start('cmd', ['/k', 'chcp 65001']);
   runApp(MyApp(
     pixivDb: pixivDb,
     backupcollection: backupcollection,
-    process: process,
     configs: configs,
   ));
 }

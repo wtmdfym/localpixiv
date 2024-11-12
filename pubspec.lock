@@ -97,6 +97,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.3"
+  dynamic_tabbar:
+    dependency: "direct main"
+    description:
+      name: dynamic_tabbar
+      sha256: eade9b9855ef01e9e6293306353bcd8923c7a31695fe48c690af91d79eccdbbe
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.8"
   equatable:
     dependency: transitive
     description:
@@ -339,14 +347,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.3"
-  proste_indexed_stack:
-    dependency: "direct main"
-    description:
-      name: proste_indexed_stack
-      sha256: "12ea6665d12be110afe0ee13232b5f612ff76c6c465296cc53cba3790548bcf8"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.4"
   provider:
     dependency: "direct main"
     description:
@@ -552,6 +552,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.4.3"
+  window_manager_plus:
+    dependency: "direct main"
+    description:
+      name: window_manager_plus
+      sha256: c3a7e030fb7f61a0e04db8c49b24c43affaaf5fbff5da375d5bb822a7e01b9f0
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.5"
   ws:
     dependency: "direct main"
     description:

@@ -429,3 +429,4 @@ class ErrorHander(enumerate):
 # print(check_image('C:/Users/Administrator/Desktop/120205761_p0.jpg'))
 # work_type = "manga"
 # print((work_type == "illust") or (work_type == "manga"))
+

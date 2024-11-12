@@ -65,9 +65,13 @@ Future<ImageProvider> imageFileLoader(String? imagePath,
   }
   if (width != null && height != null) {
     return ResizeImage(image,
-        width: width * 2, height: height * 2, policy: ResizeImagePolicy.fit);
+        width: width, height: height, policy: ResizeImagePolicy.fit);
   } else {
     return image;
+    //TODO big image open policy
+    //ResizeImage(image,
+    //    width: 5120, height: 2880, policy: ResizeImagePolicy.fit);
+    //ResizeImage.resizeIfNeeded(2560, 1440, image);
   }
   //} catch (e) {
   //  return ResizeImage(AssetImage('assets/images/default\.png'),

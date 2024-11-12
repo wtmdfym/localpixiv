@@ -40,13 +40,11 @@ class Viewer extends StatefulWidget {
     super.key,
     required this.pixivDb,
     required this.backupcollection,
-    required this.process,
     required this.configs,
     //required this.channel,
   });
   final mongo.Db pixivDb;
   final mongo.DbCollection backupcollection;
-  final Process process;
   final Configs configs;
   //final WebSocketChannel channel;
 
@@ -210,10 +208,23 @@ class _ViewerState extends State<Viewer> {
       cancelevent = false;
       return;
     }
-    searchWork(selector);
+    searchWork(selector).then((success) {
+      if (success) {
+        context.mounted
+            ? resultDialog(context, 'Search', true, 'Found $reslength results!')
+            : {};
+        maxpage = (reslength / pagesize).ceil();
+        changePage();
+      } else {
+        context.mounted
+            ? resultDialog(
+                context, 'Search', false, 'No matching results found!')
+            : {};
+      }
+    });
   }
 
-  void searchWork(mongo.SelectorBuilder selector) async {
+  Future<bool> searchWork(mongo.SelectorBuilder selector) async {
     onsearching = true;
     //widget.process.stdin.write('DATA||\n');
     //workInfos = await
@@ -221,9 +232,7 @@ class _ViewerState extends State<Viewer> {
     if (reslength == 0) {
       _isLoading.value = false;
       onsearching = false;
-      if (context.mounted) {
-        resultDialog(context, 'Search', false, 'No matching results found!');
-      }
+      return false;
     } else {
       workInfos.clear();
       page = 1;
@@ -250,11 +259,7 @@ class _ViewerState extends State<Viewer> {
         infos.clear();
       }
     });*/
-      if (context.mounted) {
-        resultDialog(context, 'Search', true, 'Found $reslength results!');
-      }
-      maxpage = (reslength / pagesize).ceil();
-      changePage();
+      return true;
     }
   }
 
@@ -433,6 +438,7 @@ class _ViewerState extends State<Viewer> {
                             )
                           ],
                         )),
+                    /*
                     //收藏操作捕捉
                     NotificationListener<WorkBookMarkNotification>(
                         onNotification: (notification) {
@@ -457,104 +463,96 @@ class _ViewerState extends State<Viewer> {
                           }
                           return true;
                         },
-                        // 作品展示网格
-                        child: Flex(
-                            direction: Axis.vertical,
-                            spacing: 8,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 1080,
-                                    //maxWidth: 1920,
-                                  ),
-                                  child: GridView.count(
-                                    scrollDirection: Axis.horizontal,
-                                    shrinkWrap: true,
-                                    crossAxisCount: 2,
-                                    childAspectRatio: 12 / 10, //高比宽
-                                    mainAxisSpacing: 16,
-                                    crossAxisSpacing: 16,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    children: <Widget>[
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[0]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[4]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[1]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[5]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[2]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[6]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[3]),
-                                      ImageContainer(
-                                          hostPath: widget.configs.savePath!,
-                                          workInfoNotifier:
-                                              workInfoNotifers[7]),
-                                    ],
-                                  )),
-                              //翻页控件
-                              Row(
-                                spacing: 300,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: prevPage,
-                                    icon: Icon(
-                                      Icons.navigate_before,
-                                      size: 30,
-                                    ),
-                                    label: Text('Prev',
-                                        style: TextStyle(fontSize: 20)),
-                                  ),
-                                  SizedBox(
-                                      width: 300,
-                                      child: TextField(
-                                        controller: _pageController,
-                                        maxLength: 10,
-                                        decoration: InputDecoration(
-                                          labelText: "页码",
-                                          //icon: Icon(Icons.search),
-                                        ),
-                                      )),
-                                  ElevatedButton.icon(
-                                      onPressed: jumpToPage,
-                                      icon: Icon(
-                                        Icons.next_plan_outlined,
-                                        size: 30,
-                                      ),
-                                      label: Text("Jump",
-                                          style: TextStyle(fontSize: 20))),
-                                  ElevatedButton.icon(
-                                      onPressed: nextPage,
-                                      icon: Icon(
-                                        Icons.navigate_next,
-                                        size: 30,
-                                      ),
-                                      iconAlignment: IconAlignment.end,
-                                      label: Text("Next",
-                                          style: TextStyle(fontSize: 20))),
+                        child: */
+                    // 作品展示网格
+                    Flex(
+                        direction: Axis.vertical,
+                        spacing: 8,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxHeight: 1080,
+                                //maxWidth: 1920,
+                              ),
+                              child: GridView.count(
+                                scrollDirection: Axis.horizontal,
+                                shrinkWrap: true,
+                                crossAxisCount: 2,
+                                childAspectRatio: 12 / 10, //高比宽
+                                mainAxisSpacing: 16,
+                                crossAxisSpacing: 16,
+                                physics: const NeverScrollableScrollPhysics(),
+                                children: <Widget>[
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[0]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[4]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[1]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[5]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[2]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[6]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[3]),
+                                  ImageContainer(
+                                      hostPath: widget.configs.savePath!,
+                                      workInfoNotifier: workInfoNotifers[7]),
                                 ],
-                              )
-                            ]))
+                              )),
+                          //翻页控件
+                          Row(
+                            spacing: 300,
+                            children: [
+                              ElevatedButton.icon(
+                                onPressed: prevPage,
+                                icon: Icon(
+                                  Icons.navigate_before,
+                                  size: 30,
+                                ),
+                                label: Text('Prev',
+                                    style: TextStyle(fontSize: 20)),
+                              ),
+                              SizedBox(
+                                  width: 300,
+                                  child: TextField(
+                                    controller: _pageController,
+                                    maxLength: 10,
+                                    decoration: InputDecoration(
+                                      labelText: "页码",
+                                      //icon: Icon(Icons.search),
+                                    ),
+                                  )),
+                              ElevatedButton.icon(
+                                  onPressed: jumpToPage,
+                                  icon: Icon(
+                                    Icons.next_plan_outlined,
+                                    size: 30,
+                                  ),
+                                  label: Text("Jump",
+                                      style: TextStyle(fontSize: 20))),
+                              ElevatedButton.icon(
+                                  onPressed: nextPage,
+                                  icon: Icon(
+                                    Icons.navigate_next,
+                                    size: 30,
+                                  ),
+                                  iconAlignment: IconAlignment.end,
+                                  label: Text("Next",
+                                      style: TextStyle(fontSize: 20))),
+                            ],
+                          )
+                        ])
                   ])),
               // 加载指示器
               ValueListenableBuilder(
