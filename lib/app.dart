@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:localpixiv/common/customwidgets.dart';
 import 'package:provider/provider.dart';

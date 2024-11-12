@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:localpixiv/common/tools.dart';
 import 'package:window_manager/window_manager.dart';
 

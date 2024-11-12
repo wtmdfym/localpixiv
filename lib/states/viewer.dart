@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:localpixiv/widgets/workcontainer.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
