@@ -1,4 +1,6 @@
 //作品信息数据
+import 'package:flutter/material.dart';
+
 class WorkInfo {
   // 作品Id
   int id;
@@ -252,4 +254,17 @@ class ClientPool {
     }
     return data;
   }
+}
+
+class StackData {
+  int index;
+  String? title;
+  Widget child;
+  bool notRemoved;
+
+  StackData(
+      {required this.index,
+      this.title,
+      required this.child,
+      this.notRemoved = true});
 }

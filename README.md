@@ -22,3 +22,6 @@ Implemented running pyapp in cmd, smooth search function (but advanced search is
 Add auto search when click tag in infoshower and can manually close this function.
 version 1.0.3
 Optimised the project structure, fixed bugs, improved the followings state, added the test drag and drop function state
+version 1.0.4
+Implemented a tablike view with a cache function , and can be dynamically added and deleted , support for lazy loading .But the method is still need to be improved.
+Fixed bugs. Use Provider to replace Notification in stackChange and bookmark.

@@ -1,10 +1,9 @@
-import 'dart:io';
-
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/workcontainer.dart';
+import 'package:provider/provider.dart';
 
 class FollowingInfoDisplayer extends StatefulWidget {
   const FollowingInfoDisplayer(
@@ -28,19 +27,6 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
   late AnimationController _mouseClickAnimationController;
   final List<WorkInfoNotifier> workInfoNotifers = [];
 
-  void showUserDetail() {
-    //List<dynamic>? imagePaths = widget.workInfoNotifier.value.imagePath;
-    UserInfo userInfo = widget.userInfoNotifer.value;
-    //WorkInfo info = widget.userInfoNotifer.value.workInfos[0];
-    //userInfo.workInfos = [for (int i = 0; i < 50; i++) info];
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            maintainState: false,
-            builder: (context) => UserDetailsDisplayer(
-                hostPath: widget.hostPath, userInfo: userInfo)));
-  }
-
   @override
   void initState() {
     super.initState();
@@ -61,13 +47,30 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
         try {
           workInfoNotifers[index].value =
               widget.userInfoNotifer.value.workInfos[index];
-        } catch (e) {}
+        } catch (e) {
+          assert(e.toString().contains('RangeError (length)'));
+        }
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    void showUserDetail() {
+      //List<dynamic>? imagePaths = widget.workInfoNotifier.value.imagePath;
+      UserInfo userInfo = widget.userInfoNotifer.value;
+      //WorkInfo info = widget.userInfoNotifer.value.workInfos[0];
+      //userInfo.workInfos = [for (int i = 0; i < 50; i++) info];
+      /*Navigator.push(
+        context,
+        MaterialPageRoute(
+            maintainState: false,
+            builder: (context) => UserDetailsDisplayer(
+                hostPath: widget.hostPath, userInfo: userInfo)));*/
+      context.read<StackChangeNotifier>().addStack(userInfo.userName,
+          UserDetailsDisplayer(hostPath: widget.hostPath, userInfo: userInfo));
+    }
+
     return MouseRegion(
         // 进入
         onEnter: (details) => _mouseEOAnimationController.forward(),
@@ -96,9 +99,13 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                         spacing: 20,
                         children: [
                           //TODO作者头像
-                          Image.file(
-                            File(
-                                'C:\\Users\\Administrator\\Desktop\\flutterpixiv\\localpixiv\\images\\default.png'),
+                          Image(
+                            image: ResizeImage(
+                              AssetImage('images/default.png'),
+                              height: 240,
+                              width: 240,
+                              policy: ResizeImagePolicy.fit,
+                            ),
                             width: 240,
                             height: 240,
                           ),
@@ -185,7 +192,7 @@ class UserDetailsDisplayer extends StatefulWidget {
 
 class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
     with TickerProviderStateMixin {
-  int rawCount = 5;
+  int rawCount = 6;
   int onceLoad = 4;
   int loadIndex = 0;
   ValueNotifier<int> pages = ValueNotifier(0);
@@ -221,11 +228,11 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
         child: Padding(
             padding: EdgeInsets.all(20),
             child: FittedBox(
-              child: Stack(
-                children: [
+              child: //Stack(
+                  //children: [
                   SizedBox(
-                      width: 2160,
-                      height: 1440,
+                      width: 2560,
+                      height: 1280,
                       child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           spacing: 30,
@@ -372,7 +379,7 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                                       ),
                                     )))
                           ])),
-                  Positioned(
+              /*Positioned(
                       top: 10,
                       left: 10,
                       child: ElevatedButton.icon(
@@ -388,7 +395,7 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                             size: 30, color: Colors.grey),
                       )),
                 ],
-              ),
+              ),*/
             )));
   }
 }

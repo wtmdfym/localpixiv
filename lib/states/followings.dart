@@ -180,7 +180,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
                 // showinfo信号监听
                 child: NotificationListener(
                     onNotification: (notification) {
-                      return true;
+                      return false;
                     },
                     child: Flex(
                       direction: Axis.vertical,

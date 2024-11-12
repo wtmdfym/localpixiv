@@ -1,17 +1,19 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:localpixiv/common/customwidgets.dart';
-//import 'package:localpixiv/common/custom_notifier.dart';
-import 'package:localpixiv/models.dart';
+import 'package:provider/provider.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
-import 'package:proste_indexed_stack/proste_indexed_stack.dart';
 //import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:localpixiv/states/home.dart';
-import 'package:localpixiv/states/viewer.dart';
-import 'package:localpixiv/states/followings.dart';
-import 'package:localpixiv/states/settings.dart';
 
-//import 'package:provider/provider.dart';
+import 'models.dart';
+import 'widgets/lazyload.dart';
+import 'widgets/mytabbar.dart';
+import 'states/home.dart';
+import 'states/viewer.dart';
+import 'states/followings.dart';
+import 'states/settings.dart';
+import 'common/customnotifier.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp(
@@ -24,7 +26,7 @@ class MyApp extends StatelessWidget {
   final mongo.DbCollection backupcollection;
   final Process process;
   final Configs configs;
-
+  final int mainTabCount = 5;
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -36,8 +38,6 @@ class MyApp extends StatelessWidget {
     //wsManager.setOnMessageCallback((message) {
     //  print('Received message: $message');
     //});
-    ValueNotifier<int> currentIndex = ValueNotifier<int>(0);
-
     return MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
@@ -71,70 +71,202 @@ class MyApp extends StatelessWidget {
           const Locale('zh', 'CN'), // 中文简体
           //其他Locales
         ],*/
-        home: DefaultTabController(
-            length: 5,
-            child: Scaffold(
-                backgroundColor: const Color.fromARGB(255, 212, 252, 255),
-                appBar: TabBar(
-                  onTap: (value) {
-                    currentIndex.value = value;
-                  },
-                  tabs: const [
-                    Tab(text: 'Home', icon: Icon(Icons.home)),
-                    Tab(text: 'Viewer', icon: Icon(Icons.view_quilt_rounded)),
-                    Tab(text: 'Followings', icon: Icon(Icons.view_list)),
-                    Tab(text: 'Settings', icon: Icon(Icons.settings)),
-                    Tab(text: 'Test', icon: Icon(Icons.build))
-                  ],
-                ),
-                body: /*TabBarView(
-                children: [
-                  const Icon(Icons.directions_car),
-                  Viewer(
-                    db: db,
-                    //channel: _channel
-                  ),
-                  const Icon(Icons.directions_bike),
-                  const Icon(Icons.downloading),
-                ],
-              ),*/
-                    Center(
-                        child: ValueListenableBuilder(
-                            valueListenable: currentIndex,
-                            builder: (context, value, child) {
-                              return //ChangeNotifierProvider(
-                                  //create: (context) => DataModel(), // 创建数据模型的实例
-                                  //child:
-                                  ProsteIndexedStack(
-                                index: value,
-                                children: [
-                                  IndexedStackChild(
-                                      child: MyHomePage(process: process)),
-                                  IndexedStackChild(
-                                      child: Viewer(
-                                        pixivDb: pixivDb,
-                                        backupcollection: backupcollection,
-                                        process: process,
-                                        configs: configs,
-                                      ),
-                                      preload: true), // 预加载的页面
-                                  IndexedStackChild(
-                                      child: FollowingsDisplayer(
-                                        hostPath: configs.savePath!,
-                                        pixivDb: pixivDb,
-                                      ),
-                                      preload: true),
-                                  IndexedStackChild(
-                                      child: Settings(
-                                    configs: configs,
-                                  )),
-                                  IndexedStackChild(
-                                    child: MyDraggable(),
-                                  ),
-                                ],
-                                //)
-                              );
-                            }))))
+        home: //ReorderableTabBarPage()
+            MainTabPage(
+                pixivDb: pixivDb,
+                backupcollection: backupcollection,
+                process: process,
+                configs: configs)
+
+        /*
+      Scaffold(body: 
+      VerticalTabs(
+        selectedTabTextStyle: TextStyle(color: Colors.red),
+        unSelectedTabTextStyle: TextStyle(color: Colors.grey),
+        tabs: <String>[
+          'Home',
+          'Viewer',
+          'Followings',
+          'Settings',
+        ],
+        contents: <Widget>[
+          Icon(Icons.directions_car),
+          Viewer(),
+          Icon(Icons.directions_bike),
+          Icon(Icons.downloading),
+        ],
+      ),
+    ));*/
+        );
+  }
+}
+
+class MainTabPage extends StatefulWidget {
+  const MainTabPage(
+      {super.key,
+      required this.pixivDb,
+      required this.backupcollection,
+      required this.process,
+      required this.configs});
+  final mongo.Db pixivDb;
+  final mongo.DbCollection backupcollection;
+  final Process process;
+  final Configs configs;
+
+  // This widget is the root of your application.
+  @override
+  State<StatefulWidget> createState() {
+    return MainTabPageState();
+  }
+}
+
+class MainTabPageState extends State<MainTabPage>
+    with TickerProviderStateMixin {
+  @override
+  Widget build(BuildContext context) {
+    final int mainTabCount = 5;
+    final List<StackData> stackDatas = [
+      StackData(index: 0, child: MyHomePage(process: widget.process)),
+      StackData(
+          index: 1,
+          child: Viewer(
+            pixivDb: widget.pixivDb,
+            backupcollection: widget.backupcollection,
+            process: widget.process,
+            configs: widget.configs,
+          )),
+      StackData(
+          index: 2,
+          child: FollowingsDisplayer(
+            hostPath: widget.configs.savePath!,
+            pixivDb: widget.pixivDb,
+          )),
+      StackData(
+          index: 3,
+          child: Settings(
+            configs: widget.configs,
+          )),
+      StackData(index: 4, child: MyDraggable()),
+    ];
+
+    //WebSocketChannel _channel = WebSocketChannel.connect(Uri.parse('ws://localhost:8765'));
+    //final wsManager = WebSocketManager();
+    //wsManager.initWebSocket('ws://localhost:8765');
+
+    // 设置接收消息的回调函数
+    //wsManager.setOnMessageCallback((message) {
+    //  print('Received message: $message');
+    //});
+    /*final List<Widget> mainStacks = <Widget>[
+      MyHomePage(process: widget.process),
+      Viewer(
+        pixivDb: widget.pixivDb,
+        backupcollection: widget.backupcollection,
+        process: widget.process,
+        configs: widget.configs,
+      ), // 预加载的页面
+      FollowingsDisplayer(
+        hostPath: widget.configs.savePath!,
+        pixivDb: widget.pixivDb,
+      ),
+      Settings(
+        configs: widget.configs,
+      ),
+      MyDraggable(),
+    ];*/
+    return MultiProvider(
+        providers: [
+          ListenableProvider<StackChangeNotifier>(
+            create: (context) {
+              StackChangeNotifier stackDataModel = StackChangeNotifier();
+              stackDataModel.initData(
+                  mainTabCount,
+                  stackDatas, //mainStacks,
+                  [1, 2]);
+              return stackDataModel;
+            },
+          ),
+          ListenableProvider<WorkBookMarkModel>(
+            create: (context) {
+              WorkBookMarkModel workBookMarModel = WorkBookMarkModel();
+              return workBookMarModel;
+            },
+          ),
+        ],
+        builder: (context, child) {
+          return DefaultTabController(
+              length: 5,
+              child: Scaffold(
+                  backgroundColor: const Color.fromARGB(255, 212, 252, 255),
+                  appBar: AppBar(
+                      title: TabBar(
+                        onTap: (value) => context
+                            .read<StackChangeNotifier>()
+                            .changeIndex(value, true),
+                        tabs: const [
+                          Tab(text: 'Home', icon: Icon(Icons.home)),
+                          Tab(
+                              text: 'Viewer',
+                              icon: Icon(Icons.view_quilt_rounded)),
+                          Tab(text: 'Followings', icon: Icon(Icons.view_list)),
+                          Tab(text: 'Settings', icon: Icon(Icons.settings)),
+                          Tab(text: 'Test', icon: Icon(Icons.build))
+                        ],
+                      ),
+                      bottom: /*TabBar(
+                      isScrollable: true,
+                      controller: TabController(
+                        vsync: this,
+                        length: count.value,
+                        initialIndex: currentIndex.value > widget.mainTabCount
+                            ? currentIndex.value - widget.mainTabCount
+                            : 0,
+                      ),
+                      onTap: (value) {
+                        currentIndex.value = value + widget.mainTabCount;
+                      },
+                      tabs: [
+                        for (int a = 0; a < count.value; a++)
+                          SizedBox(
+                              width: 200,
+                              child: ListTile(
+                                title: Text('Data  $a',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    )),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    ChangeIndexNotification(a, null, true)
+                                        .dispatch(context);
+                                  },
+                                ),
+                              ))
+                      ])*/
+                          Mytabbar()),
+                  body: Consumer<WorkBookMarkModel>(
+                    builder: (context, value, child) {
+                      if (value.workId != 114514 && value.userName != 'Man') {
+                        // 更新数据库
+                        widget.pixivDb
+                            .collection(value.userName)
+                            .updateOne(mongo.where.eq('id', value.workId),
+                                mongo.modify.set('likeData', value.bookmarked))
+                            .then((res) =>
+                                res.isSuccess ? {} : throw 'update failed');
+                        widget.backupcollection
+                            .updateOne(mongo.where.eq('id', value.workId),
+                                mongo.modify.set('likeData', value.bookmarked))
+                            .then((res) =>
+                                res.isSuccess ? {} : throw 'update failed');
+                      }
+                      return child!;
+                    },
+                    child: Center(
+                        child: LazyLoadIndexedStack(children: stackDatas)),
+                  )));
+        } //)
+
         /*
       Scaffold(body: 
       VerticalTabs(

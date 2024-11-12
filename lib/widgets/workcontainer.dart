@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/common/tools.dart';
 import 'package:localpixiv/models.dart';
+import 'package:provider/provider.dart';
 import 'package:toastification/toastification.dart';
 
 ////////////////////////////////
@@ -112,18 +113,6 @@ class _ImageContainerState extends State<ImageContainer>
   late AnimationController _mouseClickAnimationController;
   late ValueNotifier<IconData> _icon;
 
-  void showWorkDetail() {
-    List<dynamic>? imagePaths = widget.workInfoNotifier.value.imagePath;
-    if (imagePaths != null) {
-      Navigator.push(
-          context,
-          MaterialPageRoute(
-              maintainState: false,
-              builder: (context) => WorkDetialDisplayer(
-                  hostPath: widget.hostPath, imagePath: imagePaths)));
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -148,6 +137,26 @@ class _ImageContainerState extends State<ImageContainer>
 
   @override
   Widget build(BuildContext context) {
+    void showWorkDetail() {
+      List<dynamic>? imagePaths = widget.workInfoNotifier.value.imagePath;
+      if (imagePaths != null) {
+        /*
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              maintainState: false,
+              builder: (context) => WorkDetialDisplayer(
+                  hostPath: widget.hostPath, imagePath: imagePaths)));
+    }*/
+        context.read<StackChangeNotifier>().addStack(
+            widget.workInfoNotifier.value.title,
+            WorkDetialDisplayer(
+              hostPath: widget.hostPath,
+              workInfo: widget.workInfoNotifier.value,
+            ));
+      }
+    }
+
     return MouseRegion(
         // 进入
         onEnter: (details) => _mouseEOAnimationController.forward(),
@@ -280,11 +289,19 @@ class _ImageContainerState extends State<ImageContainer>
                                             : Icons.favorite;
                                         widget.workInfoNotifier
                                             .bookmark(!workInfo.isLiked);
-                                        WorkBookMarkNotification(
+                                        /*WorkBookMarkNotification(
                                                 workInfo.id,
                                                 workInfo.userName,
-                                                !workInfo.isLiked)
+                                                workInfo.isLiked)
                                             .dispatch(context);
+                                      },*/
+                                        Provider.of<WorkBookMarkModel>(context,
+                                                listen: false)
+                                            .changebookmark(
+                                          workInfo.isLiked,
+                                          workInfo.id,
+                                          workInfo.userName,
+                                        );
                                       },
                                       icon: Icon(iconvalue),
                                       iconSize: 30,
@@ -303,9 +320,9 @@ class _ImageContainerState extends State<ImageContainer>
 
 class WorkDetialDisplayer extends StatefulWidget {
   const WorkDetialDisplayer(
-      {super.key, required this.hostPath, required this.imagePath});
+      {super.key, required this.hostPath, required this.workInfo});
   final String hostPath;
-  final List<dynamic> imagePath;
+  final WorkInfo workInfo;
 
   @override
   State<StatefulWidget> createState() => _WorkDetialDisplayerState();
@@ -313,6 +330,15 @@ class WorkDetialDisplayer extends StatefulWidget {
 
 class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
   ValueNotifier<int> index = ValueNotifier<int>(0);
+  late ValueNotifier<IconData> _icon;
+
+  @override
+  void initState() {
+    super.initState();
+    _icon = ValueNotifier<IconData>(
+        widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -331,7 +357,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                         // 异步加载图片
                         FutureBuilder<ImageProvider>(
                             future: imageFileLoader(
-                                '${widget.hostPath}${widget.imagePath[index]}'),
+                                '${widget.hostPath}${widget.workInfo.imagePath![index]}'),
                             builder: (BuildContext context,
                                 AsyncSnapshot<ImageProvider> snapshot) {
                               if (snapshot.connectionState ==
@@ -345,7 +371,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                                           (context, error, stackTrace) {
                                         if (error.toString() ==
                                             'Exception: Codec failed to produce an image, possibly due to invalid image data.') {
-                                          File('${widget.hostPath}${widget.imagePath[index]}')
+                                          File('${widget.hostPath}${widget.workInfo.imagePath![index]}')
                                               .delete();
                                         }
                                         return Center(
@@ -366,7 +392,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                                 ));
                               }
                             })))),
-        Positioned(
+        /*Positioned(
             top: 10,
             left: 10,
             child: ElevatedButton.icon(
@@ -379,7 +405,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                 style: TextStyle(fontSize: 30, color: Colors.grey),
               ),
               icon: Icon(Icons.arrow_back, size: 30, color: Colors.grey),
-            )),
+            )),*/
         Positioned(
             top: 670,
             left: 10,
@@ -398,7 +424,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
             right: 10,
             child: IconButton(
                 onPressed: () {
-                  if (index.value < widget.imagePath.length - 1) {
+                  if (index.value < widget.workInfo.imagePath!.length - 1) {
                     index.value += 1;
                   }
                 },
@@ -406,6 +432,36 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                 iconSize: 80,
                 color: Colors.white,
                 style: IconButton.styleFrom(backgroundColor: Colors.grey))),
+        //收藏作品
+        Positioned(
+            bottom: 5,
+            left: 5,
+            child: ValueListenableBuilder<IconData>(
+                valueListenable: _icon,
+                builder: (context, iconvalue, child) => IconButton(
+                      onPressed: () {
+                        //通信更新信息
+                        _icon.value = widget.workInfo.isLiked
+                            ? Icons.favorite_border
+                            : Icons.favorite;
+                        widget.workInfo.isLiked = !widget.workInfo.isLiked;
+                        /*WorkBookMarkNotification(
+                                widget.workInfo.id,
+                                widget.workInfo.userName,
+                                widget.workInfo.isLiked)
+                            .dispatch(context);*/
+                        Provider.of<WorkBookMarkModel>(context, listen: false)
+                            .changebookmark(
+                          widget.workInfo.isLiked,
+                          widget.workInfo.id,
+                          widget.workInfo.userName,
+                        );
+                      },
+                      icon: Icon(iconvalue),
+                      iconSize: 60,
+                      color: Colors.white,
+                      style: IconButton.styleFrom(backgroundColor: Colors.grey),
+                    ))),
         ValueListenableBuilder(
             valueListenable: index,
             builder: (context, value, child) => Positioned(
@@ -418,7 +474,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      '${value + 1}/${widget.imagePath.length}',
+                      '${value + 1}/${widget.workInfo.imagePath!.length}',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         letterSpacing: 5,

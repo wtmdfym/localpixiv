@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 //import 'package:localpixiv/common/custom_notifier.dart';
@@ -18,6 +19,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  late final StreamSubscription<String> s1;
+  late final StreamSubscription<String> s2;
   double maxScroll = 1;
   int getType = 0;
   bool isstart = false;
@@ -38,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _startProcessListen() async {
     Utf8Decoder utf8decoder = Utf8Decoder(allowMalformed: true);
     // 监听命令的标准输出
-    widget.process.stdout.transform(utf8decoder).listen((data) {
+    s1 = widget.process.stdout.transform(utf8decoder).listen((data) {
       /*if (data.trim() == 'SENDSTART') {
         //print('start');
         needprint = false;
@@ -72,7 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
     // 监听命令的标准错误
-    widget.process.stderr.transform(utf8decoder).listen((data) {
+    s2 = widget.process.stderr.transform(utf8decoder).listen((data) {
       outputs.value += 'ERROR: $data [ERROR]';
       if (data.contains('httpx.ConnectError')) {
         if (context.mounted) {
@@ -119,6 +122,14 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _startProcessListen();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    s1.cancel();
+    s2.cancel();
+    //widget.process.
   }
 
   @override
