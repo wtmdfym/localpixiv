@@ -14,5 +14,9 @@
     },
     "enable_client_pool": false,
     "client_pool": [],
-    "last_record_time": "0"
+    "last_record_time": "0",
+    "uiConfigs": {
+        "autoSearch": true,
+        "maximageCacheRate": 0.0
+    }
 }

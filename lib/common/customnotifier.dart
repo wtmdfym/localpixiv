@@ -90,6 +90,17 @@ class UserInfoNotifier extends ValueNotifier<UserInfo> {
   final String userName;
   final bool bookmarked;
 }*/
+
+//自定义的信息变更捕捉器
+class InfosNotifier<T> extends ValueNotifier<List<T>> {
+  InfosNotifier(super.info);
+
+  void setInfos(List<T> newinfo) {
+    value = newinfo;
+    notifyListeners();
+  }
+}
+
 class WorkBookMarkModel with ChangeNotifier {
   bool _bookmarked = false;
   int _workId = 114514;

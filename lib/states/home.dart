@@ -36,6 +36,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // 3->tag
   ValueNotifier<String> outputs = ValueNotifier('');
   String addata = '';
+  //TODO 限制最大显示文本量
 
   void _startProcessListen() async {
     Utf8Decoder utf8decoder = Utf8Decoder(allowMalformed: true);
@@ -166,7 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         String location =
                             'c:/Users/Administrator/Desktop/pixiv-crawler';
                         _sendCommand(
-                            '$location/.venv/Scripts/python.exe -u lib/pythonapp/cmd_app.py  --configfile jsons/config.json'
+                            '$location/.venv/Scripts/python.exe -u lib/pythonapp/cmd_app.py  --configfile assets/jsons/config.json'
                             //'cd asset/lib/pythonapp/build/exe.win-amd64-3.12/'
                             );
                         //_sendCommand(

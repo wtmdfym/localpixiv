@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:localpixiv/models.dart';
+import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
-// cookies 格式化为 map
+/// cookies 格式化为 map
 Map<String, String> cookiesFormater(String orgcookies) {
   Map<String, String> cookies = {};
   for (String cookie in orgcookies.split(";")) {
@@ -21,7 +22,7 @@ Map<String, String> cookiesFormater(String orgcookies) {
   return cookies;
 }
 
-// configs文件管理器
+/// configs文件管理器
 dynamic configManger(String configfilepath, String operation,
     [Configs? configs]) {
   File jsonFile;
@@ -46,24 +47,29 @@ dynamic configManger(String configfilepath, String operation,
   }
 }
 
-// 异步加载图片
+/// 异步加载图片
 Future<ImageProvider> imageFileLoader(String? imagePath,
-    [int? width, int? height]) async {
+    [int? width, int? height, double? cacheRate]) async {
   ImageProvider image;
-  //try {
   if (imagePath != null) {
     var file = File(imagePath);
     var exists = await file.exists();
     if (exists) {
       image = FileImage(file);
     } else {
-      image = AssetImage('images/default.png');
+      image = AssetImage('assets/images/default.png');
     }
   } else {
     // 若图片不存在就加载默认图片
-    image = AssetImage('images/default.png');
+    image = AssetImage('assets/images/default.png');
   }
   if (width != null && height != null) {
+    if (cacheRate != null) {
+      return ResizeImage(image,
+          width: cacheRate == 0 ? width : width * cacheRate.toInt(),
+          height: cacheRate == 0 ? height : height * cacheRate.toInt(),
+          policy: ResizeImagePolicy.fit);
+    }
     return ResizeImage(image,
         width: width, height: height, policy: ResizeImagePolicy.fit);
   } else {
@@ -73,8 +79,18 @@ Future<ImageProvider> imageFileLoader(String? imagePath,
     //    width: 5120, height: 2880, policy: ResizeImagePolicy.fit);
     //ResizeImage.resizeIfNeeded(2560, 1440, image);
   }
-  //} catch (e) {
-  //  return ResizeImage(AssetImage('assets/images/default\.png'),
-  //      policy: ResizeImagePolicy.fit);
-  //}
+}
+
+///从数据库获取UserInfo
+UserInfo fetchUserInfo(Map<String, dynamic> following, mongo.Db pixivDb) {
+  final List<WorkInfo> workInfos = [];
+  mongo.DbCollection userCollection = pixivDb.collection(following['userName']);
+  var res =
+      userCollection.find(mongo.where.exists('id').excludeFields(['_id']));
+  res.forEach((info) {
+    workInfos.add(WorkInfo.fromJson(info));
+  });
+  following['workInfos'] = workInfos;
+  following['profileImage'] = '';
+  return UserInfo.fromJson(following);
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:localpixiv/common/customnotifier.dart';
+import 'package:localpixiv/common/tools.dart';
 import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/userdisplayer.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
@@ -59,30 +60,40 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   int maxpage = 1;
   int reslength = 0;
   final int pagesize = 4;
-  List<UserInfoNotifier> userInfoNotifers = [
-    UserInfoNotifier(UserInfo.fromJson(defaultuserdata)),
-    UserInfoNotifier(UserInfo.fromJson(defaultuserdata)),
-    UserInfoNotifier(UserInfo.fromJson(defaultuserdata)),
-    UserInfoNotifier(UserInfo.fromJson(defaultuserdata)),
-  ];
+  final InfosNotifier<UserInfo> userInfosNotifer = InfosNotifier([
+    UserInfo.fromJson(defaultuserdata),
+    UserInfo.fromJson(defaultuserdata),
+    UserInfo.fromJson(defaultuserdata),
+    UserInfo.fromJson(defaultuserdata),
+  ]);
   final TextEditingController _pageController =
       TextEditingController(text: '1/1');
   final List<UserInfo> userInfos = [];
 
-  void futherDataLoader() async {
+  void dataLoader() async {
     mongo.DbCollection followingCollection =
         widget.pixivDb.collection('All Followings');
-    //TODO not following user
-    int count = await followingCollection
-        .count(mongo.where.exists('userName').notExists('not_following_now'));
-    reslength = count;
+    // 计算page
+    reslength = await followingCollection.count(mongo.where.exists('userName'));
     maxpage = (reslength / pagesize).ceil();
+    // 异步加载数据
     Stream<Map<String, dynamic>> followings = followingCollection
         .find(mongo.where.exists('userName').excludeFields(['_id']));
+    followings.forEach((following) {
+      userInfos.add(fetchUserInfo(following, widget.pixivDb));
+    });
+    // 当有足够数据或加载完成时显示
+    Timer.periodic(Durations.medium1, (timer) {
+      if ((userInfos.length > 4) || (userInfos.length < reslength)) {
+        changePage();
+        timer.cancel();
+      }
+    });
+  } /*
     backendDataLoader(followings);
     Timer.periodic(Durations.medium1, (timer) {
       if (userInfos.length < reslength) {
-        if (userInfos.length > 4) {
+        if (userInfos.length > 5) {
           changePage();
           timer.cancel();
         }
@@ -111,17 +122,15 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
         userInfos.add(UserInfo.fromJson(following));
       }
     });
-  }
+  }*/
 
   @override
   void initState() {
     super.initState();
-    futherDataLoader();
+    dataLoader();
   }
 
-  /// ************************* ///
-  /// *********翻页控制********* ///
-  /// ************************* ///
+  // 翻页控制
   void prevPage() {
     if (page > 1) {
       page -= 1;
@@ -149,26 +158,21 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   }
 
   void changePage() {
+    List<UserInfo> info = [];
     if (userInfos.length >= page * pagesize) {
-      List<dynamic> info =
-          userInfos.sublist((page - 1) * pagesize, page * pagesize);
-      for (int i = 0; i < pagesize; i++) {
-        userInfoNotifers[i].setInfo(info[i]);
+      info = userInfos.sublist((page - 1) * pagesize, page * pagesize);
+      for (int i = 0; i < pagesize; i++) {}
+    } else {
+      info = userInfos.sublist((page - 1) * pagesize, userInfos.length);
+      if (info.length < pagesize) {
+        info.addAll([
+          for (int i = info.length; i < pagesize; i++)
+            UserInfo.fromJson(defaultuserdata)
+        ]);
       }
     }
-    List<dynamic> info =
-        userInfos.sublist((page - 1) * pagesize, userInfos.length);
-    for (int i = 0; i < pagesize; i++) {
-      try {
-        userInfoNotifers[i].setInfo(info[i]);
-      } on RangeError {
-        userInfoNotifers[i].value = UserInfo.fromJson(defaultuserdata);
-      }
-    }
-
+    userInfosNotifer.setInfos(info);
     _pageController.text = '$page/$maxpage';
-
-    //print(page);
   }
 
   @override
@@ -177,70 +181,67 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
         child: Padding(
             padding: const EdgeInsets.all(30),
             child: FittedBox(
-                // showinfo信号监听
-                child: NotificationListener(
-                    onNotification: (notification) {
-                      return false;
-                    },
-                    child: Flex(
-                      direction: Axis.vertical,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 15,
-                      children: [
-                        FollowingInfoDisplayer(
-                            hostPath: widget.hostPath,
-                            userInfoNotifer: userInfoNotifers[0]),
-                        FollowingInfoDisplayer(
-                            hostPath: widget.hostPath,
-                            userInfoNotifer: userInfoNotifers[1]),
-                        FollowingInfoDisplayer(
-                            hostPath: widget.hostPath,
-                            userInfoNotifer: userInfoNotifers[2]),
-                        FollowingInfoDisplayer(
-                            hostPath: widget.hostPath,
-                            userInfoNotifer: userInfoNotifers[3]), //翻页控件
-                        Row(
-                          spacing: 300,
+                child: ValueListenableBuilder(
+                    valueListenable: userInfosNotifer,
+                    builder: (context, userInfos, child) => Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          spacing: 15,
                           children: [
-                            ElevatedButton.icon(
-                              onPressed: prevPage,
-                              icon: Icon(
-                                Icons.navigate_before,
-                                size: 30,
-                              ),
-                              label:
-                                  Text('Prev', style: TextStyle(fontSize: 20)),
-                            ),
-                            SizedBox(
-                                width: 300,
-                                child: TextField(
-                                  controller: _pageController,
-                                  maxLength: 10,
-                                  decoration: InputDecoration(
-                                    labelText: "页码",
-                                    //icon: Icon(Icons.search),
+                            FollowingInfoDisplayer(
+                                hostPath: widget.hostPath,
+                                userInfo: userInfos[0]),
+                            FollowingInfoDisplayer(
+                                hostPath: widget.hostPath,
+                                userInfo: userInfos[1]),
+                            FollowingInfoDisplayer(
+                                hostPath: widget.hostPath,
+                                userInfo: userInfos[2]),
+                            FollowingInfoDisplayer(
+                                hostPath: widget.hostPath,
+                                userInfo: userInfos[3]),
+                            //翻页控件
+                            Row(
+                              spacing: 300,
+                              children: [
+                                ElevatedButton.icon(
+                                  onPressed: prevPage,
+                                  icon: Icon(
+                                    Icons.navigate_before,
+                                    size: 30,
                                   ),
-                                )),
-                            ElevatedButton.icon(
-                                onPressed: jumpToPage,
-                                icon: Icon(
-                                  Icons.next_plan_outlined,
-                                  size: 30,
+                                  label: Text('Prev',
+                                      style: TextStyle(fontSize: 20)),
                                 ),
-                                label: Text("Jump",
-                                    style: TextStyle(fontSize: 20))),
-                            ElevatedButton.icon(
-                                onPressed: nextPage,
-                                icon: Icon(
-                                  Icons.navigate_next,
-                                  size: 30,
-                                ),
-                                iconAlignment: IconAlignment.end,
-                                label: Text("Next",
-                                    style: TextStyle(fontSize: 20))),
+                                SizedBox(
+                                    width: 300,
+                                    child: TextField(
+                                      controller: _pageController,
+                                      maxLength: 10,
+                                      decoration: InputDecoration(
+                                        labelText: "Page",
+                                        //icon: Icon(Icons.search),
+                                      ),
+                                    )),
+                                ElevatedButton.icon(
+                                    onPressed: jumpToPage,
+                                    icon: Icon(
+                                      Icons.next_plan_outlined,
+                                      size: 30,
+                                    ),
+                                    label: Text("Jump",
+                                        style: TextStyle(fontSize: 20))),
+                                ElevatedButton.icon(
+                                    onPressed: nextPage,
+                                    icon: Icon(
+                                      Icons.navigate_next,
+                                      size: 30,
+                                    ),
+                                    iconAlignment: IconAlignment.end,
+                                    label: Text("Next",
+                                        style: TextStyle(fontSize: 20))),
+                              ],
+                            )
                           ],
-                        )
-                      ],
-                    )))));
+                        )))));
   }
 }

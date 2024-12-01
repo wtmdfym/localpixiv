@@ -80,6 +80,8 @@ class UserInfo {
   String userComment;
   // 作者作品路径
   List<WorkInfo> workInfos;
+  // 是否还在关注
+  bool notFollowingNow = false;
 
   UserInfo({
     required this.userId,
@@ -87,20 +89,21 @@ class UserInfo {
     required this.profileImage,
     required this.userComment,
     required this.workInfos,
+    this.notFollowingNow = false,
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
     return UserInfo(
-      userId: json['userId'],
-      userName: json['userName'],
-      profileImage: json['profileImage'],
-      userComment: json['userComment'],
-      workInfos: json['workInfos'],
-    );
+        userId: json['userId'],
+        userName: json['userName'],
+        profileImage: json['profileImage'],
+        userComment: json['userComment'],
+        workInfos: json['workInfos'],
+        notFollowingNow: json['not_following_now'] ?? false);
   }
 }
 
-// 配置文件
+/// 总配置信息
 class Configs {
   String? savePath;
   Cookies? cookies;
@@ -112,20 +115,20 @@ class Configs {
   String? lastRecordTime;
   bool enableClientPool = false;
   List<ClientPool>? clientPool;
-  bool autoSearch = true;
+  UIConfigs uiConfigs = UIConfigs();
 
   Configs({
     this.savePath,
     this.cookies,
-    required this.enableProxy,
+    this.enableProxy = false,
     this.httpProxies,
     this.httpsProxies,
     this.semaphore,
     this.downloadType,
     this.lastRecordTime,
-    required this.enableClientPool,
+    this.enableClientPool = false,
     this.clientPool,
-    required this.autoSearch,
+    required this.uiConfigs,
   });
 
   Configs.fromJson(Map<String, dynamic> json) {
@@ -147,7 +150,7 @@ class Configs {
         clientPool!.add(ClientPool.fromJson(v));
       });
     }
-    autoSearch = json['autoSearch'];
+    uiConfigs = UIConfigs.fromJson(json['uiConfigs']);
   }
 
   Map<String, dynamic> toJson() {
@@ -168,11 +171,38 @@ class Configs {
     if (clientPool != null) {
       data['client_pool'] = clientPool!.map((v) => v.toJson()).toList();
     }
-    data['autoSearch'] = autoSearch;
+    data['uiConfigs'] = uiConfigs.toJson();
     return data;
   }
 }
 
+/// UI界面配置信息
+class UIConfigs {
+  /// 是否在点击tag时自动搜索
+  bool autoSearch = true;
+
+  /// 图片的最大缓存大小与窗口大小的比值，0为无限制，
+  double maxImageCacheRate = 0;
+
+  UIConfigs({
+    this.autoSearch = true,
+    this.maxImageCacheRate = 0,
+  });
+
+  UIConfigs.fromJson(Map<String, dynamic> json) {
+    autoSearch = json['autoSearch'];
+    maxImageCacheRate = json['maximageCacheRate'];
+  }
+
+  Map<String, dynamic> toJson() {
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['autoSearch'] = autoSearch;
+    data['maximageCacheRate'] = maxImageCacheRate;
+    return data;
+  }
+}
+
+/// Cookies配置信息
 class Cookies {
   String? phpsessid;
 
@@ -197,6 +227,7 @@ class Cookies {
   }
 }
 
+/// DownloadType配置信息
 class DownloadType {
   bool? illust;
   bool? manga;
@@ -231,6 +262,7 @@ class DownloadType {
   }
 }
 
+/// ClientPool配置信息
 class ClientPool {
   String? email;
   String? passward;
@@ -256,6 +288,7 @@ class ClientPool {
   }
 }
 
+/// indexedstack datas
 class StackData {
   int index;
   String? title;

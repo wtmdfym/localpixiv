@@ -62,17 +62,17 @@ class _ViewerState extends State<Viewer> {
   final int pagesize = 8;
   bool cancelevent = false;
   final List<dynamic> searchedInfos = [];
-  final List<WorkInfoNotifier> workInfoNotifers = [
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-    WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata))),
-  ];
-  //WorkInfoNotifier(WorkInfo(id: 1,imagePath: ['images/default\.png'],imageInfo: {'imagecount':1}))
+  final InfosNotifier<WorkInfo> workInfosNotifer = InfosNotifier([
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    WorkInfo.fromJson(jsonDecode(defaultdata)),
+  ]);
+  final List<dynamic> searchResults = [];
   final WorkInfoNotifier showingInfo =
       WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata)));
   final TextEditingController _searchController = TextEditingController();
@@ -80,7 +80,6 @@ class _ViewerState extends State<Viewer> {
       TextEditingController(text: '1/1');
   /*ValueNotifier<List<bool>> searchType =
       ValueNotifier([true, false, false]); //id  uid tag*/
-  final List<dynamic> workInfos = [];
   int reslength = 0;
   final int buffer = 200;
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
@@ -213,7 +212,14 @@ class _ViewerState extends State<Viewer> {
             ? resultDialog(context, 'Search', true, 'Found $reslength results!')
             : {};
         maxpage = (reslength / pagesize).ceil();
-        changePage();
+        Timer.periodic(Durations.short2, (timer) {
+          if ((searchResults.length >= 8) ||
+              (searchResults.length == reslength)) {
+            _isLoading.value = false;
+            changePage();
+            timer.cancel();
+          }
+        });
       } else {
         context.mounted
             ? resultDialog(
@@ -233,7 +239,7 @@ class _ViewerState extends State<Viewer> {
       onsearching = false;
       return false;
     } else {
-      workInfos.clear();
+      searchResults.clear();
       page = 1;
       widget.backupcollection
           .find(selector.sortBy('id', descending: true).excludeFields(['_id']))
@@ -242,22 +248,8 @@ class _ViewerState extends State<Viewer> {
           cancelevent = false;
           return;
         }
-        workInfos.add(info);
+        searchResults.add(info);
       }).then((_) => onsearching = false);
-      //.toList();
-
-      //print(result.length);
-      /*int index = 0;
-    List<dynamic> infos = [];
-    searchResults.forEach((info) {
-      if (index < pagesize) {
-        infos.add(info);
-      } else {
-        workInfos.addEntries({page: infos}.entries);
-        index = 0;
-        infos.clear();
-      }
-    });*/
       return true;
     }
   }
@@ -295,37 +287,29 @@ class _ViewerState extends State<Viewer> {
   }
 
   void changePage() async {
-    Timer.periodic(Durations.short2, (timer) {
-      if (page * pagesize < reslength) {
-        if (workInfos.length >= 8) {
-          _isLoading.value = false;
-          List<dynamic> info =
-              workInfos.sublist((page - 1) * pagesize, page * pagesize);
-          for (int i = 0; i < pagesize; i++) {
-            workInfoNotifers[i].setInfoJson(info[i]);
-          }
-          timer.cancel();
-        }
-      } else {
-        if (workInfos.length == reslength) {
-          _isLoading.value = false;
-          List<dynamic> info =
-              workInfos.sublist((page - 1) * pagesize, reslength);
-          for (int i = 0; i < pagesize; i++) {
-            try {
-              workInfoNotifers[i].setInfoJson(info[i]);
-            } on RangeError {
-              workInfoNotifers[i].value =
-                  WorkInfo.fromJson(jsonDecode(defaultdata));
-            }
-          }
-          timer.cancel();
+    final List<WorkInfo> workInfos = [];
+    if (page < maxpage) {
+      List<dynamic> info =
+          searchResults.sublist((page - 1) * pagesize, page * pagesize);
+      for (int i = 0; i < pagesize; i++) {
+        workInfos.add(WorkInfo.fromJson(info[i]));
+        //workInfoNotifers[i].setInfoJson(info[i]);
+      }
+    } else {
+      List<dynamic> info =
+          searchResults.sublist((page - 1) * pagesize, reslength);
+      for (int i = 0; i < pagesize; i++) {
+        try {
+          workInfos.add(WorkInfo.fromJson(info[i]));
+          //workInfoNotifers[i].setInfoJson(info[i]);
+        } on RangeError {
+          //workInfoNotifers[i].value =
+          workInfos.add(WorkInfo.fromJson(jsonDecode(defaultdata)));
         }
       }
-
-      _pageController.text = '$page/$maxpage';
-    });
-
+    }
+    workInfosNotifer.setInfos(workInfos);
+    _pageController.text = '$page/$maxpage';
     //print(page);
   }
 
@@ -437,32 +421,6 @@ class _ViewerState extends State<Viewer> {
                             )
                           ],
                         )),
-                    /*
-                    //收藏操作捕捉
-                    NotificationListener<WorkBookMarkNotification>(
-                        onNotification: (notification) {
-                          if (notification.id != 114514 &&
-                              notification.userName != 'Man') {
-                            // 更新数据库
-                            widget.pixivDb
-                                .collection(notification.userName)
-                                .updateOne(
-                                    mongo.where.eq('id', notification.id),
-                                    mongo.modify.set(
-                                        'likeData', notification.bookmarked))
-                                .then((res) =>
-                                    res.isSuccess ? {} : throw 'update failed');
-                            widget.backupcollection
-                                .updateOne(
-                                    mongo.where.eq('id', notification.id),
-                                    mongo.modify.set(
-                                        'likeData', notification.bookmarked))
-                                .then((res) =>
-                                    res.isSuccess ? {} : throw 'update failed');
-                          }
-                          return true;
-                        },
-                        child: */
                     // 作品展示网格
                     Flex(
                         direction: Axis.vertical,
@@ -474,41 +432,53 @@ class _ViewerState extends State<Viewer> {
                                 maxHeight: 1080,
                                 //maxWidth: 1920,
                               ),
-                              child: GridView.count(
-                                scrollDirection: Axis.horizontal,
-                                shrinkWrap: true,
-                                crossAxisCount: 2,
-                                childAspectRatio: 12 / 10, //高比宽
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                physics: const NeverScrollableScrollPhysics(),
-                                children: <Widget>[
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[0]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[4]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[1]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[5]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[2]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[6]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[3]),
-                                  ImageContainer(
-                                      hostPath: widget.configs.savePath!,
-                                      workInfoNotifier: workInfoNotifers[7]),
-                                ],
-                              )),
+                              child: ValueListenableBuilder(
+                                  valueListenable: workInfosNotifer,
+                                  builder: (context, workInfos, child) =>
+                                      GridView.count(
+                                        scrollDirection: Axis.horizontal,
+                                        shrinkWrap: true,
+                                        crossAxisCount: 2,
+                                        childAspectRatio: 12 / 10, //高比宽
+                                        mainAxisSpacing: 16,
+                                        crossAxisSpacing: 16,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        children: <Widget>[
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[0]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[4]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[1]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[5]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[2]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[6]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[3]),
+                                          ImageContainer(
+                                              hostPath:
+                                                  widget.configs.savePath!,
+                                              workInfo: workInfos[7]),
+                                        ],
+                                      ))),
                           //翻页控件
                           Row(
                             spacing: 300,
@@ -528,7 +498,7 @@ class _ViewerState extends State<Viewer> {
                                     controller: _pageController,
                                     maxLength: 10,
                                     decoration: InputDecoration(
-                                      labelText: "页码",
+                                      labelText: "Page",
                                       //icon: Icon(Icons.search),
                                     ),
                                   )),

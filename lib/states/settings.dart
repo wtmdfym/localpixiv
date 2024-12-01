@@ -365,14 +365,39 @@ class _SettingsState extends State<Settings> {
                       'Auto search when click tag',
                       style: TextStyle(fontSize: 20),
                     ),
-                    value: widget.configs.autoSearch, //当前状态
+                    value: widget.configs.uiConfigs.autoSearch, //当前状态
                     onChanged: (value) {
                       //重新构建页面
                       setState(() {
-                        widget.configs.autoSearch = value;
+                        widget.configs.uiConfigs.autoSearch = value;
                       });
                     },
                   ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'MaxImageCacheRate(unused)',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Expanded(
+                          child: Slider(
+                        max: 4,
+                        divisions: 4,
+                        label: widget.configs.uiConfigs.maxImageCacheRate == 0
+                            ? 'Not limited'
+                            : '${widget.configs.uiConfigs.maxImageCacheRate}',
+                        value: widget.configs.uiConfigs.maxImageCacheRate,
+                        onChanged: (value) {
+                          //重新构建页面
+                          setState(() {
+                            widget.configs.uiConfigs.maxImageCacheRate = value;
+                          });
+                        },
+                      )),
+                    ],
+                  ),
+
                   // 保存button
                   Builder(builder: (context) {
                     return ElevatedButton(
@@ -398,16 +423,7 @@ class _SettingsState extends State<Settings> {
                         ),
                       ),
                     );
-                  }), /*
-                        ElevatedButton(
-                            onPressed: () => setState(() {}),
-                            child: Text(
-                              'Cancle',
-                              style: TextStyle(
-                                fontSize: 20,
-                              ),
-                            ))
-                      ])*/
+                  }),
                 ],
               ))),
     ));

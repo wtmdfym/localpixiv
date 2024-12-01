@@ -163,6 +163,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_widgetz:
+    dependency: "direct main"
+    description:
+      name: flutter_widgetz
+      sha256: e119f5a0354906cf9a082630ede34f58a9d102021c6aeec7c414f70b6c0e33b1
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.3.0"
   http:
     dependency: transitive
     description:

@@ -5,8 +5,7 @@ import 'package:mongo_dart/mongo_dart.dart' as mongo;
 //import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'models.dart';
-import 'widgets/lazyload.dart';
-import 'widgets/mytabbar.dart';
+import 'widgets/lazyloadtabview.dart';
 import 'states/home.dart';
 import 'states/viewer.dart';
 import 'states/followings.dart';
@@ -67,11 +66,10 @@ class MyApp extends StatelessWidget {
           const Locale('zh', 'CN'), // 中文简体
           //其他Locales
         ],*/
-        home: //ReorderableTabBarPage()
-            MainTabPage(
-                pixivDb: pixivDb,
-                backupcollection: backupcollection,
-                configs: configs)
+        home: MainTabPage(
+            pixivDb: pixivDb,
+            backupcollection: backupcollection,
+            configs: configs)
 
         /*
       Scaffold(body: 
@@ -96,6 +94,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// This widget is the root of the application.
 class MainTabPage extends StatefulWidget {
   const MainTabPage(
       {super.key,
@@ -106,7 +105,6 @@ class MainTabPage extends StatefulWidget {
   final mongo.DbCollection backupcollection;
   final Configs configs;
 
-  // This widget is the root of your application.
   @override
   State<StatefulWidget> createState() {
     return MainTabPageState();
@@ -149,23 +147,6 @@ class MainTabPageState extends State<MainTabPage>
     //wsManager.setOnMessageCallback((message) {
     //  print('Received message: $message');
     //});
-    /*final List<Widget> mainStacks = <Widget>[
-      MyHomePage(process: widget.process),
-      Viewer(
-        pixivDb: widget.pixivDb,
-        backupcollection: widget.backupcollection,
-        process: widget.process,
-        configs: widget.configs,
-      ), // 预加载的页面
-      FollowingsDisplayer(
-        hostPath: widget.configs.savePath!,
-        pixivDb: widget.pixivDb,
-      ),
-      Settings(
-        configs: widget.configs,
-      ),
-      MyDraggable(),
-    ];*/
     return MultiProvider(
         providers: [
           ListenableProvider<StackChangeNotifier>(
@@ -187,55 +168,18 @@ class MainTabPageState extends State<MainTabPage>
         ],
         builder: (context, child) {
           return DefaultTabController(
-              length: 5,
+              length: mainTabCount,
               child: Scaffold(
                   backgroundColor: const Color.fromARGB(255, 212, 252, 255),
-                  appBar: AppBar(
-                      title: TabBar(
-                        onTap: (value) => context
-                            .read<StackChangeNotifier>()
-                            .changeIndex(value, true),
-                        tabs: const [
-                          Tab(text: 'Home', icon: Icon(Icons.home)),
-                          Tab(
-                              text: 'Viewer',
-                              icon: Icon(Icons.view_quilt_rounded)),
-                          Tab(text: 'Followings', icon: Icon(Icons.view_list)),
-                          Tab(text: 'Settings', icon: Icon(Icons.settings)),
-                          Tab(text: 'Test', icon: Icon(Icons.build))
-                        ],
-                      ),
-                      bottom: /*TabBar(
-                      isScrollable: true,
-                      controller: TabController(
-                        vsync: this,
-                        length: count.value,
-                        initialIndex: currentIndex.value > widget.mainTabCount
-                            ? currentIndex.value - widget.mainTabCount
-                            : 0,
-                      ),
-                      onTap: (value) {
-                        currentIndex.value = value + widget.mainTabCount;
-                      },
-                      tabs: [
-                        for (int a = 0; a < count.value; a++)
-                          SizedBox(
-                              width: 200,
-                              child: ListTile(
-                                title: Text('Data  $a',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    )),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.delete),
-                                  onPressed: () {
-                                    ChangeIndexNotification(a, null, true)
-                                        .dispatch(context);
-                                  },
-                                ),
-                              ))
-                      ])*/
-                          Mytabbar()),
+                  appBar: MutiTabbar(
+                    mainTabs: const [
+                      Tab(text: 'Home', icon: Icon(Icons.home)),
+                      Tab(text: 'Viewer', icon: Icon(Icons.view_quilt_rounded)),
+                      Tab(text: 'Followings', icon: Icon(Icons.view_list)),
+                      Tab(text: 'Settings', icon: Icon(Icons.settings)),
+                      Tab(text: 'Test', icon: Icon(Icons.build))
+                    ],
+                  ),
                   body: Consumer<WorkBookMarkModel>(
                     builder: (context, value, child) {
                       if (value.workId != 114514 && value.userName != 'Man') {

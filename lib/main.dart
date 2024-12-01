@@ -9,7 +9,7 @@ import 'package:localpixiv/models.dart';
 
 void main() async {
   // 读取配置文件
-  Configs configs = configManger('jsons/config.json', 'r');
+  Configs configs = configManger('assets/jsons/config.json', 'r');
   // 初始化窗口
   WidgetsFlutterBinding.ensureInitialized();
   /*if (kIsDesktop) {
