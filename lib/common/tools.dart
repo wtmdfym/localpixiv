@@ -52,8 +52,8 @@ Future<ImageProvider> imageFileLoader(String? imagePath,
     [int? width, int? height, double? cacheRate]) async {
   ImageProvider image;
   if (imagePath != null) {
-    var file = File(imagePath);
-    var exists = await file.exists();
+    File file = File(imagePath);
+    bool exists = await file.exists();
     if (exists) {
       image = FileImage(file);
     } else {
@@ -81,13 +81,14 @@ Future<ImageProvider> imageFileLoader(String? imagePath,
   }
 }
 
-///从数据库获取UserInfo
-UserInfo fetchUserInfo(Map<String, dynamic> following, mongo.Db pixivDb) {
+/// 从数据库获取UserInfo
+Future<UserInfo> fetchUserInfo(
+    Map<String, dynamic> following, mongo.Db pixivDb) async {
   final List<WorkInfo> workInfos = [];
   mongo.DbCollection userCollection = pixivDb.collection(following['userName']);
-  var res =
-      userCollection.find(mongo.where.exists('id').excludeFields(['_id']));
-  res.forEach((info) {
+  await userCollection
+      .find(mongo.where.exists('id').excludeFields(['_id']))
+      .forEach((info) {
     workInfos.add(WorkInfo.fromJson(info));
   });
   following['workInfos'] = workInfos;

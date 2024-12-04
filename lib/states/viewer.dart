@@ -1,38 +1,15 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:mongo_dart/mongo_dart.dart'
+    show Db, DbCollection, SelectorBuilder, where;
+import 'package:provider/provider.dart';
+
+import 'package:localpixiv/common/defaultdatas.dart';
+import 'package:localpixiv/widgets/userdisplayer.dart';
 import 'package:localpixiv/widgets/workcontainer.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
-
-const String defaultdata = '''
-{
-  "type": "illust",
-  "id": 114514,
-  "title": "꒰ঌ(🎀 ᗜ`˰´ᗜ 🌸)໒꒱💈❌",
-  "description": "꒰ঌ(🎀 ᗜ`˰´ᗜ 🌸)໒꒱💈❌+و(◠ڼ◠)٩ =꒰ঌ(🎀ᗜ v ᗜ 🌸)໒꒱✅",
-  "tags": {
-    "水着": "泳装",
-    "女の子": "女孩子",
-    "オリジナル": "原创",
-    "太もも": "大腿",
-    "海": "sea",
-    "浮き輪": "游泳圈",
-    "イラスト": "插画"
-  },
-  "userId": "114514",
-  "username": "Man",
-  "uploadDate": "2042",
-  "likeData": true,
-  "isOriginal": true,
-  "imageCount": 1,
-  "relative_path": [
-    "what can I say"
-  ]
-}
-''';
 
 class Viewer extends StatefulWidget {
   const Viewer({
@@ -42,8 +19,8 @@ class Viewer extends StatefulWidget {
     required this.configs,
     //required this.channel,
   });
-  final mongo.Db pixivDb;
-  final mongo.DbCollection backupcollection;
+  final Db pixivDb;
+  final DbCollection backupcollection;
   final Configs configs;
   //final WebSocketChannel channel;
 
@@ -54,27 +31,24 @@ class Viewer extends StatefulWidget {
 }
 
 class _ViewerState extends State<Viewer> {
-  ///************************///
-  ///*********初始化*********///
-  ///************************///
+  // 初始化
   int page = 1;
   int maxpage = 1;
   final int pagesize = 8;
   bool cancelevent = false;
   final List<dynamic> searchedInfos = [];
   final InfosNotifier<WorkInfo> workInfosNotifer = InfosNotifier([
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
-    WorkInfo.fromJson(jsonDecode(defaultdata)),
+    defaultWorkInfo,
+    defaultWorkInfo,
+    defaultWorkInfo,
+    defaultWorkInfo,
+    defaultWorkInfo,
+    defaultWorkInfo,
+    defaultWorkInfo,
+    defaultWorkInfo,
   ]);
   final List<dynamic> searchResults = [];
-  final WorkInfoNotifier showingInfo =
-      WorkInfoNotifier(WorkInfo.fromJson(jsonDecode(defaultdata)));
+  final WorkInfoNotifier showingInfo = WorkInfoNotifier(defaultWorkInfo);
   final TextEditingController _searchController = TextEditingController();
   final TextEditingController _pageController =
       TextEditingController(text: '1/1');
@@ -85,19 +59,16 @@ class _ViewerState extends State<Viewer> {
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
   bool onsearching = false;
 
-  /// ************************* ///
-  /// *********搜索控制********* ///
-  /// ************************* ///
+  // 搜索控制
   void searchAnalyzer(
-      [Map<String, dynamic>? advancedtext,
-      mongo.SelectorBuilder? finishedselector]) {
+      [Map<String, dynamic>? advancedtext, SelectorBuilder? finishedselector]) {
     if (onsearching) {
       resultDialog(context, 'Search', false,
           'Searching operation not complete!\nPlease wait.');
       return;
     }
     _isLoading.value = true;
-    mongo.SelectorBuilder selector = mongo.SelectorBuilder().exists('id');
+    SelectorBuilder selector = SelectorBuilder().exists('id');
     if (advancedtext != null) {
       if (advancedtext.isNotEmpty) {
         bool searchtag = true;
@@ -114,17 +85,17 @@ class _ViewerState extends State<Viewer> {
           if (!partly) {
             for (String keyword in advancedtext['AND']) {
               if (keyword.isNotEmpty) {
-                selector.and(mongo.where.exists('tags.$keyword'));
+                selector.and(where.exists('tags.$keyword'));
               }
             }
             for (String keyword in advancedtext['NOT']) {
               if (keyword.isNotEmpty) {
-                selector.and(mongo.where.notExists('tags.$keyword'));
+                selector.and(where.notExists('tags.$keyword'));
               }
             }
             for (String keyword in advancedtext['OR']) {
               if (keyword.isNotEmpty) {
-                selector.or(mongo.where.exists('tags.$keyword'));
+                selector.or(where.exists('tags.$keyword'));
               }
             }
           }
@@ -145,8 +116,7 @@ class _ViewerState extends State<Viewer> {
 
             for (String keyword in advancedtext['OR']) {
               if (keyword.isNotEmpty) {
-                selector
-                    .or(mongo.where.match('tags', keyword, multiLine: true));
+                selector.or(where.match('tags', keyword, multiLine: true));
               }
             }
           }
@@ -229,10 +199,8 @@ class _ViewerState extends State<Viewer> {
     });
   }
 
-  Future<bool> searchWork(mongo.SelectorBuilder selector) async {
+  Future<bool> searchWork(SelectorBuilder selector) async {
     onsearching = true;
-    //widget.process.stdin.write('DATA||\n');
-    //workInfos = await
     reslength = await widget.backupcollection.count(selector);
     if (reslength == 0) {
       _isLoading.value = false;
@@ -257,9 +225,7 @@ class _ViewerState extends State<Viewer> {
   // 通信信息处理
   void dataHander(data) {}
 
-  /// ************************* ///
-  /// *********翻页控制********* ///
-  /// ************************* ///
+  // 翻页控制
   void prevPage() {
     if (page > 1) {
       page -= 1;
@@ -293,7 +259,6 @@ class _ViewerState extends State<Viewer> {
           searchResults.sublist((page - 1) * pagesize, page * pagesize);
       for (int i = 0; i < pagesize; i++) {
         workInfos.add(WorkInfo.fromJson(info[i]));
-        //workInfoNotifers[i].setInfoJson(info[i]);
       }
     } else {
       List<dynamic> info =
@@ -301,29 +266,24 @@ class _ViewerState extends State<Viewer> {
       for (int i = 0; i < pagesize; i++) {
         try {
           workInfos.add(WorkInfo.fromJson(info[i]));
-          //workInfoNotifers[i].setInfoJson(info[i]);
         } on RangeError {
-          //workInfoNotifers[i].value =
-          workInfos.add(WorkInfo.fromJson(jsonDecode(defaultdata)));
+          workInfos.add(defaultWorkInfo);
         }
       }
     }
     workInfosNotifer.setInfos(workInfos);
     _pageController.text = '$page/$maxpage';
-    //print(page);
   }
 
-  ///***********************///
-  ///        构造界面        ///
-  ///***********************///
+  // 构造界面
   @override
   Widget build(BuildContext context) {
     return FittedBox(
-        // showinfo信号监听
         child: Padding(
-            padding: const EdgeInsets.all(30),
+            padding: const EdgeInsets.all(20),
             child: Stack(children: [
               NotificationListener<ShowInfoNotification>(
+                  // showinfo信号监听
                   onNotification: (notification) {
                     showingInfo.setInfo(notification.msg);
                     return true;
@@ -335,7 +295,7 @@ class _ViewerState extends State<Viewer> {
                         child: ListView(
                           shrinkWrap: true,
                           children: [
-                            //搜索控件
+                            // 搜索控件
                             TextField(
                               controller: _searchController,
                               maxLength: 100,
@@ -398,88 +358,106 @@ class _ViewerState extends State<Viewer> {
                             ElevatedButton(
                                 onPressed: () {
                                   advancedSearch(context).then((context) {
-                                    //TODO 高级搜索
+                                    // TODO 高级搜索
                                     searchAnalyzer(context);
                                   });
                                 },
                                 child: Text('Advanced Search',
                                     style: TextStyle(fontSize: 20))),
                             Divider(),
-                            //信息显示部件
-                            NotificationListener<TagSearchNotification>(
-                              onNotification: (notification) {
-                                searchAnalyzer(
-                                    null,
-                                    mongo.where
-                                        .exists('tags.${notification.tag}'));
-                                return true;
-                              },
-                              child: InfoContainer(
-                                workInfo: showingInfo,
-                                config: widget.configs,
-                              ),
-                            )
+                            // 信息显示部件
+                            ValueListenableBuilder(
+                                valueListenable: showingInfo,
+                                builder: (context, value, child) =>
+                                    InfoContainer(
+                                      workInfo: value,
+                                      onTapUser: (userName) {
+                                        context
+                                            .read<StackChangeNotifier>()
+                                            .addStack(
+                                                userName,
+                                                UserDetailsDisplayer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  userName: userName,
+                                                  pixivDb: widget.pixivDb,
+                                                ));
+                                      },
+                                      onTapTag: (tag) {
+                                        widget.configs.uiConfigs.autoSearch
+                                            ? searchAnalyzer(
+                                                null, where.exists('tags.$tag'))
+                                            : {};
+                                      },
+                                    ))
                           ],
                         )),
                     // 作品展示网格
-                    Flex(
-                        direction: Axis.vertical,
+                    Column(
                         spacing: 8,
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           ConstrainedBox(
                               constraints: const BoxConstraints(
                                 maxHeight: 1080,
-                                //maxWidth: 1920,
                               ),
-                              child: ValueListenableBuilder(
-                                  valueListenable: workInfosNotifer,
-                                  builder: (context, workInfos, child) =>
-                                      GridView.count(
-                                        scrollDirection: Axis.horizontal,
-                                        shrinkWrap: true,
-                                        crossAxisCount: 2,
-                                        childAspectRatio: 12 / 10, //高比宽
-                                        mainAxisSpacing: 16,
-                                        crossAxisSpacing: 16,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        children: <Widget>[
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[0]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[4]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[1]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[5]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[2]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[6]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[3]),
-                                          ImageContainer(
-                                              hostPath:
-                                                  widget.configs.savePath!,
-                                              workInfo: workInfos[7]),
-                                        ],
-                                      ))),
-                          //翻页控件
+                              child: /*Consumer<WorkBookMarkModel>(
+                                  builder: (context, workBookMarkInfo, child) {
+                                    //workBookMarkInfo.workId;
+                                    searchResults.elementAt(0)['likeData'] =
+                                        workBookMarkInfo.bookmarked;
+                                    return child!;
+                                  },
+                                  child:*/
+                                  ValueListenableBuilder(
+                                      valueListenable: workInfosNotifer,
+                                      builder: (context, workInfos, child) =>
+                                          GridView.count(
+                                            scrollDirection: Axis.horizontal,
+                                            shrinkWrap: true,
+                                            crossAxisCount: 2,
+                                            childAspectRatio: 12 / 10, //高比宽
+                                            mainAxisSpacing: 16,
+                                            crossAxisSpacing: 16,
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            children: <Widget>[
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[0]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[4]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[1]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[5]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[2]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[6]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[3]),
+                                              WorkContainer(
+                                                  hostPath:
+                                                      widget.configs.savePath!,
+                                                  workInfo: workInfos[7]),
+                                            ],
+                                            //)
+                                          ))),
+                          // 翻页控件
                           Row(
                             spacing: 300,
                             children: [
@@ -499,7 +477,6 @@ class _ViewerState extends State<Viewer> {
                                     maxLength: 10,
                                     decoration: InputDecoration(
                                       labelText: "Page",
-                                      //icon: Icon(Icons.search),
                                     ),
                                   )),
                               ElevatedButton.icon(
@@ -523,31 +500,35 @@ class _ViewerState extends State<Viewer> {
                           )
                         ])
                   ])),
+
               // 加载指示器
               ValueListenableBuilder(
                   valueListenable: _isLoading,
                   builder: (context, value, child) {
-                    return value
-                        ? Positioned.fill(
-                            child: Stack(children: [
-                            ModalBarrier(
-                              color: const Color.fromARGB(150, 158, 158, 158),
-                              dismissible: true,
-                              onDismiss: () => {
-                                cancelevent = true,
-                                _isLoading.value = false
-                              },
-                            ),
-                            Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.blueAccent,
-                                strokeWidth: 6,
-                                semanticsLabel: 'Loading......',
-                              ),
-                            ),
-                          ]))
-                        // 当不加载时不显示
-                        : Container();
+                    return Positioned.fill(
+                      child:
+                          // 当不加载时不显示
+                          Offstage(
+                              offstage: !value,
+                              child: Stack(children: [
+                                ModalBarrier(
+                                  color:
+                                      const Color.fromARGB(150, 160, 160, 160),
+                                  dismissible: true,
+                                  onDismiss: () => {
+                                    cancelevent = true,
+                                    _isLoading.value = false
+                                  },
+                                ),
+                                Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.blueAccent,
+                                    strokeWidth: 6,
+                                    semanticsLabel: 'Loading......',
+                                  ),
+                                ),
+                              ])),
+                    );
                   }),
             ])));
   }

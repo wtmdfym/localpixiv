@@ -1,6 +1,6 @@
-//作品信息数据
 import 'package:flutter/material.dart';
 
+//作品信息数据
 class WorkInfo {
   // 作品Id
   int id;
@@ -301,3 +301,9 @@ class StackData {
       required this.child,
       this.notRemoved = true});
 }
+
+/// 搜索操作回调函数
+typedef NeedSearchCallback = void Function(String needSearch);
+
+/// 打开新窗口操作回调函数
+typedef OpenTabCallback = void Function(String userName);

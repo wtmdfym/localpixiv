@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:localpixiv/models.dart';
 
-//自定义的作品信息变更捕捉器
+/// 作品信息变更捕捉器
 class WorkInfoNotifier extends ValueNotifier<WorkInfo> {
   WorkInfoNotifier(super.workInfo);
 
@@ -30,11 +30,11 @@ class WorkInfoNotifier extends ValueNotifier<WorkInfo> {
   }
 
   void setId(int id) {
-    ///赋值 这里需要注意的是 如果没有给 ValueNotifier 赋值 WorkInfo 对象时
+    /// 赋值 这里需要注意的是 如果没有给 ValueNotifier 赋值 WorkInfo 对象时
     /// value 会出现空指针异常
     value.id = id;
 
-    ///通知更新
+    /// 通知更新
     notifyListeners();
   }
 
@@ -58,13 +58,13 @@ class WorkInfoNotifier extends ValueNotifier<WorkInfo> {
   }
 }
 
-// 作品信息显示通知器
+/// 作品信息显示通知器
 class ShowInfoNotification extends Notification {
   ShowInfoNotification(this.msg);
   final WorkInfo msg;
 }
 
-//自定义的作者信息变更捕捉器
+/// 自定义的作者信息变更捕捉器
 class UserInfoNotifier extends ValueNotifier<UserInfo> {
   UserInfoNotifier(super.workInfo);
 
@@ -83,15 +83,7 @@ class UserInfoNotifier extends ValueNotifier<UserInfo> {
   }
 }
 
-// 作品收藏操作通知器
-/*class WorkBookMarkNotification extends Notification {
-  WorkBookMarkNotification(this.id, this.userName, this.bookmarked);
-  final int id;
-  final String userName;
-  final bool bookmarked;
-}*/
-
-//自定义的信息变更捕捉器
+/// 信息变更捕捉器
 class InfosNotifier<T> extends ValueNotifier<List<T>> {
   InfosNotifier(super.info);
 
@@ -101,6 +93,7 @@ class InfosNotifier<T> extends ValueNotifier<List<T>> {
   }
 }
 
+/// 作品收藏操作通知器
 class WorkBookMarkModel with ChangeNotifier {
   bool _bookmarked = false;
   int _workId = 114514;
@@ -116,12 +109,6 @@ class WorkBookMarkModel with ChangeNotifier {
     _userName = userName;
     notifyListeners();
   }
-}
-
-// 标签搜索操作通知器
-class TagSearchNotification extends Notification {
-  TagSearchNotification(this.tag);
-  final String tag;
 }
 
 /*

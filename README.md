@@ -16,15 +16,27 @@ For help getting started with Flutter development, view the
 samples, guidance on mobile development, and a full API reference.
 
 ## 路线图
- - [ ] 与pythonapp的通信
+ - [x] 自动启动pythonapp
+ - [ ] 实现不同数据需求的支持（id, tag......）
  - [x] image viewer
- - [ ] noval viewer
+ - [ ] novel viewer
  - [x] following viewer
  - [x] settings
+ - [ ] 自定义图片缓存大小
+ - [ ] 完整的高级搜索功能
  - [ ] pixivcat代理
  - [ ] 数据分块加载
  - [ ] 支持不使用mongoDB
 ## Update History
+ - Version 1.0.6
+
+    - 修复了控制台输出过多时程序卡死的问题。
+    - 将图片异步加载显示的部件封装为单个widget。
+    - 使用回调函数取代了部分Notification，同时减少了不必要的参数传递。
+    - 实现了点击作者名字自动打开作者详情页。
+    - 增加了对已取消关注的作者的标识。
+    - 将默认数据移至单独的文件，方便管理和使用。
+    - 使用了新的加载动画，整体更加流畅。
  - Version 1.0.5
 
     更换了组件的更新逻辑，修复了已知bug，修改了文件结构。

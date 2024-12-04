@@ -15,7 +15,7 @@ class MutiTabbar extends StatefulWidget implements PreferredSizeWidget {
     return MutiTabbarState();
   }
 }
-//TODO 关闭后切换图片出错
+// TODO 关闭后切换图片出错, 现在似乎又好了？？？
 class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
@@ -86,7 +86,7 @@ class LazyLoadIndexedStack extends StatelessWidget {
     Widget? unloadWidget,
     required this.children,
   }) {
-    this.unloadWidget = unloadWidget ?? Container();
+    this.unloadWidget = unloadWidget ?? SizedBox();
   }
 
   final AlignmentGeometry alignment;

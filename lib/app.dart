@@ -25,14 +25,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    //WebSocketChannel _channel = WebSocketChannel.connect(Uri.parse('ws://localhost:8765'));
-    //final wsManager = WebSocketManager();
-    //wsManager.initWebSocket('ws://localhost:8765');
-
-    // 设置接收消息的回调函数
-    //wsManager.setOnMessageCallback((message) {
-    //  print('Received message: $message');
-    //});
     return MaterialApp(
         title: 'Flutter Demo',
         theme: ThemeData(
@@ -69,28 +61,7 @@ class MyApp extends StatelessWidget {
         home: MainTabPage(
             pixivDb: pixivDb,
             backupcollection: backupcollection,
-            configs: configs)
-
-        /*
-      Scaffold(body: 
-      VerticalTabs(
-        selectedTabTextStyle: TextStyle(color: Colors.red),
-        unSelectedTabTextStyle: TextStyle(color: Colors.grey),
-        tabs: <String>[
-          'Home',
-          'Viewer',
-          'Followings',
-          'Settings',
-        ],
-        contents: <Widget>[
-          Icon(Icons.directions_car),
-          Viewer(),
-          Icon(Icons.directions_bike),
-          Icon(Icons.downloading),
-        ],
-      ),
-    ));*/
-        );
+            configs: configs));
   }
 }
 
@@ -138,24 +109,12 @@ class MainTabPageState extends State<MainTabPage>
           )),
       StackData(index: 4, child: MyDraggable()),
     ];
-
-    //WebSocketChannel _channel = WebSocketChannel.connect(Uri.parse('ws://localhost:8765'));
-    //final wsManager = WebSocketManager();
-    //wsManager.initWebSocket('ws://localhost:8765');
-
-    // 设置接收消息的回调函数
-    //wsManager.setOnMessageCallback((message) {
-    //  print('Received message: $message');
-    //});
     return MultiProvider(
         providers: [
           ListenableProvider<StackChangeNotifier>(
             create: (context) {
               StackChangeNotifier stackDataModel = StackChangeNotifier();
-              stackDataModel.initData(
-                  mainTabCount,
-                  stackDatas, //mainStacks,
-                  [1, 2]);
+              stackDataModel.initData(mainTabCount, stackDatas, [1, 2]);
               return stackDataModel;
             },
           ),
@@ -201,27 +160,6 @@ class MainTabPageState extends State<MainTabPage>
                     child: Center(
                         child: LazyLoadIndexedStack(children: stackDatas)),
                   )));
-        } //)
-
-        /*
-      Scaffold(body: 
-      VerticalTabs(
-        selectedTabTextStyle: TextStyle(color: Colors.red),
-        unSelectedTabTextStyle: TextStyle(color: Colors.grey),
-        tabs: <String>[
-          'Home',
-          'Viewer',
-          'Followings',
-          'Settings',
-        ],
-        contents: <Widget>[
-          Icon(Icons.directions_car),
-          Viewer(),
-          Icon(Icons.directions_bike),
-          Icon(Icons.downloading),
-        ],
-      ),
-    ));*/
-        );
+        });
   }
 }

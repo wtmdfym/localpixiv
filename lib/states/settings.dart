@@ -31,7 +31,7 @@ class _SettingsState extends State<Settings> {
         child: SizedBox(
       width: 1920,
       child: Padding(
-          padding: EdgeInsets.all(30),
+          padding: EdgeInsets.all(20),
           child: Form(
               autovalidateMode: AutovalidateMode.onUserInteraction,
               child: Column(

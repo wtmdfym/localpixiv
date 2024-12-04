@@ -20,11 +20,10 @@ class _MyHomePageState extends State<MyHomePage> {
   late final Process process;
   late final StreamSubscription<String> s1;
   late final StreamSubscription<String> s2;
-  double maxScroll = 1;
   int getType = 0;
   bool isstart = false;
   //bool needprint = true;
-  List<String> hittexts = [
+  final List<String> hittexts = [
     '( ･ω･)☞   (:3 」∠)',
     'Enter work Id',
     'Enter user Id',
@@ -34,9 +33,10 @@ class _MyHomePageState extends State<MyHomePage> {
   // 1->id
   // 2->uid
   // 3->tag
-  ValueNotifier<String> outputs = ValueNotifier('');
-  String addata = '';
-  //TODO 限制最大显示文本量
+  final ValueNotifier<String> outputs = ValueNotifier('');
+  final String addata = '';
+  // 限制最大显示文本量
+  final int maxLength = 16000;
 
   void _startProcessListen() async {
     Utf8Decoder utf8decoder = Utf8Decoder(allowMalformed: true);
@@ -69,8 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });*/
 
-      //outputs += 'OUTPUT: $data';
-      outputs.value += data; //gbk.decode(data);
+      updateOutputs(data);
       if (_scrollController.hasClients) {
         _scrollController.animateTo(_scrollController.position.maxScrollExtent,
             duration: Durations.medium1, curve: Curves.linear);
@@ -78,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     // 监听命令的标准错误
     s2 = process.stderr.transform(utf8decoder).listen((data) {
-      outputs.value += 'ERROR: $data [ERROR]';
+      updateOutputs('ERROR: $data [ERROR]');
       if (data.contains('httpx.ConnectError')) {
         if (context.mounted) {
           showDialog(
@@ -106,11 +105,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     // 监听命令的返回代码
     int exitCode = await process.exitCode;
-    outputs.value += 'Process exited with code: $exitCode\n';
+    updateOutputs('Process exited with code: $exitCode\n');
     // 自动滚动至底部
     if (_scrollController.hasClients) {
-      _scrollController.animateTo(_scrollController.position.maxScrollExtent,
-          duration: Durations.medium1, curve: Curves.linear);
+      //_scrollController.animateTo(_scrollController.position.maxScrollExtent,
+      //    duration: Durations.medium1, curve: Curves.linear);
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     }
   }
 
@@ -118,6 +118,18 @@ class _MyHomePageState extends State<MyHomePage> {
     //TODO different getType
     process.stdin.write('$command\n');
     process.stdin.flush();
+  }
+
+  void updateOutputs(String newoutputs, [bool clear = false]) {
+    if (clear) {
+      updateOutputs('', true);
+    } else {
+      if ((outputs.value.length + newoutputs.length) > maxLength) {
+        outputs.value = outputs.value.substring(newoutputs.length) + newoutputs;
+      } else {
+        outputs.value += newoutputs;
+      }
+    }
   }
 
   @override
@@ -129,15 +141,17 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     super.dispose();
+    _scrollController.dispose();
+    _controller.dispose();
+    process.kill();
     s1.cancel();
     s2.cancel();
-    //widget.process.
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(30),
+      padding: const EdgeInsets.all(20),
       child: Column(children: <Widget>[
         Row(
           spacing: 30,
