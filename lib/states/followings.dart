@@ -7,11 +7,16 @@ import 'package:localpixiv/common/tools.dart';
 import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/userdisplayer.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
+import 'package:provider/provider.dart';
 
 class FollowingsDisplayer extends StatefulWidget {
   const FollowingsDisplayer(
-      {super.key, required this.hostPath, required this.pixivDb});
+      {super.key,
+      required this.hostPath,
+      // required this.cacheRate,
+      required this.pixivDb});
   final String hostPath;
+  // final double cacheRate;
   final mongo.Db pixivDb;
   @override
   State<StatefulWidget> createState() => _FollowingsDisplayerState();
@@ -43,9 +48,17 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     Stream<Map<String, dynamic>> followings = followingCollection
         .find(mongo.where.exists('userName').excludeFields(['_id']));
     followings.forEach((following) {
-      fetchUserInfo(following, widget.pixivDb).then((userInfo) {
-        userInfos.add(userInfo);
-      });
+      if (following['newestWorks'] != null) {
+        following['workInfos'] = [
+          for (Map<String, dynamic> workinfojson in following['newestWorks'])
+            WorkInfo.fromJson(workinfojson)
+        ];
+        userInfos.add(UserInfo.fromJson(following));
+      } else {
+        fetchUserInfo(following, widget.pixivDb).then((userInfo) {
+          userInfos.add(userInfo);
+        });
+      }
     });
     // 当有足够数据或加载完成时显示
     Timer.periodic(Durations.medium1, (timer) {
@@ -108,6 +121,17 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
 
   @override
   Widget build(BuildContext context) {
+    void openTabCallback(String userName) {
+      context.read<StackChangeNotifier>().addStack(
+          userName,
+          UserDetailsDisplayer(
+            hostPath: widget.hostPath,
+            userName: userName,
+            pixivDb: widget.pixivDb,
+            // cacheRate: widget.cacheRate,
+          ));
+    }
+
     return Center(
         child: FittedBox(
             child: Padding(
@@ -119,17 +143,29 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
                           spacing: 15,
                           children: [
                             FollowingInfoDisplayer(
-                                hostPath: widget.hostPath,
-                                userInfo: userInfos[0]),
+                              hostPath: widget.hostPath,
+                              // cacheRate: widget.cacheRate,
+                              userInfo: userInfos[0],
+                              onTab: (userName) => openTabCallback(userName),
+                            ),
                             FollowingInfoDisplayer(
-                                hostPath: widget.hostPath,
-                                userInfo: userInfos[1]),
+                              hostPath: widget.hostPath,
+                              // cacheRate: widget.cacheRate,
+                              userInfo: userInfos[1],
+                              onTab: (userName) => openTabCallback(userName),
+                            ),
                             FollowingInfoDisplayer(
-                                hostPath: widget.hostPath,
-                                userInfo: userInfos[2]),
+                              hostPath: widget.hostPath,
+                              // cacheRate: widget.cacheRate,
+                              userInfo: userInfos[2],
+                              onTab: (userName) => openTabCallback(userName),
+                            ),
                             FollowingInfoDisplayer(
-                                hostPath: widget.hostPath,
-                                userInfo: userInfos[3]),
+                              hostPath: widget.hostPath,
+                              // cacheRate: widget.cacheRate,
+                              userInfo: userInfos[3],
+                              onTab: (userName) => openTabCallback(userName),
+                            ),
                             // 翻页控件
                             Row(
                               spacing: 300,

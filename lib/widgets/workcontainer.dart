@@ -24,9 +24,7 @@ class InfoContainer extends StatelessWidget {
     List<Widget> tags = [];
     workInfo.tags.forEach((key, value) {
       tags.add(SelectableText.rich(
-          style: TextStyle(
-              fontSize: 20,
-              backgroundColor: const Color.fromARGB(150, 255, 193, 7)),
+          style: TextStyle(fontSize: 20, backgroundColor: Colors.amberAccent),
           TextSpan(
               text: '$key ($value)',
               recognizer: (TapGestureRecognizer()
@@ -64,12 +62,14 @@ class WorkContainer extends StatefulWidget {
     required this.hostPath,
     this.width = 400,
     this.height = 480,
+    // required this.cacheRate,
     required this.workInfo,
     this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
   });
   final String hostPath;
   final int width;
   final int height;
+  // final double cacheRate;
   final WorkInfo workInfo;
   final Color backgroundColor;
   @override
@@ -108,15 +108,13 @@ class _WorkContainerState extends State<WorkContainer>
     _icon = ValueNotifier<IconData>(
         widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border);
     void showWorkDetail() {
-      List<dynamic>? imagePaths = widget.workInfo.imagePath;
-      if (imagePaths != null) {
-        context.read<StackChangeNotifier>().addStack(
-            widget.workInfo.title,
-            WorkDetialDisplayer(
-              hostPath: widget.hostPath,
-              workInfo: widget.workInfo,
-            ));
-      }
+      context.read<StackChangeNotifier>().addStack(
+          widget.workInfo.title,
+          WorkDetialDisplayer(
+            hostPath: widget.hostPath,
+            workInfo: widget.workInfo,
+            // cacheRate: widget.cacheRate,
+          ));
     }
 
     return MouseRegion(
@@ -146,41 +144,37 @@ class _WorkContainerState extends State<WorkContainer>
                 decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     color: widget.backgroundColor),
-                //child: Column(children: [
-                //  SizedBox(
                 width: widget.width + 8,
                 height: widget.height + 8,
                 child: widget.workInfo.type == 'novel'
-                    ? NovelLoader()
+                    ? NovelLoader(
+                        coverImagePath: '',
+                        title: widget.workInfo.title,
+                      )
                     : ImageLoader(
                         path:
                             '${widget.hostPath}${widget.workInfo.imagePath![0]}',
                         width: widget.width,
                         height: widget.height,
-                        cacheRate: 0)),
-            /*SizedBox(
-              width: widget.width - 100,
-              child: Text(
-                  workInfo.title,
-                  style: TextStyle(fontSize: 16),
-                  maxLines: 1,
-                ))
-            ])*/
+                        // cacheRate: widget.cacheRate,
+                      )),
           )
               .animate(
                   controller: _mouseClickAnimationController, autoPlay: false)
               .color(duration: 50.ms, blendMode: BlendMode.darken),
-          // 图片数量显示
+          // 图片数量/小说字数显示
           Positioned(
               top: 5,
               right: 5,
-              width: 30,
+              width: widget.workInfo.type == 'novel' ? 90 : 30,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                     color: Colors.grey[500],
                     borderRadius: BorderRadius.circular(8)),
                 child: Text(
-                  widget.workInfo.imageCount.toString(),
+                  widget.workInfo.type == 'novel'
+                      ? widget.workInfo.characterCount.toString()
+                      : widget.workInfo.imageCount.toString(),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: Colors.white,
@@ -219,11 +213,20 @@ class _WorkContainerState extends State<WorkContainer>
   }
 }
 
+/// 展示作品详情的容器
 class WorkDetialDisplayer extends StatefulWidget {
-  const WorkDetialDisplayer(
-      {super.key, required this.hostPath, required this.workInfo});
+  const WorkDetialDisplayer({
+    super.key,
+    required this.hostPath,
+    // required this.cacheRate,
+    required this.workInfo,
+    this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
+  });
+
   final String hostPath;
+  // final double cacheRate;
   final WorkInfo workInfo;
+  final Color backgroundColor;
 
   @override
   State<StatefulWidget> createState() => _WorkDetialDisplayerState();
@@ -246,19 +249,25 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
         child: FittedBox(
             child: Stack(
       children: [
-        InteractiveViewer(
-            maxScale: 12,
+        Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: widget.backgroundColor),
+            width: 2560,
+            height: 1440,
             child: ValueListenableBuilder(
                 valueListenable: index,
-                builder: (context, index, child) => SizedBox(
-                    width: 2560,
-                    height: 1440,
-                    child: ImageLoader(
-                        path:
-                            '${widget.hostPath}${widget.workInfo.imagePath![index]}',
-                        width: 2560,
-                        height: 1440,
-                        cacheRate: 0)))),
+                builder: (context, index, child) =>
+                    widget.workInfo.type == 'novel'
+                        ? NovelDetialLoader(content: widget.workInfo.content!)
+                        : InteractiveViewer(
+                            maxScale: 12,
+                            child: ImageLoader(
+                              path:
+                                  '${widget.hostPath}${widget.workInfo.imagePath![index]}',
+                              width: 2560,
+                              height: 1440,
+                              // cacheRate: widget.cacheRate
+                            )))),
 
         Positioned(
             top: 670,
@@ -294,7 +303,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                 valueListenable: _icon,
                 builder: (context, iconvalue, child) => IconButton(
                       onPressed: () {
-                        //通信更新信息
+                        // 通信更新信息
                         _icon.value = widget.workInfo.isLiked
                             ? Icons.favorite_border
                             : Icons.favorite;
@@ -311,26 +320,28 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                       color: Colors.white,
                       style: IconButton.styleFrom(backgroundColor: Colors.grey),
                     ))),
-        ValueListenableBuilder(
-            valueListenable: index,
-            builder: (context, value, child) => Positioned(
-                bottom: 20,
-                right: 1225,
-                width: 150,
-                child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.grey,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      '${value + 1}/${widget.workInfo.imagePath!.length}',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        letterSpacing: 5,
-                        fontSize: 30,
-                        color: Colors.white,
-                      ),
-                    ))))
+        widget.workInfo.type == 'novel'
+            ? SizedBox()
+            : ValueListenableBuilder(
+                valueListenable: index,
+                builder: (context, value, child) => Positioned(
+                    bottom: 20,
+                    right: 1225,
+                    width: 150,
+                    child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: Colors.grey,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '${value + 1}/${widget.workInfo.imagePath!.length}',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            letterSpacing: 5,
+                            fontSize: 30,
+                            color: Colors.white,
+                          ),
+                        ))))
       ],
     )));
   }

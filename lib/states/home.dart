@@ -79,21 +79,22 @@ class _MyHomePageState extends State<MyHomePage> {
     s2 = process.stderr.transform(utf8decoder).listen((data) {
       updateOutputs('ERROR: $data [ERROR]');
       if (data.contains('httpx.ConnectError')) {
-        if (context.mounted) {
-          showDialog(
-              context: context,
-              builder: (context) {
-                return AlertDialog(
-                  title: Text('ConnectError:\nProxy inaccessible'),
-                  titleTextStyle:
-                      TextStyle(color: Colors.redAccent, fontSize: 25),
-                  content: Text(
-                    '请检查代理设置是否正确',
-                    textAlign: TextAlign.center,
-                  ),
-                );
-              });
-        }
+        context.mounted
+            ? showDialog(
+                // ignore: use_build_context_synchronously
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    title: Text('ConnectError:\nProxy inaccessible'),
+                    titleTextStyle:
+                        TextStyle(color: Colors.redAccent, fontSize: 25),
+                    content: Text(
+                      '请检查代理设置是否正确',
+                      textAlign: TextAlign.center,
+                    ),
+                  );
+                })
+            : {};
         setState(() {
           isstart = false;
         });

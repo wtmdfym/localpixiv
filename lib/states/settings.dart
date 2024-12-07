@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/dialogs.dart';
 import 'package:localpixiv/common/tools.dart';
-
+import 'package:provider/provider.dart';
+// TODO     - 优化了settings的显示和交互。
 class Settings extends StatefulWidget {
   const Settings({super.key, required this.configs});
-  final Configs configs;
+  final MainConfigs configs;
   @override
   State<StatefulWidget> createState() {
     return _SettingsState();
@@ -14,6 +16,9 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
+  // cookie
+  late final TextEditingController _cookiecontroller;
+  double cacheRate = 1.0;
   // 删除Client
   void _removeClient(int index) {
     setState(() {
@@ -21,19 +26,33 @@ class _SettingsState extends State<Settings> {
     });
   }
 
+  // 自动保存
+  void autoSaveUIConfigs() {
+    configWriter('jsons/config.json', widget.configs,
+            context.read<UIConfigUpdateNotifier>().uiConfigs)
+        .then((success) => success
+            ? {}
+            : resultDialog(
+                context.mounted ? context : null, 'Save configs', false));
+  }
+
+  @override
+  void initState() {
+    cacheRate = context.read<UIConfigUpdateNotifier>().uiConfigs.imageCacheRate;
+    _cookiecontroller =
+        TextEditingController(text: widget.configs.cookies.toString());
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    //Configs newConfigs = Configs();
     return SingleChildScrollView(
-        //spacing: 100,
-        //children: [
-        //Spacer(),
         child: SizedBox(
       width: 1920,
       child: Padding(
           padding: EdgeInsets.all(20),
           child: Form(
-              autovalidateMode: AutovalidateMode.onUserInteraction,
+              autovalidateMode: AutovalidateMode.onUnfocus,
               child: Column(
                 spacing: 20,
                 children: [
@@ -44,23 +63,22 @@ class _SettingsState extends State<Settings> {
                       fontSize: 20,
                     ),
                     decoration: getInputDecoration('Save Path'),
-                    onChanged: (value) {
-                      // 处理文本变化
-                    },
                     validator: (value) {
+                      var pathre = RegExp(r'^[C-Z]\:[\\,\/].*');
                       if (value == null || value.isEmpty) {
                         return '请输入Save Path';
-                      } else {}
-                      return null;
+                      } else if (pathre.hasMatch(value)) {
+                        return null;
+                      } else {
+                        return 'Path 格式错误';
+                      }
                     },
                     onSaved: (newValue) => widget.configs.savePath = newValue,
                   ),
                   TextFormField(
-                    initialValue: widget.configs.cookies.toString(),
-                    //maxLength: 100,
+                    controller: _cookiecontroller,
                     minLines: 5,
                     maxLines: 5,
-                    //expands: true,
                     style: TextStyle(
                       fontSize: 20,
                     ),
@@ -72,20 +90,20 @@ class _SettingsState extends State<Settings> {
                         borderRadius: BorderRadius.all(Radius.circular(5)),
                       ),
                     ),
-                    onChanged: (value) {
-                      // 处理文本变化
-                    },
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return '请输入Cookies';
-                      } else {
-                        if (value != widget.configs.cookies.toString()) {
-                          if (cookiesFormater(value)['PHPSESSID'] == null) {
-                            return 'Cookies值错误';
-                          }
+                      } else if (value != widget.configs.cookies.toString()) {
+                        Map<String, String> formatted = cookiesFormater(value);
+                        if (formatted['PHPSESSID'] == null) {
+                          return 'Cookies值错误';
+                        } else {
+                          _cookiecontroller.text = formatted.toString();
+                          return null;
                         }
+                      } else {
+                        return null;
                       }
-                      return null;
                     },
                     onSaved: (newValue) {
                       if (newValue != widget.configs.cookies.toString()) {
@@ -99,9 +117,8 @@ class _SettingsState extends State<Settings> {
                       'Enable Proxy',
                       style: TextStyle(fontSize: 20),
                     ),
-                    value: widget.configs.enableProxy, //当前状态
+                    value: widget.configs.enableProxy,
                     onChanged: (value) {
-                      //重新构建页面
                       setState(() {
                         widget.configs.enableProxy = value;
                       });
@@ -187,7 +204,7 @@ class _SettingsState extends State<Settings> {
                         fontSize: 20,
                       ),
                     ),
-                    value: widget.configs.downloadType!.illust, //[0],
+                    value: widget.configs.downloadType!.illust,
                     onChanged: (value) {
                       setState(() {
                         widget.configs.downloadType!.illust = value!;
@@ -201,7 +218,7 @@ class _SettingsState extends State<Settings> {
                         fontSize: 20,
                       ),
                     ),
-                    value: widget.configs.downloadType!.manga, //[1],
+                    value: widget.configs.downloadType!.manga,
                     onChanged: (value) {
                       setState(() {
                         widget.configs.downloadType!.manga = value!;
@@ -288,9 +305,9 @@ class _SettingsState extends State<Settings> {
                                 'Enable Client Pool',
                                 style: TextStyle(fontSize: 20),
                               ),
-                              value: widget.configs.enableClientPool, //当前状态
+                              value: widget.configs.enableClientPool,
                               onChanged: (value) {
-                                //重新构建页面
+                                // 重新构建页面
                                 setState(() {
                                   widget.configs.enableClientPool = value;
                                 });
@@ -323,7 +340,7 @@ class _SettingsState extends State<Settings> {
                         children: <Widget>[
                           SizedBox(
                             height: 200,
-                            //使用 ListView.builder 来构建列表
+                            // 使用 ListView.builder 来构建列表
                             child: ListView.builder(
                               itemExtent: 60,
                               itemCount: widget.configs.clientPool!.length,
@@ -348,57 +365,7 @@ class _SettingsState extends State<Settings> {
                           ),
                         ],
                       )),
-                  /*Row(
-                      spacing: 50,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [*/
-                  Divider(),
-                  //UI 相关设置
-                  Text(
-                    'UI Settings',
-                    style: TextStyle(
-                      fontSize: 20,
-                    ),
-                  ),
-                  SwitchListTile(
-                    title: Text(
-                      'Auto search when click tag',
-                      style: TextStyle(fontSize: 20),
-                    ),
-                    value: widget.configs.uiConfigs.autoSearch, //当前状态
-                    onChanged: (value) {
-                      //重新构建页面
-                      setState(() {
-                        widget.configs.uiConfigs.autoSearch = value;
-                      });
-                    },
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'MaxImageCacheRate(unused)',
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      Expanded(
-                          child: Slider(
-                        max: 4,
-                        divisions: 4,
-                        label: widget.configs.uiConfigs.maxImageCacheRate == 0
-                            ? 'Not limited'
-                            : '${widget.configs.uiConfigs.maxImageCacheRate}',
-                        value: widget.configs.uiConfigs.maxImageCacheRate,
-                        onChanged: (value) {
-                          //重新构建页面
-                          setState(() {
-                            widget.configs.uiConfigs.maxImageCacheRate = value;
-                          });
-                        },
-                      )),
-                    ],
-                  ),
-
-                  // 保存button
+                  // 保存
                   Builder(builder: (context) {
                     return ElevatedButton(
                       onPressed: () {
@@ -408,11 +375,19 @@ class _SettingsState extends State<Settings> {
                             // 保存表单数据
                             Form.of(context).save();
                             // 写入配置文件
-                            //File jsonFile = File('jsons/test.json');
-                            configManger(
-                                    'jsons/config.json', 'w', widget.configs)
-                                ? resultDialog(context, 'Save configs', true)
-                                : resultDialog(context, 'Save configs', false);
+                            configWriter(
+                                    'jsons/config.json',
+                                    widget.configs,
+                                    context
+                                        .read<UIConfigUpdateNotifier>()
+                                        .uiConfigs)
+                                .then((success) => context.mounted
+                                    ? success
+                                        ? resultDialog(
+                                            context, 'Save configs', true)
+                                        : resultDialog(
+                                            context, 'Save configs', false)
+                                    : {});
                           });
                         }
                       },
@@ -424,6 +399,88 @@ class _SettingsState extends State<Settings> {
                       ),
                     );
                   }),
+                  Divider(),
+                  // UI 相关设置
+                  // 自动保存
+                  Text(
+                    'UI Settings',
+                    style: TextStyle(
+                      fontSize: 20,
+                    ),
+                  ),
+                  SwitchListTile(
+                    title: Text(
+                      'Auto open user detial page when click user infos',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    value: context
+                        .read<UIConfigUpdateNotifier>()
+                        .uiConfigs
+                        .autoOpen,
+                    onChanged: (value) {
+                      // 重新构建页面
+                      setState(() {
+                        // 通知UI更新
+                        context
+                            .read<UIConfigUpdateNotifier>()
+                            .updateUiConfigs('autoOpen', value);
+                        autoSaveUIConfigs();
+                      });
+                    },
+                  ),
+                  SwitchListTile(
+                    title: Text(
+                      'Auto search when click tag',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                    value: context
+                        .read<UIConfigUpdateNotifier>()
+                        .uiConfigs
+                        .autoSearch,
+                    onChanged: (value) {
+                      // 重新构建页面
+                      setState(() {
+                        // 通知UI更新
+                        context
+                            .read<UIConfigUpdateNotifier>()
+                            .updateUiConfigs('autoSearch', value);
+                        autoSaveUIConfigs();
+                      });
+                    },
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '  ImageCacheRate',
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      Expanded(
+                          child: Slider(
+                        max: 4,
+                        divisions: 8,
+                        label: cacheRate == 0
+                            ? 'Not limited'
+                            : '$cacheRate',
+                        value: cacheRate,
+                        onChanged: (value) {
+                          setState(() {
+                            cacheRate = value;
+                          });
+                        },
+                        onChangeEnd: (value) {
+                          // 重新构建页面
+                          setState(() {
+                            // 通知UI更新
+                            context
+                                .read<UIConfigUpdateNotifier>()
+                                .updateUiConfigs('imageCacheRate', value);
+                            autoSaveUIConfigs();
+                          });
+                        },
+                      )),
+                    ],
+                  ),
                 ],
               ))),
     ));

@@ -81,12 +81,14 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                                   '插画、动图',
                                   '插画',
                                   '漫画',
-                                  '动图'*/
+                                  '动图'
+                                  '小说'*/
                                 'illust,manga,ugoira',
                                 'illust,manga',
                                 'illust',
                                 'manga',
                                 'ugoira',
+                                'novel',
                               ].map<DropdownMenuItem<String>>((String value) {
                                 return DropdownMenuItem<String>(
                                   value: value,
@@ -302,8 +304,8 @@ Future<String> addClient(
   }
 }
 
-void resultDialog(BuildContext context, String operation, bool success,
-    [String? description]) async {
+void resultDialog(BuildContext? context, String operation, bool success,
+    {String? description}) async {
   toastification.show(
     context: context,
     type: success ? ToastificationType.success : ToastificationType.error,

@@ -28,6 +28,13 @@ samples, guidance on mobile development, and a full API reference.
  - [ ] 数据分块加载
  - [ ] 支持不使用mongoDB
 ## Update History
+ - Version 1.0.7
+
+    - 细节和bug修正。
+    - 优化了userinfo的载入方法，减少卡顿和性能消耗。
+    - 使用provider提供UI设置的更新和传递。
+    - 实现了UIConfig的自动保存
+    - 开始编写小说显示器的雏形（仅能显示简陋的信息）。
  - Version 1.0.6
 
     - 修复了控制台输出过多时程序卡死的问题。

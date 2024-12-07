@@ -1,11 +1,7 @@
-import 'dart:io';
-
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:mongo_dart/mongo_dart.dart' show Db, where;
 
-import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/common/defaultdatas.dart';
 import 'package:localpixiv/common/tools.dart';
 import 'package:localpixiv/models.dart';
@@ -18,12 +14,16 @@ class FollowingInfoDisplayer extends StatefulWidget {
     required this.hostPath,
     this.width = 200,
     this.height = 200,
+    // required this.cacheRate,
     required this.userInfo,
+    required this.onTab,
   });
   final String hostPath;
   final double width;
   final double height;
+  // final double cacheRate;
   final UserInfo userInfo;
+  final OpenTabCallback onTab;
   @override
   State<StatefulWidget> createState() => _FollowingInfoDisplayerState();
 }
@@ -50,15 +50,6 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
   Widget build(BuildContext context) {
     workInfos.clear();
     workInfos.addAll(widget.userInfo.workInfos.sublist(0, 4));
-    void showUserDetail() {
-      UserInfo userInfo = widget.userInfo;
-      context.read<StackChangeNotifier>().addStack(
-          userInfo.userName,
-          UserDetailsDisplayer(
-            hostPath: widget.hostPath,
-            userInfo: userInfo,
-          ));
-    }
 
     return MouseRegion(
         // 进入
@@ -73,7 +64,8 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
               onTapDown: (details) => _mouseClickAnimationController.forward(),
               onTapUp: (details) => _mouseClickAnimationController.reverse(),
               onTapCancel: () => _mouseClickAnimationController.reverse(),
-              onTap: () => showUserDetail(),
+              onTap: () =>
+                  widget.onTab(widget.userInfo.userName), //showUserDetail(),
               //onDoubleTap: () {},
               child: Container(
                       padding: const EdgeInsets.all(8),
@@ -94,7 +86,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                                     '${widget.hostPath}${widget.userInfo.profileImage}',
                                 width: 240,
                                 height: 240,
-                                cacheRate: 0,
+                                // cacheRate: widget.cacheRate,
                               )),
                           Container(
                               decoration: BoxDecoration(
@@ -126,6 +118,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                             workInfo: workInfos[0],
                             width: 360,
                             height: 270,
+                            // cacheRate: widget.cacheRate,
                             backgroundColor: Colors.white,
                           ),
                           WorkContainer(
@@ -133,6 +126,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                             workInfo: workInfos[1],
                             width: 360,
                             height: 270,
+                            // cacheRate: widget.cacheRate,
                             backgroundColor: Colors.white,
                           ),
                           WorkContainer(
@@ -140,6 +134,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                             workInfo: workInfos[2],
                             width: 360,
                             height: 270,
+                            // cacheRate: widget.cacheRate,
                             backgroundColor: Colors.white,
                           ),
                           WorkContainer(
@@ -147,6 +142,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                             workInfo: workInfos[3],
                             width: 360,
                             height: 270,
+                            // cacheRate: widget.cacheRate,
                             backgroundColor: Colors.white,
                           ),
                         ],
@@ -166,6 +162,7 @@ class UserDetailsDisplayer extends StatefulWidget {
   UserDetailsDisplayer({
     super.key,
     required this.hostPath,
+    // required this.cacheRate,
     this.userInfo,
     this.userName,
     this.pixivDb,
@@ -174,6 +171,7 @@ class UserDetailsDisplayer extends StatefulWidget {
   }
 
   final String hostPath;
+  // final double cacheRate;
   final UserInfo? userInfo;
   final String? userName;
   final Db? pixivDb;
@@ -250,40 +248,15 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                   spacing: 30,
                   children: [
                     SizedBox(
+                      width: 240,
+                      height: 240,
+                      child: ImageLoader(
+                        path: '${widget.hostPath}${_userInfo.profileImage}',
                         width: 240,
                         height: 240,
-                        child: FutureBuilder<ImageProvider>(
-                            future: imageFileLoader(
-                              '${widget.hostPath}${_userInfo.profileImage}',
-                              240,
-                              240,
-                            ),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<ImageProvider> snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.done) {
-                                return Image(
-                                  image: snapshot.data!,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    if (error.toString() ==
-                                        'Exception: Codec failed to produce an image, possibly due to invalid image data.') {
-                                      File('${widget.hostPath}${_userInfo.profileImage}')
-                                          .delete();
-                                    }
-                                    return Center(
-                                        child: Text(
-                                      '${error.toString()} It will be deleted automatically.',
-                                      style: TextStyle(
-                                          color: Colors.redAccent,
-                                          fontSize: 20),
-                                    ));
-                                  },
-                                ).animate().fadeIn(duration: 500.ms);
-                              } else {
-                                return const Center(
-                                    child: CircularProgressIndicator());
-                              }
-                            })),
+                        // cacheRate: widget.cacheRate,
+                      ),
+                    ),
                     Expanded(
                         child: Text(
                       'UserName: ${_userInfo.userName}',
@@ -343,6 +316,7 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                                       WorkContainer(
                                         hostPath: widget.hostPath,
                                         workInfo: info,
+                                        // cacheRate: widget.cacheRate,
                                       )
                                   ],
                                 );
@@ -356,6 +330,7 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                                       WorkContainer(
                                         hostPath: widget.hostPath,
                                         workInfo: info,
+                                        // cacheRate: widget.cacheRate,
                                       )
                                   ],
                                 );

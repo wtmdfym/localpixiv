@@ -135,13 +135,13 @@ class CmdData extends InheritedWidget {
   bool updateShouldNotify(CmdData oldWidget) => data != oldWidget.data;
 }*/
 
-// stack 变更通知器
+/// stack 变更通知器
 class StackChangeNotifier with ChangeNotifier {
   late final int _mainTabCount;
   int historyIndex = 0;
   //int _lastremoved = -1;
   // index of stake that not be removed
-  List<int> alive = [];
+  final List<int> alive = [];
 
   final List<String> _titles = [];
   final List<StackData> _stackDatas = [];
@@ -242,5 +242,63 @@ class StackChangeNotifier with ChangeNotifier {
 
   void updateLoadedIndex(int index) {
     _loadedIndex.add(index);
+  }
+}
+
+/// 全局设置更新通知器
+class UIConfigUpdateNotifier with ChangeNotifier {
+  // late final MainConfigs _configs;
+  late final UIConfigs _uiConfigs;
+
+  // MainConfigs get configs => _configs;
+  UIConfigs get uiConfigs => _uiConfigs;
+
+  void initconfigs(MainConfigs configs, UIConfigs uiConfigs) {
+    // _configs = configs;
+    _uiConfigs = uiConfigs;
+    notifyListeners();
+  }
+
+  /*
+  void updateMainConfigs(String key, dynamic value) {
+    // TODO 不需要通知
+    if (key == 'savePath') {
+      _configs.savePath = value;
+    }
+    else if (key == 'cookies') {
+      _configs.cookies = value;
+    } else if (key == 'enableProxy') {
+      _configs.enableProxy = value;
+    } else if (key == 'httpProxies') {
+      _configs.httpProxies = value;
+    } else if (key == 'httpsProxies') {
+      _configs.httpsProxies = value;
+    } else if (key == 'semaphore') {
+      _configs.semaphore = value;
+    } else if (key == 'downloadType') {
+      _configs.downloadType = value;
+    } else if (key == 'lastRecordTime') {
+      _configs.lastRecordTime = value;
+    } else if (key == 'enableClientPool') {
+      _configs.enableClientPool = value;
+    } else if (key == 'clientPool') {
+      _configs.clientPool = value;
+    } else {
+      throw 'Invalid key!';
+    }
+    // notifyListeners();
+  }
+  */
+  void updateUiConfigs(String key, dynamic value) {
+    if (key == 'autoOpen') {
+      _uiConfigs.autoOpen = value;
+    } else if (key == 'autoSearch') {
+      _uiConfigs.autoSearch = value;
+    } else if (key == 'imageCacheRate') {
+      _uiConfigs.imageCacheRate = value;
+    } else {
+      throw 'Invalid key!';
+    }
+    notifyListeners();
   }
 }

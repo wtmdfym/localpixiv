@@ -17,12 +17,10 @@ class Viewer extends StatefulWidget {
     required this.pixivDb,
     required this.backupcollection,
     required this.configs,
-    //required this.channel,
   });
   final Db pixivDb;
   final DbCollection backupcollection;
-  final Configs configs;
-  //final WebSocketChannel channel;
+  final MainConfigs configs;
 
   @override
   State<StatefulWidget> createState() {
@@ -61,10 +59,10 @@ class _ViewerState extends State<Viewer> {
 
   // 搜索控制
   void searchAnalyzer(
-      [Map<String, dynamic>? advancedtext, SelectorBuilder? finishedselector]) {
+      {Map<String, dynamic>? advancedtext, SelectorBuilder? finishedselector}) {
     if (onsearching) {
       resultDialog(context, 'Search', false,
-          'Searching operation not complete!\nPlease wait.');
+          description: 'Searching operation not complete!\nPlease wait.');
       return;
     }
     _isLoading.value = true;
@@ -178,9 +176,8 @@ class _ViewerState extends State<Viewer> {
     }
     searchWork(selector).then((success) {
       if (success) {
-        context.mounted
-            ? resultDialog(context, 'Search', true, 'Found $reslength results!')
-            : {};
+        resultDialog(context.mounted ? context : null, 'Search', true,
+            description: 'Found $reslength results!');
         maxpage = (reslength / pagesize).ceil();
         Timer.periodic(Durations.short2, (timer) {
           if ((searchResults.length >= 8) ||
@@ -191,10 +188,8 @@ class _ViewerState extends State<Viewer> {
           }
         });
       } else {
-        context.mounted
-            ? resultDialog(
-                context, 'Search', false, 'No matching results found!')
-            : {};
+        resultDialog(context.mounted ? context : null, 'Search', false,
+            description: 'No matching results found!');
       }
     });
   }
@@ -357,9 +352,9 @@ class _ViewerState extends State<Viewer> {
                             Divider(),
                             ElevatedButton(
                                 onPressed: () {
-                                  advancedSearch(context).then((context) {
+                                  advancedSearch(context).then((advancedtext) {
                                     // TODO 高级搜索
-                                    searchAnalyzer(context);
+                                    searchAnalyzer(advancedtext: advancedtext);
                                   });
                                 },
                                 child: Text('Advanced Search',
@@ -368,28 +363,40 @@ class _ViewerState extends State<Viewer> {
                             // 信息显示部件
                             ValueListenableBuilder(
                                 valueListenable: showingInfo,
-                                builder: (context, value, child) =>
-                                    InfoContainer(
-                                      workInfo: value,
-                                      onTapUser: (userName) {
-                                        context
-                                            .read<StackChangeNotifier>()
-                                            .addStack(
-                                                userName,
-                                                UserDetailsDisplayer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  userName: userName,
-                                                  pixivDb: widget.pixivDb,
-                                                ));
-                                      },
-                                      onTapTag: (tag) {
-                                        widget.configs.uiConfigs.autoSearch
-                                            ? searchAnalyzer(
-                                                null, where.exists('tags.$tag'))
-                                            : {};
-                                      },
-                                    ))
+                                builder: (context, workInfo, child) => Consumer<
+                                        UIConfigUpdateNotifier>(
+                                    builder: (context, value, child) =>
+                                        InfoContainer(
+                                          workInfo: workInfo,
+                                          onTapUser: (userName) {
+                                            value.uiConfigs.autoOpen
+                                                ? context
+                                                    .read<StackChangeNotifier>()
+                                                    .addStack(
+                                                        userName,
+                                                        UserDetailsDisplayer(
+                                                          hostPath: widget
+                                                              .configs
+                                                              .savePath!,
+                                                          /*cacheRate:
+                                                            configNotifier
+                                                                .uiConfigs
+                                                                .imageCacheRate,*/
+                                                          userName: userName,
+                                                          pixivDb:
+                                                              widget.pixivDb,
+                                                        ))
+                                                : {};
+                                          },
+                                          onTapTag: (tag) {
+                                            value.uiConfigs.autoSearch
+                                                ? searchAnalyzer(
+                                                    advancedtext: null,
+                                                    finishedselector: where
+                                                        .exists('tags.$tag'))
+                                                : {};
+                                          },
+                                        )))
                           ],
                         )),
                     // 作品展示网格
@@ -423,37 +430,53 @@ class _ViewerState extends State<Viewer> {
                                                 const NeverScrollableScrollPhysics(),
                                             children: <Widget>[
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[0]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[0],
+                                                //cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[4]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[4],
+                                                //cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[1]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[1],
+                                                //cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[5]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[5],
+                                                // cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[2]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[2],
+                                                //  cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[6]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[6],
+                                                //  cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[3]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[3],
+                                                // cacheRate: widget.uiConfigs.imageCacheRate,
+                                              ),
                                               WorkContainer(
-                                                  hostPath:
-                                                      widget.configs.savePath!,
-                                                  workInfo: workInfos[7]),
+                                                hostPath:
+                                                    widget.configs.savePath!,
+                                                workInfo: workInfos[7],
+                                                //cacheRate: widget .uiConfigs.imageCacheRate,
+                                              ),
                                             ],
                                             //)
                                           ))),

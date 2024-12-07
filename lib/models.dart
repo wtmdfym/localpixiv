@@ -21,6 +21,8 @@ class WorkInfo {
   // 作者相关信息
   String userId;
   String userName;
+  // 是否为ai生成 1 yes||2 no
+  int? aiType;
   // 图片数量
   int? imageCount;
   // 图片路径
@@ -29,6 +31,8 @@ class WorkInfo {
   String? coverImagePath;
   // 小说内容
   String? content;
+  // 小说字数
+  int? characterCount;
 
   WorkInfo({
     required this.id,
@@ -41,34 +45,39 @@ class WorkInfo {
     required this.uploadDate,
     required this.userId,
     required this.userName,
-    this.imageCount,
-    this.imagePath,
-    this.coverImagePath,
-    this.content,
+    this.aiType = 1,
+    this.imageCount = 0,
+    this.imagePath = const [''],
+    this.coverImagePath = '',
+    this.content = '',
+    this.characterCount = 0,
   });
 
   factory WorkInfo.fromJson(Map<String, dynamic> json) {
     int imageCount = json['relative_path']?.length ?? 0;
+    //TODO novelcover/id.png
+    String coverImagePath = json['coverImagePath'] ?? '';
     return WorkInfo(
-      id: json['id'],
-      title: json['title'],
-      type: json['type'],
-      tags: json['tags'],
-      description: json['description'],
-      isOriginal: json['isOriginal'],
-      isLiked: json['likeData'],
-      uploadDate: json['uploadDate'],
-      userId: json['userId'],
-      userName: json['username'],
-      imageCount: imageCount,
-      imagePath: json['relative_path'],
-      coverImagePath: json['coverImagePath'],
-      content: json['content'],
-    );
+        id: json['id'],
+        title: json['title'],
+        type: json['type'],
+        tags: json['tags'],
+        description: json['description'],
+        isOriginal: json['isOriginal'],
+        isLiked: json['likeData'],
+        uploadDate: json['uploadDate'],
+        userId: json['userId'],
+        userName: json['username'],
+        aiType: json['aiType'],
+        imageCount: imageCount,
+        imagePath: json['relative_path'],
+        coverImagePath: coverImagePath,
+        content: json['content'],
+        characterCount: json['characterCount']);
   }
 }
 
-//作者信息数据
+/// 作者信息数据
 class UserInfo {
   // 作者Id
   String userId;
@@ -93,10 +102,13 @@ class UserInfo {
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
+    //RegExp regExp = RegExp(r'bird');
+    //regExp.allMatches(json['profileImageUrl'],);
     return UserInfo(
         userId: json['userId'],
         userName: json['userName'],
-        profileImage: json['profileImage'],
+        profileImage:
+            'userProfileImages/${json['userId']}.${json['profileImageUrl']?.substring(103) ?? 'no'}',
         userComment: json['userComment'],
         workInfos: json['workInfos'],
         notFollowingNow: json['not_following_now'] ?? false);
@@ -104,7 +116,7 @@ class UserInfo {
 }
 
 /// 总配置信息
-class Configs {
+class MainConfigs {
   String? savePath;
   Cookies? cookies;
   bool enableProxy = false;
@@ -115,9 +127,9 @@ class Configs {
   String? lastRecordTime;
   bool enableClientPool = false;
   List<ClientPool>? clientPool;
-  UIConfigs uiConfigs = UIConfigs();
+  // UIConfigs uiConfigs = UIConfigs();
 
-  Configs({
+  MainConfigs({
     this.savePath,
     this.cookies,
     this.enableProxy = false,
@@ -128,10 +140,10 @@ class Configs {
     this.lastRecordTime,
     this.enableClientPool = false,
     this.clientPool,
-    required this.uiConfigs,
+    // required this.uiConfigs,
   });
 
-  Configs.fromJson(Map<String, dynamic> json) {
+  MainConfigs.fromJson(Map<String, dynamic> json) {
     savePath = json['save_path'];
     cookies =
         json['cookies'] != null ? Cookies.fromJson(json['cookies']) : null;
@@ -150,7 +162,7 @@ class Configs {
         clientPool!.add(ClientPool.fromJson(v));
       });
     }
-    uiConfigs = UIConfigs.fromJson(json['uiConfigs']);
+    // uiConfigs = UIConfigs.fromJson(json['uiConfigs']);
   }
 
   Map<String, dynamic> toJson() {
@@ -171,33 +183,41 @@ class Configs {
     if (clientPool != null) {
       data['client_pool'] = clientPool!.map((v) => v.toJson()).toList();
     }
-    data['uiConfigs'] = uiConfigs.toJson();
+    // data['uiConfigs'] = uiConfigs.toJson();
     return data;
   }
 }
 
 /// UI界面配置信息
 class UIConfigs {
+  /// 是否在点击userinfo时自动打开
+  bool autoOpen = true;
+
   /// 是否在点击tag时自动搜索
   bool autoSearch = true;
 
   /// 图片的最大缓存大小与窗口大小的比值，0为无限制，
-  double maxImageCacheRate = 0;
+  double imageCacheRate = 0;
 
   UIConfigs({
+    this.autoOpen = true,
     this.autoSearch = true,
-    this.maxImageCacheRate = 0,
+    this.imageCacheRate = 0,
   });
 
   UIConfigs.fromJson(Map<String, dynamic> json) {
+    // TODO
+    json = json['uiConfigs'];
+    autoOpen = json['autoOpen'];
     autoSearch = json['autoSearch'];
-    maxImageCacheRate = json['maximageCacheRate'];
+    imageCacheRate = json['imageCacheRate'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
+    data['autoOpen'] = autoOpen;
     data['autoSearch'] = autoSearch;
-    data['maximageCacheRate'] = maxImageCacheRate;
+    data['imageCacheRate'] = imageCacheRate;
     return data;
   }
 }

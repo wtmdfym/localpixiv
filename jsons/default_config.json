@@ -16,7 +16,8 @@
     "client_pool": [],
     "last_record_time": "0",
     "uiConfigs": {
+        "autoOpen": true,
         "autoSearch": true,
-        "maximageCacheRate": 0.0
+        "imageCacheRate": 1.0
     }
 }

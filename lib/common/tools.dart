@@ -1,11 +1,18 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
 /// cookies 格式化为 map
 Map<String, String> cookiesFormater(String orgcookies) {
+  RegExpMatch? matched =
+      RegExp(r'(?<=\{PHPSESSID\s*\:).*(?=\})').firstMatch(orgcookies);
+  if (matched != null) {
+    return {'PHPSESSID': matched[0]!.trim()};
+  }
+
   Map<String, String> cookies = {};
   for (String cookie in orgcookies.split(";")) {
     List<String> temp = cookie.split("=");
@@ -23,62 +30,53 @@ Map<String, String> cookiesFormater(String orgcookies) {
 }
 
 /// configs文件管理器
-dynamic configManger(String configfilepath, String operation,
-    [Configs? configs]) {
-  File jsonFile;
+/// 读取config文件
+Future<(MainConfigs, UIConfigs)> configReader(String configfilepath) async {
+  bool isexist = File(configfilepath).existsSync();
+  Map<String, dynamic> json;
+  if (isexist) {
+    json = jsonDecode(File(configfilepath).readAsStringSync());
+  } else {
+    json = jsonDecode(await rootBundle.loadString('jsons/default_config.json'));
+  }
+  return (MainConfigs.fromJson(json), UIConfigs.fromJson(json));
+}
 
-  if (operation == 'r') {
-    if (File(configfilepath).existsSync()) {
-      jsonFile = File(configfilepath);
-    } else {
-      jsonFile = File('jsons/default_config.json');
+/// 写入config文件
+Future<bool> configWriter(
+    String configfilepath, MainConfigs mainConfigs, UIConfigs uiConfigs) async {
+  File configFile = File(configfilepath);
+  try {
+    if (!await configFile.exists()) {
+      await configFile.create(recursive: true, exclusive: true);
     }
-    String json = jsonFile.readAsStringSync();
-    Configs configs = Configs.fromJson(jsonDecode(json));
-    return configs;
-  } else if (operation == 'w' && configs != null) {
-    try {
-      jsonFile = File(configfilepath);
-      jsonFile.writeAsString(jsonEncode(configs), flush: true);
-      return true;
-    } catch (e) {
-      return false;
-    }
+    var configs = mainConfigs.toJson();
+    configs['uiConfigs'] = uiConfigs.toJson();
+    configFile.writeAsString(jsonEncode(configs), flush: true);
+    return true;
+  } catch (e) {
+    return false;
   }
 }
 
 /// 异步加载图片
-Future<ImageProvider> imageFileLoader(String? imagePath,
-    [int? width, int? height, double? cacheRate]) async {
+Future<ImageProvider> imageFileLoader(String imagePath,
+    {int width = 400, int height = 480, double cacheRate = 1.0}) async {
   ImageProvider image;
-  if (imagePath != null) {
-    File file = File(imagePath);
-    bool exists = await file.exists();
-    if (exists) {
-      image = FileImage(file);
-    } else {
-      image = AssetImage('assets/images/default.png');
-    }
+  final File file = File(imagePath);
+  final bool exists = await file.exists();
+  if (exists) {
+    image = FileImage(file);
   } else {
     // 若图片不存在就加载默认图片
-    image = AssetImage('assets/images/default.png');
+    image = AssetImage('images/default.png');
   }
-  if (width != null && height != null) {
-    if (cacheRate != null) {
-      return ResizeImage(image,
-          width: cacheRate == 0 ? width : width * cacheRate.toInt(),
-          height: cacheRate == 0 ? height : height * cacheRate.toInt(),
+  return cacheRate == 0
+      ? image
+      : ResizeImage(image,
+          width: width * cacheRate.toInt(),
+          height: height * cacheRate.toInt(),
           policy: ResizeImagePolicy.fit);
-    }
-    return ResizeImage(image,
-        width: width, height: height, policy: ResizeImagePolicy.fit);
-  } else {
-    return image;
-    //TODO big image open policy
-    //ResizeImage(image,
-    //    width: 5120, height: 2880, policy: ResizeImagePolicy.fit);
-    //ResizeImage.resizeIfNeeded(2560, 1440, image);
-  }
 }
 
 /// 从数据库获取UserInfo
@@ -86,12 +84,15 @@ Future<UserInfo> fetchUserInfo(
     Map<String, dynamic> following, mongo.Db pixivDb) async {
   final List<WorkInfo> workInfos = [];
   mongo.DbCollection userCollection = pixivDb.collection(following['userName']);
+  // TODO 按照上传时间排序
   await userCollection
-      .find(mongo.where.exists('id').excludeFields(['_id']))
+      .find(mongo.where
+          .exists('id')
+          .excludeFields(['_id']).sortBy('id', descending: true))
       .forEach((info) {
     workInfos.add(WorkInfo.fromJson(info));
   });
   following['workInfos'] = workInfos;
-  following['profileImage'] = '';
+  //following['profileImage'] = '';
   return UserInfo.fromJson(following);
 }

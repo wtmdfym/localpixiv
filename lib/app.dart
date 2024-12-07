@@ -17,10 +17,12 @@ class MyApp extends StatelessWidget {
       {super.key,
       required this.pixivDb,
       required this.backupcollection,
-      required this.configs});
+      required this.configs,
+      required this.uiConfigs});
   final mongo.Db pixivDb;
   final mongo.DbCollection backupcollection;
-  final Configs configs;
+  final MainConfigs configs;
+  final UIConfigs uiConfigs;
   final int mainTabCount = 5;
   // This widget is the root of your application.
   @override
@@ -56,12 +58,14 @@ class MyApp extends StatelessWidget {
         supportedLocales: [
           const Locale('en', 'US'), // 美国英语
           const Locale('zh', 'CN'), // 中文简体
-          //其他Locales
+          // 其他Locales
         ],*/
         home: MainTabPage(
-            pixivDb: pixivDb,
-            backupcollection: backupcollection,
-            configs: configs));
+          pixivDb: pixivDb,
+          backupcollection: backupcollection,
+          configs: configs,
+          uiConfigs: uiConfigs,
+        ));
   }
 }
 
@@ -71,10 +75,12 @@ class MainTabPage extends StatefulWidget {
       {super.key,
       required this.pixivDb,
       required this.backupcollection,
-      required this.configs});
+      required this.configs,
+      required this.uiConfigs});
   final mongo.Db pixivDb;
   final mongo.DbCollection backupcollection;
-  final Configs configs;
+  final MainConfigs configs;
+  final UIConfigs uiConfigs;
 
   @override
   State<StatefulWidget> createState() {
@@ -100,6 +106,7 @@ class MainTabPageState extends State<MainTabPage>
           index: 2,
           child: FollowingsDisplayer(
             hostPath: widget.configs.savePath!,
+            // cacheRate: widget.uiConfigs.imageCacheRate,
             pixivDb: widget.pixivDb,
           )),
       StackData(
@@ -124,6 +131,15 @@ class MainTabPageState extends State<MainTabPage>
               return workBookMarModel;
             },
           ),
+          ListenableProvider<UIConfigUpdateNotifier>(
+            create: (context) {
+              UIConfigUpdateNotifier configUpdateNotifier =
+                  UIConfigUpdateNotifier();
+              configUpdateNotifier.initconfigs(
+                  widget.configs, widget.uiConfigs);
+              return configUpdateNotifier;
+            },
+          )
         ],
         builder: (context, child) {
           return DefaultTabController(
