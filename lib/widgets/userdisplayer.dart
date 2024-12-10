@@ -12,18 +12,20 @@ class FollowingInfoDisplayer extends StatefulWidget {
   const FollowingInfoDisplayer({
     super.key,
     required this.hostPath,
-    this.width = 200,
-    this.height = 200,
+    this.width = 2320,
+    this.height = 300,
     // required this.cacheRate,
     required this.userInfo,
     required this.onTab,
+    required this.onWorkBookmarked,
   });
   final String hostPath;
-  final double width;
-  final double height;
+  final int width;
+  final int height;
   // final double cacheRate;
   final UserInfo userInfo;
   final OpenTabCallback onTab;
+  final WorkBookmarkCallback onWorkBookmarked;
   @override
   State<StatefulWidget> createState() => _FollowingInfoDisplayerState();
 }
@@ -47,6 +49,13 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    _mouseEOAnimationController.dispose();
+    _mouseClickAnimationController.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     workInfos.clear();
     workInfos.addAll(widget.userInfo.workInfos.sublist(0, 4));
@@ -64,10 +73,11 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
               onTapDown: (details) => _mouseClickAnimationController.forward(),
               onTapUp: (details) => _mouseClickAnimationController.reverse(),
               onTapCancel: () => _mouseClickAnimationController.reverse(),
-              onTap: () =>
-                  widget.onTab(widget.userInfo.userName), //showUserDetail(),
+              onTap: () => widget.onTab(widget.userInfo.userName),
               //onDoubleTap: () {},
               child: Container(
+                      width: widget.width.toDouble(),
+                      height: widget.height.toDouble(),
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
@@ -78,6 +88,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                         mainAxisSize: MainAxisSize.min,
                         spacing: 20,
                         children: [
+                          // 作者头像
                           SizedBox(
                               width: 240,
                               height: 240,
@@ -88,7 +99,9 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                                 height: 240,
                                 // cacheRate: widget.cacheRate,
                               )),
+                          // 作者名字和描述
                           Container(
+                              padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
                                   color: Colors.white,
                                   borderRadius: BorderRadius.circular(12)),
@@ -97,14 +110,15 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                                 spacing: 10,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // 异步加载图片
                                   SelectableText(
-                                    'UserName: ${widget.userInfo.userName}',
-                                    style: TextStyle(fontSize: 24),
+                                    widget.userInfo.userName,
+                                    style: TextStyle(
+                                        fontSize: 24, color: Colors.blueAccent),
                                     maxLines: 1,
                                   ),
                                   SizedBox(
-                                    height: 220,
+                                    width: 480,
+                                    height: 200,
                                     child: SingleChildScrollView(
                                         child: SelectableText(
                                       widget.userInfo.userComment,
@@ -113,38 +127,22 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                                   )
                                 ],
                               )),
-                          WorkContainer(
-                            hostPath: widget.hostPath,
-                            workInfo: workInfos[0],
-                            width: 360,
-                            height: 270,
-                            // cacheRate: widget.cacheRate,
-                            backgroundColor: Colors.white,
-                          ),
-                          WorkContainer(
-                            hostPath: widget.hostPath,
-                            workInfo: workInfos[1],
-                            width: 360,
-                            height: 270,
-                            // cacheRate: widget.cacheRate,
-                            backgroundColor: Colors.white,
-                          ),
-                          WorkContainer(
-                            hostPath: widget.hostPath,
-                            workInfo: workInfos[2],
-                            width: 360,
-                            height: 270,
-                            // cacheRate: widget.cacheRate,
-                            backgroundColor: Colors.white,
-                          ),
-                          WorkContainer(
-                            hostPath: widget.hostPath,
-                            workInfo: workInfos[3],
-                            width: 360,
-                            height: 270,
-                            // cacheRate: widget.cacheRate,
-                            backgroundColor: Colors.white,
-                          ),
+                          // 作者的最新作品
+                          for (int i = 0; i < 4; i++)
+                            WorkContainer(
+                              hostPath: widget.hostPath,
+                              workInfo: workInfos[i],
+                              width: 360,
+                              height: widget.height - 20,
+                              // cacheRate: widget.cacheRate,
+                              onBookmarked: (isLiked, workId, userName) =>
+                                  widget.onWorkBookmarked(
+                                isLiked,
+                                workId,
+                                userName,
+                              ),
+                              backgroundColor: Colors.white,
+                            ),
                         ],
                       ))
                   .animate(
@@ -166,6 +164,7 @@ class UserDetailsDisplayer extends StatefulWidget {
     this.userInfo,
     this.userName,
     this.pixivDb,
+    required this.onWorkBookmarked,
   }) {
     assert((userInfo != null) || ((pixivDb != null) && (userName != null)));
   }
@@ -175,6 +174,7 @@ class UserDetailsDisplayer extends StatefulWidget {
   final UserInfo? userInfo;
   final String? userName;
   final Db? pixivDb;
+  final WorkBookmarkCallback onWorkBookmarked;
 
   @override
   State<StatefulWidget> createState() => _UserDetailsDisplayerState();
@@ -317,6 +317,13 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                                         hostPath: widget.hostPath,
                                         workInfo: info,
                                         // cacheRate: widget.cacheRate,
+                                        onBookmarked:
+                                            (isLiked, workId, userName) =>
+                                                widget.onWorkBookmarked(
+                                          isLiked,
+                                          workId,
+                                          userName,
+                                        ),
                                       )
                                   ],
                                 );
@@ -331,6 +338,13 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer>
                                         hostPath: widget.hostPath,
                                         workInfo: info,
                                         // cacheRate: widget.cacheRate,
+                                        onBookmarked:
+                                            (isLiked, workId, userName) =>
+                                                widget.onWorkBookmarked(
+                                          isLiked,
+                                          workId,
+                                          userName,
+                                        ),
                                       )
                                   ],
                                 );

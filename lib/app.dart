@@ -17,12 +17,10 @@ class MyApp extends StatelessWidget {
       {super.key,
       required this.pixivDb,
       required this.backupcollection,
-      required this.configs,
-      required this.uiConfigs});
+      required this.configs});
   final mongo.Db pixivDb;
   final mongo.DbCollection backupcollection;
-  final MainConfigs configs;
-  final UIConfigs uiConfigs;
+  final Configs configs;
   final int mainTabCount = 5;
   // This widget is the root of your application.
   @override
@@ -64,23 +62,21 @@ class MyApp extends StatelessWidget {
           pixivDb: pixivDb,
           backupcollection: backupcollection,
           configs: configs,
-          uiConfigs: uiConfigs,
         ));
   }
 }
 
 // This widget is the root of the application.
 class MainTabPage extends StatefulWidget {
-  const MainTabPage(
-      {super.key,
-      required this.pixivDb,
-      required this.backupcollection,
-      required this.configs,
-      required this.uiConfigs});
+  const MainTabPage({
+    super.key,
+    required this.pixivDb,
+    required this.backupcollection,
+    required this.configs,
+  });
   final mongo.Db pixivDb;
   final mongo.DbCollection backupcollection;
-  final MainConfigs configs;
-  final UIConfigs uiConfigs;
+  final Configs configs;
 
   @override
   State<StatefulWidget> createState() {
@@ -100,12 +96,12 @@ class MainTabPageState extends State<MainTabPage>
           child: Viewer(
             pixivDb: widget.pixivDb,
             backupcollection: widget.backupcollection,
-            configs: widget.configs,
+            basicConfigs: widget.configs.basicConfigs,
           )),
       StackData(
           index: 2,
           child: FollowingsDisplayer(
-            hostPath: widget.configs.savePath!,
+            hostPath: widget.configs.basicConfigs.savePath,
             // cacheRate: widget.uiConfigs.imageCacheRate,
             pixivDb: widget.pixivDb,
           )),
@@ -125,9 +121,9 @@ class MainTabPageState extends State<MainTabPage>
               return stackDataModel;
             },
           ),
-          ListenableProvider<WorkBookMarkModel>(
+          ListenableProvider<WorkBookmarkModel>(
             create: (context) {
-              WorkBookMarkModel workBookMarModel = WorkBookMarkModel();
+              WorkBookmarkModel workBookMarModel = WorkBookmarkModel();
               return workBookMarModel;
             },
           ),
@@ -135,8 +131,7 @@ class MainTabPageState extends State<MainTabPage>
             create: (context) {
               UIConfigUpdateNotifier configUpdateNotifier =
                   UIConfigUpdateNotifier();
-              configUpdateNotifier.initconfigs(
-                  widget.configs, widget.uiConfigs);
+              configUpdateNotifier.initconfigs(widget.configs.uiConfigs);
               return configUpdateNotifier;
             },
           )
@@ -155,7 +150,7 @@ class MainTabPageState extends State<MainTabPage>
                       Tab(text: 'Test', icon: Icon(Icons.build))
                     ],
                   ),
-                  body: Consumer<WorkBookMarkModel>(
+                  body: Consumer<WorkBookmarkModel>(
                     builder: (context, value, child) {
                       if (value.workId != 114514 && value.userName != 'Man') {
                         // 更新数据库

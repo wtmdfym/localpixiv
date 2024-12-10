@@ -5,7 +5,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/workloader.dart';
-import 'package:provider/provider.dart';
 
 /// 显示作品信息的容器
 class InfoContainer extends StatelessWidget {
@@ -64,6 +63,7 @@ class WorkContainer extends StatefulWidget {
     this.height = 480,
     // required this.cacheRate,
     required this.workInfo,
+    required this.onBookmarked,
     this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
   });
   final String hostPath;
@@ -71,6 +71,7 @@ class WorkContainer extends StatefulWidget {
   final int height;
   // final double cacheRate;
   final WorkInfo workInfo;
+  final WorkBookmarkCallback onBookmarked;
   final Color backgroundColor;
   @override
   State<StatefulWidget> createState() {
@@ -81,7 +82,6 @@ class WorkContainer extends StatefulWidget {
 class _WorkContainerState extends State<WorkContainer>
     with TickerProviderStateMixin {
   late AnimationController _mouseEOAnimationController;
-  late AnimationController _mouseClickAnimationController;
   late ValueNotifier<IconData> _icon;
 
   @override
@@ -91,31 +91,21 @@ class _WorkContainerState extends State<WorkContainer>
     _mouseEOAnimationController = AnimationController(
       vsync: this,
     );
-    _mouseClickAnimationController = AnimationController(
-      vsync: this,
-    );
+    _icon = ValueNotifier<IconData>(
+        widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border);
   }
 
   @override
   void dispose() {
     _mouseEOAnimationController.dispose();
-    _mouseClickAnimationController.dispose();
+    _icon.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    _icon = ValueNotifier<IconData>(
-        widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border);
-    void showWorkDetail() {
-      context.read<StackChangeNotifier>().addStack(
-          widget.workInfo.title,
-          WorkDetialDisplayer(
-            hostPath: widget.hostPath,
-            workInfo: widget.workInfo,
-            // cacheRate: widget.cacheRate,
-          ));
-    }
+    _icon.value =
+        widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border;
 
     return MouseRegion(
         // 进入
@@ -129,16 +119,6 @@ class _WorkContainerState extends State<WorkContainer>
             onTap: () {
               ShowInfoNotification(widget.workInfo).dispatch(context);
             },
-            //onTapDown: (details) =>
-            //    _mouseClickAnimationController.forward(),
-            //onTapUp: (details) =>
-            //    _mouseClickAnimationController.reverse(),
-            //onTapCancel: () =>
-            //    _mouseClickAnimationController.reverse(),
-            onDoubleTap: () => showWorkDetail(),
-            //onDoubleTapDown: (details) =>
-            //    _mouseClickAnimationController.forward(),
-            //onDoubleTapCancel: () => _mouseClickAnimationController.reverse(),
             child: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
@@ -146,22 +126,40 @@ class _WorkContainerState extends State<WorkContainer>
                     color: widget.backgroundColor),
                 width: widget.width + 8,
                 height: widget.height + 8,
-                child: widget.workInfo.type == 'novel'
-                    ? NovelLoader(
-                        coverImagePath: '',
-                        title: widget.workInfo.title,
-                      )
-                    : ImageLoader(
-                        path:
-                            '${widget.hostPath}${widget.workInfo.imagePath![0]}',
-                        width: widget.width,
-                        height: widget.height,
-                        // cacheRate: widget.cacheRate,
-                      )),
-          )
-              .animate(
-                  controller: _mouseClickAnimationController, autoPlay: false)
-              .color(duration: 50.ms, blendMode: BlendMode.darken),
+                child: LongPressDraggable<(String, WorkInfo)>(
+                    data: (widget.hostPath, widget.workInfo),
+                    delay: Durations.medium2,
+                    dragAnchorStrategy: (draggable, context, position) =>
+                        Offset(-12, 32),
+                    feedback: Material(
+                        borderRadius: BorderRadius.circular(5),
+                        color: Color.fromARGB(0, 0, 0, 0),
+                        child: Container(
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(5),
+                                color:
+                                    const Color.fromARGB(150, 158, 158, 158)),
+                            child: Text(
+                              widget.workInfo.title,
+                              style: TextStyle(
+                                color: Colors.amber,
+                                fontSize: 16,
+                              ),
+                            ))),
+                    child: widget.workInfo.type == 'novel'
+                        ? NovelLoader(
+                            coverImagePath: '',
+                            title: widget.workInfo.title,
+                          )
+                        : ImageLoader(
+                            path:
+                                '${widget.hostPath}${widget.workInfo.imagePath![0]}',
+                            width: widget.width,
+                            height: widget.height,
+                            // cacheRate: widget.cacheRate,
+                          ))),
+          ),
+
           // 图片数量/小说字数显示
           Positioned(
               top: 5,
@@ -187,26 +185,23 @@ class _WorkContainerState extends State<WorkContainer>
               left: 5,
               child: ValueListenableBuilder<IconData>(
                   valueListenable: _icon,
-                  builder: (context, iconvalue, child) => IconButton(
+                  builder: (context, iconvalue, child) => RepaintBoundary(
+                          child: IconButton(
                         onPressed: () {
                           // 通信更新信息
                           _icon.value = widget.workInfo.isLiked
                               ? Icons.favorite_border
                               : Icons.favorite;
                           widget.workInfo.isLiked = !widget.workInfo.isLiked;
-                          Provider.of<WorkBookMarkModel>(context, listen: false)
-                              .changebookmark(
-                            widget.workInfo.isLiked,
-                            widget.workInfo.id,
-                            widget.workInfo.userName,
-                          );
+                          widget.onBookmarked(widget.workInfo.isLiked,
+                              widget.workInfo.id, widget.workInfo.userName);
                         },
                         icon: Icon(iconvalue),
                         iconSize: 30,
                         color: Colors.white,
                         style:
                             IconButton.styleFrom(backgroundColor: Colors.grey),
-                      )))
+                      ))))
         ]))
             .animate(controller: _mouseEOAnimationController, autoPlay: false)
             .scaleXY(begin: 1.0, end: 1.02, duration: 100.ms));
@@ -219,6 +214,7 @@ class WorkDetialDisplayer extends StatefulWidget {
     super.key,
     required this.hostPath,
     // required this.cacheRate,
+    required this.onBookmarked,
     required this.workInfo,
     this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
   });
@@ -226,6 +222,7 @@ class WorkDetialDisplayer extends StatefulWidget {
   final String hostPath;
   // final double cacheRate;
   final WorkInfo workInfo;
+  final WorkBookmarkCallback onBookmarked;
   final Color backgroundColor;
 
   @override
@@ -301,15 +298,15 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
             left: 5,
             child: ValueListenableBuilder<IconData>(
                 valueListenable: _icon,
-                builder: (context, iconvalue, child) => IconButton(
+                builder: (context, iconvalue, child) => RepaintBoundary(
+                        child: IconButton(
                       onPressed: () {
                         // 通信更新信息
                         _icon.value = widget.workInfo.isLiked
                             ? Icons.favorite_border
                             : Icons.favorite;
                         widget.workInfo.isLiked = !widget.workInfo.isLiked;
-                        Provider.of<WorkBookMarkModel>(context, listen: false)
-                            .changebookmark(
+                        widget.onBookmarked(
                           widget.workInfo.isLiked,
                           widget.workInfo.id,
                           widget.workInfo.userName,
@@ -319,7 +316,7 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
                       iconSize: 60,
                       color: Colors.white,
                       style: IconButton.styleFrom(backgroundColor: Colors.grey),
-                    ))),
+                    )))),
         widget.workInfo.type == 'novel'
             ? SizedBox()
             : ValueListenableBuilder(

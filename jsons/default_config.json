@@ -1,21 +1,27 @@
 {
-    "save_path": "C:/pixiv/",
-    "cookies": {},
-    "enable_proxy": false,
-    "http_proxies": "",
-    "https_proxies": "",
-    "semaphore": 2,
-    "download_type": {
-        "illust": true,
-        "manga": true,
-        "novel": false,
-        "ugoira": true,
-        "series": false
+    "BasicConfigs": {
+        "save_path": "C:/pixiv/"
     },
-    "enable_client_pool": false,
-    "client_pool": [],
-    "last_record_time": "0",
-    "uiConfigs": {
+    "WebCrawlerConfigs": {
+        "cookies": {"PHPSESSID":""},
+        "enable_proxy": false,
+        "http_proxies": "",
+        "https_proxies": "",
+        "enableIPixiv": true,
+        "ipixivHostPath":"i.pixiv.re",
+        "semaphore": 2,
+        "download_type": {
+            "illust": true,
+            "manga": true,
+            "novel": false,
+            "ugoira": true,
+            "series": false
+        },
+        "enable_client_pool": false,
+        "client_pool": [],
+        "last_record_time": "0"
+    },
+    "UIConfigs": {
         "autoOpen": true,
         "autoSearch": true,
         "imageCacheRate": 1.0

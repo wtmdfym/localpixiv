@@ -8,7 +8,6 @@ import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:localpixiv/models.dart';
 
 void main() async {
-  
   // 初始化窗口
   WidgetsFlutterBinding.ensureInitialized();
   /*if (kIsDesktop) {
@@ -18,11 +17,9 @@ void main() async {
   }*/
   // 必须加上这一行。
   await windowManager.ensureInitialized();
-  
+
   // 读取配置文件
-  var allconfigs = await configReader('jsons/config.json');
-  MainConfigs configs = allconfigs.$1;
-  UIConfigs uiConfigs = allconfigs.$2;
+  Configs configs = await configReader('jsons/config.json');
   WindowOptions windowOptions = WindowOptions(
     minimumSize: Size(1080, 720),
     size: Size(1440, 900),
@@ -45,7 +42,6 @@ void main() async {
     pixivDb: pixivDb,
     backupcollection: backupcollection,
     configs: configs,
-    uiConfigs: uiConfigs,
   ));
 }
 

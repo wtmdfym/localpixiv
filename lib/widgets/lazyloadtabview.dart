@@ -1,5 +1,7 @@
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
+import 'package:localpixiv/widgets/workcontainer.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
@@ -15,53 +17,140 @@ class MutiTabbar extends StatefulWidget implements PreferredSizeWidget {
     return MutiTabbarState();
   }
 }
+
 // TODO 关闭后切换图片出错, 现在似乎又好了？？？
 class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
+  late final AnimationController _dargEOController;
+  late TabController _tabController;
+  @override
+  void initState() {
+    super.initState();
+    _dargEOController = AnimationController(vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _dargEOController.dispose();
+    _tabController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Selector<StackChangeNotifier, List<String>>(
         selector: (context, stackData) {
       return List.unmodifiable(stackData.titles);
     }, builder: (context, titles, child) {
-      return Column(
-        children: [
-          TabBar(
-              onTap: (value) =>
-                  context.read<StackChangeNotifier>().changeIndex(value, true),
-              tabs: widget.mainTabs),
-          TabBar(
-              isScrollable: true,
-              controller: TabController(
-                vsync: this,
-                length: titles.length,
-                initialIndex:
-                    titles.isEmpty ? titles.length : titles.length - 1,
-              ),
-              onTap: (value) =>
-                  context.read<StackChangeNotifier>().changeIndex(value, false),
-              tabs: [
-                for (int index = 0; index < titles.length; index++)
-                  SizedBox(
-                      width: 300,
-                      child: ListTile(
-                        title: Text(titles[index],
-                            maxLines: 1,
-                            style: TextStyle(
-                              fontSize: 12,
-                            )),
-                        trailing: IconButton(
-                          icon: Icon(Icons.close),
-                          onPressed: () {
-                            context.read<StackChangeNotifier>().removeAt(
-                                  index,
-                                );
-                          },
-                        ),
-                      ))
-              ])
-        ],
+      _tabController = TabController(
+        vsync: this,
+        length: titles.length,
+        initialIndex: titles.isEmpty ? titles.length : titles.length - 1,
       );
+      return DragTarget<(String, WorkInfo)>(
+        onWillAcceptWithDetails: (details) {
+          _dargEOController.forward();
+          return true;
+        },
+        onLeave: (data) {
+          _dargEOController.reverse();
+        },
+        onAcceptWithDetails: (details) {
+          _dargEOController.reverse();
+          context.read<StackChangeNotifier>().addStack(
+              details.data.$2.title,
+              WorkDetialDisplayer(
+                hostPath: details.data.$1,
+                workInfo: details.data.$2,
+                // cacheRate: widget.cacheRate,
+                onBookmarked: (isLiked, workId, userName) =>
+                    Provider.of<WorkBookmarkModel>(context, listen: false)
+                        .changebookmark(
+                  isLiked,
+                  workId,
+                  userName,
+                ),
+              ));
+        },
+        builder: (context, candidateData, rejectedData) {
+          return Column(
+            children: [
+              TabBar(
+                  onTap: (value) => context
+                      .read<StackChangeNotifier>()
+                      .changeIndex(value, true),
+                  tabs: widget.mainTabs),
+              Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_back,
+                    ),
+                    onPressed: _moveToPreviousTab,
+                  ),
+                  Expanded(
+                      child: TabBar(
+                          isScrollable: true,
+                          controller: _tabController,
+                          onTap: (value) => context
+                              .read<StackChangeNotifier>()
+                              .changeIndex(value, false),
+                          tabs: [
+                        for (int index = 0; index < titles.length; index++)
+                          SizedBox(
+                              width: 300,
+                              child: ListTile(
+                                title: Text(titles[index],
+                                    maxLines: 1,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                    )),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.close),
+                                  onPressed: () {
+                                    context
+                                        .read<StackChangeNotifier>()
+                                        .removeAt(
+                                          index,
+                                        );
+                                  },
+                                ),
+                              ))
+                      ])),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.arrow_forward,
+                    ),
+                    onPressed: _moveToNextTab,
+                  ),
+                ],
+              )
+            ],
+          );
+        },
+      )
+          .animate(controller: _dargEOController, autoPlay: false)
+          .color(blendMode: BlendMode.darken);
     });
+  }
+
+  _moveToNextTab() {
+    if (_tabController.index + 1 < _tabController.length) {
+      _tabController.animateTo(_tabController.index + 1);
+    } else {
+      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      //   content: Text("Can't move forward"),
+      // ));
+    }
+  }
+
+  _moveToPreviousTab() {
+    if (_tabController.index > 0) {
+      _tabController.animateTo(_tabController.index - 1);
+    } else {
+      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      //   content: Text("Can't go back"),
+      // ));
+    }
   }
 }
 

@@ -7,8 +7,8 @@ import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
 /// cookies 格式化为 map
 Map<String, String> cookiesFormater(String orgcookies) {
-  RegExpMatch? matched =
-      RegExp(r'(?<=\{PHPSESSID\s*\:).*(?=\})').firstMatch(orgcookies);
+  RegExpMatch? matched = RegExp(r'(?<=[\{,\,,\s]\PHPSESSID\:\s).*?(?=[\},\,])')
+      .firstMatch(orgcookies);
   if (matched != null) {
     return {'PHPSESSID': matched[0]!.trim()};
   }
@@ -31,7 +31,7 @@ Map<String, String> cookiesFormater(String orgcookies) {
 
 /// configs文件管理器
 /// 读取config文件
-Future<(MainConfigs, UIConfigs)> configReader(String configfilepath) async {
+Future<Configs> configReader(String configfilepath) async {
   bool isexist = File(configfilepath).existsSync();
   Map<String, dynamic> json;
   if (isexist) {
@@ -39,20 +39,17 @@ Future<(MainConfigs, UIConfigs)> configReader(String configfilepath) async {
   } else {
     json = jsonDecode(await rootBundle.loadString('jsons/default_config.json'));
   }
-  return (MainConfigs.fromJson(json), UIConfigs.fromJson(json));
+  return Configs.fromJson(json);
 }
 
 /// 写入config文件
-Future<bool> configWriter(
-    String configfilepath, MainConfigs mainConfigs, UIConfigs uiConfigs) async {
+Future<bool> configWriter(String configfilepath, Configs configs) async {
   File configFile = File(configfilepath);
   try {
     if (!await configFile.exists()) {
       await configFile.create(recursive: true, exclusive: true);
     }
-    var configs = mainConfigs.toJson();
-    configs['uiConfigs'] = uiConfigs.toJson();
-    configFile.writeAsString(jsonEncode(configs), flush: true);
+    configFile.writeAsString(jsonEncode(configs.toJson()), flush: true);
     return true;
   } catch (e) {
     return false;
@@ -61,7 +58,10 @@ Future<bool> configWriter(
 
 /// 异步加载图片
 Future<ImageProvider> imageFileLoader(String imagePath,
-    {int width = 400, int height = 480, double cacheRate = 1.0}) async {
+    {int width = 400,
+    int height = 480,
+    double cacheRate = 1.0,
+    ResizeImagePolicy policy = ResizeImagePolicy.fit}) async {
   ImageProvider image;
   final File file = File(imagePath);
   final bool exists = await file.exists();
@@ -76,7 +76,8 @@ Future<ImageProvider> imageFileLoader(String imagePath,
       : ResizeImage(image,
           width: width * cacheRate.toInt(),
           height: height * cacheRate.toInt(),
-          policy: ResizeImagePolicy.fit);
+          policy: policy,
+          allowUpscaling: true);
 }
 
 /// 从数据库获取UserInfo

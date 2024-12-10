@@ -16,11 +16,11 @@ class Viewer extends StatefulWidget {
     super.key,
     required this.pixivDb,
     required this.backupcollection,
-    required this.configs,
+    required this.basicConfigs,
   });
   final Db pixivDb;
   final DbCollection backupcollection;
-  final MainConfigs configs;
+  final BasicConfigs basicConfigs;
 
   @override
   State<StatefulWidget> createState() {
@@ -376,8 +376,8 @@ class _ViewerState extends State<Viewer> {
                                                         userName,
                                                         UserDetailsDisplayer(
                                                           hostPath: widget
-                                                              .configs
-                                                              .savePath!,
+                                                              .basicConfigs
+                                                              .savePath,
                                                           /*cacheRate:
                                                             configNotifier
                                                                 .uiConfigs
@@ -385,6 +385,19 @@ class _ViewerState extends State<Viewer> {
                                                           userName: userName,
                                                           pixivDb:
                                                               widget.pixivDb,
+                                                          // TODO 同步信息
+                                                          onWorkBookmarked: (isLiked,
+                                                                  workId,
+                                                                  userName) =>
+                                                              Provider.of<WorkBookmarkModel>(
+                                                                      context,
+                                                                      listen:
+                                                                          false)
+                                                                  .changebookmark(
+                                                            isLiked,
+                                                            workId,
+                                                            userName,
+                                                          ),
                                                         ))
                                                 : {};
                                           },
@@ -406,80 +419,41 @@ class _ViewerState extends State<Viewer> {
                         children: [
                           ConstrainedBox(
                               constraints: const BoxConstraints(
-                                maxHeight: 1080,
+                                maxWidth: 1920,
+                                // maxHeight: 1080,
                               ),
-                              child: /*Consumer<WorkBookMarkModel>(
-                                  builder: (context, workBookMarkInfo, child) {
-                                    //workBookMarkInfo.workId;
-                                    searchResults.elementAt(0)['likeData'] =
-                                        workBookMarkInfo.bookmarked;
-                                    return child!;
-                                  },
-                                  child:*/
-                                  ValueListenableBuilder(
-                                      valueListenable: workInfosNotifer,
-                                      builder: (context, workInfos, child) =>
-                                          GridView.count(
-                                            scrollDirection: Axis.horizontal,
-                                            shrinkWrap: true,
-                                            crossAxisCount: 2,
-                                            childAspectRatio: 12 / 10, //高比宽
-                                            mainAxisSpacing: 16,
-                                            crossAxisSpacing: 16,
-                                            physics:
-                                                const NeverScrollableScrollPhysics(),
-                                            children: <Widget>[
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[0],
-                                                //cacheRate: widget.uiConfigs.imageCacheRate,
+                              child: ValueListenableBuilder(
+                                  valueListenable: workInfosNotifer,
+                                  builder: (context, workInfos, child) =>
+                                      GridView.count(
+                                        scrollDirection: Axis.vertical,
+                                        shrinkWrap: true,
+                                        crossAxisCount: 4,
+                                        childAspectRatio: 10 / 12, //宽比高
+                                        mainAxisSpacing: 16,
+                                        crossAxisSpacing: 16,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        children: <Widget>[
+                                          for (int i = 0; i < pagesize; i++)
+                                            WorkContainer(
+                                              hostPath:
+                                                  widget.basicConfigs.savePath,
+                                              workInfo: workInfos[i],
+                                              //cacheRate: widget.uiConfigs.imageCacheRate,
+                                              onBookmarked: (isLiked, workId,
+                                                      userName) =>
+                                                  Provider.of<WorkBookmarkModel>(
+                                                          context,
+                                                          listen: false)
+                                                      .changebookmark(
+                                                isLiked,
+                                                workId,
+                                                userName,
                                               ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[4],
-                                                //cacheRate: widget.uiConfigs.imageCacheRate,
-                                              ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[1],
-                                                //cacheRate: widget.uiConfigs.imageCacheRate,
-                                              ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[5],
-                                                // cacheRate: widget.uiConfigs.imageCacheRate,
-                                              ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[2],
-                                                //  cacheRate: widget.uiConfigs.imageCacheRate,
-                                              ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[6],
-                                                //  cacheRate: widget.uiConfigs.imageCacheRate,
-                                              ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[3],
-                                                // cacheRate: widget.uiConfigs.imageCacheRate,
-                                              ),
-                                              WorkContainer(
-                                                hostPath:
-                                                    widget.configs.savePath!,
-                                                workInfo: workInfos[7],
-                                                //cacheRate: widget .uiConfigs.imageCacheRate,
-                                              ),
-                                            ],
-                                            //)
-                                          ))),
+                                            ),
+                                        ],
+                                      ))),
                           // 翻页控件
                           Row(
                             spacing: 300,

@@ -22,12 +22,20 @@ samples, guidance on mobile development, and a full API reference.
  - [ ] novel viewer
  - [x] following viewer
  - [x] settings
- - [ ] 自定义图片缓存大小
+ - [x] 自定义图片缓存大小
  - [ ] 完整的高级搜索功能
  - [ ] pixivcat代理
  - [ ] 数据分块加载
  - [ ] 支持不使用mongoDB
 ## Update History
+ - Version 1.0.8
+
+    - 修改了Config的结构。
+    - 修改了settings的结构。
+    - 优化了settings的显示和交互。
+    - 使用拖拽的方式取代双击打开作品详情页，交互更加流畅。
+    - 删除了一些不必要的动画。
+    - 为tabbar增加了向前和向后的按钮。
  - Version 1.0.7
 
     - 细节和bug修正。
@@ -35,6 +43,7 @@ samples, guidance on mobile development, and a full API reference.
     - 使用provider提供UI设置的更新和传递。
     - 实现了UIConfig的自动保存
     - 开始编写小说显示器的雏形（仅能显示简陋的信息）。
+    - 实现了自定义图片缓存大小。
  - Version 1.0.6
 
     - 修复了控制台输出过多时程序卡死的问题。

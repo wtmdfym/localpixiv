@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:localpixiv/common/defaultdatas.dart';
-import 'package:localpixiv/widgets/workcontainer.dart';
 
 class MyDraggable extends StatefulWidget {
   const MyDraggable({super.key});
@@ -49,23 +47,6 @@ class DragTestState<MyDraggable> extends State with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Column(children: [
-      ElevatedButton(
-          onPressed: (() => setState(() {
-                tabController =
-                    TabController(length: stacks.length + 1, vsync: this);
-                stacks.add(KeepAlive(
-                    keepAlive: true,
-                    child: WorkDetialDisplayer(
-                        hostPath: 'E://pixiv', workInfo: defaultWorkInfo)));
-              })),
-          child: Text('Add')),
-      ElevatedButton(
-          onPressed: (() => setState(() {
-                tabController =
-                    TabController(length: stacks.length - 1, vsync: this);
-                stacks.removeLast();
-              })),
-          child: Text('romove')),
       DragTarget<int>(
         builder: (context, candidateData, rejectedData) {
           return TabBar(

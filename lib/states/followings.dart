@@ -49,10 +49,17 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
         .find(mongo.where.exists('userName').excludeFields(['_id']));
     followings.forEach((following) {
       if (following['newestWorks'] != null) {
-        following['workInfos'] = [
+        final List<WorkInfo> workInfo = [
           for (Map<String, dynamic> workinfojson in following['newestWorks'])
             WorkInfo.fromJson(workinfojson)
         ];
+        // 检查workInfos数量是否正常
+        assert(workInfo.length <= 4);
+        if (workInfo.length < 4) {
+          workInfo.addAll(
+              [for (int i = workInfo.length; i <= 4; i++) defaultWorkInfo]);
+        }
+        following['workInfos'] = workInfo;
         userInfos.add(UserInfo.fromJson(following));
       } else {
         fetchUserInfo(following, widget.pixivDb).then((userInfo) {
@@ -129,6 +136,13 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
             userName: userName,
             pixivDb: widget.pixivDb,
             // cacheRate: widget.cacheRate,
+            onWorkBookmarked: (isLiked, workId, userName) =>
+                Provider.of<WorkBookmarkModel>(context, listen: false)
+                    .changebookmark(
+              isLiked,
+              workId,
+              userName,
+            ),
           ));
     }
 
@@ -142,30 +156,21 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           spacing: 15,
                           children: [
-                            FollowingInfoDisplayer(
-                              hostPath: widget.hostPath,
-                              // cacheRate: widget.cacheRate,
-                              userInfo: userInfos[0],
-                              onTab: (userName) => openTabCallback(userName),
-                            ),
-                            FollowingInfoDisplayer(
-                              hostPath: widget.hostPath,
-                              // cacheRate: widget.cacheRate,
-                              userInfo: userInfos[1],
-                              onTab: (userName) => openTabCallback(userName),
-                            ),
-                            FollowingInfoDisplayer(
-                              hostPath: widget.hostPath,
-                              // cacheRate: widget.cacheRate,
-                              userInfo: userInfos[2],
-                              onTab: (userName) => openTabCallback(userName),
-                            ),
-                            FollowingInfoDisplayer(
-                              hostPath: widget.hostPath,
-                              // cacheRate: widget.cacheRate,
-                              userInfo: userInfos[3],
-                              onTab: (userName) => openTabCallback(userName),
-                            ),
+                            for (int i = 0; i < pagesize; i++)
+                              FollowingInfoDisplayer(
+                                hostPath: widget.hostPath,
+                                // cacheRate: widget.cacheRate,
+                                userInfo: userInfos[i],
+                                onTab: (userName) => openTabCallback(userName),
+                                onWorkBookmarked: (isLiked, workId, userName) =>
+                                    Provider.of<WorkBookmarkModel>(context,
+                                            listen: false)
+                                        .changebookmark(
+                                  isLiked,
+                                  workId,
+                                  userName,
+                                ),
+                              ),
                             // 翻页控件
                             Row(
                               spacing: 300,

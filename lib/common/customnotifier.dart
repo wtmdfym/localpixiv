@@ -94,7 +94,7 @@ class InfosNotifier<T> extends ValueNotifier<List<T>> {
 }
 
 /// 作品收藏操作通知器
-class WorkBookMarkModel with ChangeNotifier {
+class WorkBookmarkModel with ChangeNotifier {
   bool _bookmarked = false;
   int _workId = 114514;
   String _userName = 'Man';
@@ -245,7 +245,7 @@ class StackChangeNotifier with ChangeNotifier {
   }
 }
 
-/// 全局设置更新通知器
+/// UI设置更新通知器
 class UIConfigUpdateNotifier with ChangeNotifier {
   // late final MainConfigs _configs;
   late final UIConfigs _uiConfigs;
@@ -253,7 +253,7 @@ class UIConfigUpdateNotifier with ChangeNotifier {
   // MainConfigs get configs => _configs;
   UIConfigs get uiConfigs => _uiConfigs;
 
-  void initconfigs(MainConfigs configs, UIConfigs uiConfigs) {
+  void initconfigs(UIConfigs uiConfigs) {
     // _configs = configs;
     _uiConfigs = uiConfigs;
     notifyListeners();
