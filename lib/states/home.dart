@@ -86,8 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 builder: (context) {
                   return AlertDialog(
                     title: Text('ConnectError:\nProxy inaccessible'),
-                    titleTextStyle:
-                        TextStyle(color: Colors.redAccent, fontSize: 25),
+                    titleTextStyle: TextStyle(color: Colors.redAccent),
                     content: Text(
                       '请检查代理设置是否正确',
                       textAlign: TextAlign.center,
@@ -182,8 +181,9 @@ class _MyHomePageState extends State<MyHomePage> {
                         String location =
                             'c:/Users/Administrator/Desktop/pixiv-crawler';
                         _sendCommand(
-                            '$location/.venv/Scripts/python.exe -u lib/pythonapp/cmd_app.py  --configfile assets/jsons/config.json'
+                            '$location/.venv/Scripts/python.exe -u lib/pythonapp/cmd_app.py  --configfile jsons/config.json'
                             //'cd asset/lib/pythonapp/build/exe.win-amd64-3.12/'
+                            //'"lib/pythonapp/build/exe.win-amd64-3.12/cmd_app.exe" --configfile jsons/config.json'
                             );
                         //_sendCommand(
                         //    'cmd_app.exe --configfile jsons/config.json');

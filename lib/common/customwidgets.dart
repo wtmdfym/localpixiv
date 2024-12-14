@@ -154,3 +154,99 @@ class DragTestState<MyDraggable> extends State with TickerProviderStateMixin {
     ]);
   }
 }
+
+class ResizableWidget extends StatefulWidget {
+  const ResizableWidget({super.key});
+
+  @override
+  State createState() => _ResizableWidgetState();
+}
+
+class _ResizableWidgetState extends State<ResizableWidget> {
+  double _dividerPosition = 0.5; // 分隔条初始位置
+  double _movingdividerPosition = 0.5; // 分隔条初始位置
+  bool change = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return MouseRegion(
+            cursor:
+                change ? SystemMouseCursors.resizeLeftRight : MouseCursor.defer,
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  width: constraints.maxWidth * _dividerPosition,
+                  height: constraints.maxHeight,
+                  child: Container(
+                    color: Colors.blue,
+                    child: Center(child: Text('Left Widget')),
+                  ),
+                ),
+                Positioned(
+                  left: constraints.maxWidth * _dividerPosition,
+                  top: 0,
+                  width: constraints.maxWidth * (1 - _dividerPosition),
+                  height: constraints.maxHeight,
+                  child: Container(
+                    color: Colors.green,
+                    child: Center(child: Text('Right Widget')),
+                  ),
+                ),
+                Positioned(
+                  left: constraints.maxWidth * _dividerPosition - 4,
+                  top: 0,
+                  width: 8,
+                  height: constraints.maxHeight,
+                  child: Draggable(
+                    axis: Axis.horizontal,
+                    feedback: Container(
+                      color: const Color.fromARGB(125, 158, 158, 158),
+                      width: 4,
+                      height: constraints.maxHeight,
+                    ),
+                    childWhenDragging: Container(
+                      color: Color.fromARGB(125, 158, 158, 158),
+                      width: 4,
+                      height: constraints.maxHeight,
+                    ),
+                    onDragStarted: () => setState(
+                      () => change = true,
+                    ),
+                    onDragUpdate: (details) {
+                      setState(() {
+                        _movingdividerPosition +=
+                            details.delta.dx / constraints.maxWidth;
+                        if (_movingdividerPosition > 1) {
+                          _dividerPosition = 1;
+                        } else if (_movingdividerPosition < 0) {
+                          _dividerPosition = 0;
+                        } else {
+                          _dividerPosition = _movingdividerPosition;
+                        }
+                      });
+                    },
+                    onDragEnd: (details) {
+                      setState(() {
+                        change = false;
+                        _dividerPosition =
+                            details.offset.dx / constraints.maxWidth;
+                        if (_dividerPosition < 0) _dividerPosition = 0;
+                        if (_dividerPosition > 1) _dividerPosition = 1;
+                        _movingdividerPosition = _dividerPosition;
+                      });
+                    },
+                    child: Container(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            ));
+      },
+    );
+  }
+}

@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:localpixiv/widgets/divided_stack.dart';
+import 'package:localpixiv/widgets/page_controller_row.dart';
 import 'package:mongo_dart/mongo_dart.dart'
     show Db, DbCollection, SelectorBuilder, where;
 import 'package:provider/provider.dart';
@@ -30,32 +32,222 @@ class Viewer extends StatefulWidget {
 
 class _ViewerState extends State<Viewer> {
   // 初始化
-  int page = 1;
-  int maxpage = 1;
+  ValueNotifier<int> maxpage = ValueNotifier(1);
   final int pagesize = 8;
   bool cancelevent = false;
   final List<dynamic> searchedInfos = [];
-  final InfosNotifier<WorkInfo> workInfosNotifer = InfosNotifier([
-    defaultWorkInfo,
-    defaultWorkInfo,
-    defaultWorkInfo,
-    defaultWorkInfo,
-    defaultWorkInfo,
-    defaultWorkInfo,
-    defaultWorkInfo,
-    defaultWorkInfo,
-  ]);
+  final InfosNotifier<WorkInfo> workInfosNotifer =
+      InfosNotifier([for (int i = 0; i < 8; i++) defaultWorkInfo]);
   final List<dynamic> searchResults = [];
-  final WorkInfoNotifier showingInfo = WorkInfoNotifier(defaultWorkInfo);
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _pageController =
-      TextEditingController(text: '1/1');
   /*ValueNotifier<List<bool>> searchType =
       ValueNotifier([true, false, false]); //id  uid tag*/
   int reslength = 0;
   final int buffer = 200;
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
   bool onsearching = false;
+
+  // 构造界面
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<UIConfigUpdateNotifier>(
+        builder: (context, notifier, child) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: DividedStack(
+          leftWidget: SingleChildScrollView(
+              child: Padding(
+                  padding: EdgeInsets.only(right: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // 搜索控件
+                      TextField(
+                        controller: _searchController,
+                        maxLength: 100,
+                        decoration: InputDecoration(
+                          labelText: "Ciallo~(∠・ω< )⌒☆",
+                          icon: Icon(
+                            Icons.search,
+                          ),
+                        ),
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: searchAnalyzer,
+                        icon: Icon(
+                          Icons.search,
+                        ),
+                        label: Text(
+                          'Search',
+                        ),
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      ElevatedButton(
+                          onPressed: () {
+                            advancedSearch(context).then((advancedtext) {
+                              // TODO 高级搜索
+                              searchAnalyzer(advancedtext: advancedtext);
+                            });
+                          },
+                          child: Text('Advanced Search')),
+                      Divider(),
+                      // 信息显示部件
+                      Consumer<ShowInfoNotifier>(
+                          builder: (context, workInfoNotifier, child) =>
+                              InfoContainer(
+                                workInfo: workInfoNotifier.workInfo,
+                                onTapUser: (userName) {
+                                  notifier.uiConfigs.autoOpen
+                                      ? context
+                                          .read<StackChangeNotifier>()
+                                          .addStack(
+                                              userName,
+                                              UserDetailsDisplayer(
+                                                hostPath: widget
+                                                    .basicConfigs.savePath,
+                                                cacheRate: notifier
+                                                    .uiConfigs.imageCacheRate,
+                                                userName: userName,
+                                                pixivDb: widget.pixivDb,
+                                                // TODO 同步信息
+                                                onWorkBookmarked: (isLiked,
+                                                        workId, userName) =>
+                                                    context
+                                                        .read<
+                                                            WorkBookmarkModel>()
+                                                        .changebookmark(
+                                                          isLiked,
+                                                          workId,
+                                                          userName,
+                                                        ),
+                                              ))
+                                      : {};
+                                },
+                                onTapTag: (tag) {
+                                  notifier.uiConfigs.autoSearch
+                                      ? searchAnalyzer(
+                                          advancedtext: null,
+                                          finishedselector:
+                                              where.exists('tags.$tag'))
+                                      : {};
+                                },
+                              ))
+                    ],
+                  ))),
+          rightWidget: // 作品展示网格
+              Column(children: [
+            ValueListenableBuilder(
+                valueListenable: workInfosNotifer,
+                builder: (context, workInfos, child) => GridView.count(
+                      scrollDirection: Axis.vertical,
+                      shrinkWrap: true,
+                      crossAxisCount: 4,
+                      childAspectRatio: 10 / 12, //宽比高
+                      mainAxisSpacing: 12,
+                      crossAxisSpacing: 12,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: <Widget>[
+                        for (int i = 0; i < pagesize; i++)
+                          WorkContainer(
+                            hostPath: widget.basicConfigs.savePath,
+                            workInfo: workInfos[i],
+                            cacheRate: notifier.uiConfigs.imageCacheRate,
+                            onBookmarked: (isLiked, workId, userName) => context
+                                .read<WorkBookmarkModel>()
+                                .changebookmark(
+                                  isLiked,
+                                  workId,
+                                  userName,
+                                ),
+                          ),
+                      ],
+                    )),
+            // 翻页控件
+            Expanded(
+                child: PageControllerRow(
+                          maxpage: maxpage,
+                          pagesize: pagesize,
+                          onPageChange: (page) => changePage(page),
+                        ))
+          ]),
+          additionalWidgets: [
+            // 加载指示器
+            Positioned.fill(
+                child: ValueListenableBuilder(
+                    valueListenable: _isLoading,
+                    builder: (context, value, child) {
+                      return
+                          // 当不加载时不显示
+                          Offstage(
+                              offstage: !value,
+                              child: Stack(children: [
+                                ModalBarrier(
+                                  color:
+                                      const Color.fromARGB(150, 160, 160, 160),
+                                  dismissible: true,
+                                  onDismiss: () => {
+                                    cancelevent = true,
+                                    _isLoading.value = false
+                                  },
+                                ),
+                                Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.blueAccent,
+                                    strokeWidth: 6,
+                                    semanticsLabel: 'Loading......',
+                                  ),
+                                ),
+                              ]));
+                    })),
+            Positioned(
+                left: 2,
+                bottom: 2,
+                child: Tooltip(
+                  message: 'Tips: Testing......',
+                  child: Icon(Icons.info_outlined),
+                ))
+          ],
+        ),
+        /*ValueListenableBuilder(
+              valueListenable: searchType,
+              builder: (context, _searchType, child) =>
+                  Row(mainAxisSize: MainAxisSize.min, children: [
+                    Expanded(
+                        child: CheckboxListTile(
+                      title: Text('Id'),
+                      value: _searchType[0],
+                      onChanged: (value) {
+                        List<bool> temp = searchType.value;
+                        temp[0] = value!;
+                        searchType.value = temp;
+                      },
+                    )),
+                    Expanded(
+                        child: CheckboxListTile(
+                      title: Text('Uid'),
+                      value: _searchType[1],
+                      onChanged: (value) {
+                        List<bool> temp = searchType.value;
+                        temp[0] = value!;
+                        searchType.value = temp;
+                      },
+                    )),
+                    Expanded(
+                        child: CheckboxListTile(
+                      title: Text('Tag'),
+                      value: _searchType[2],
+                      onChanged: (value) {
+                        List<bool> temp = searchType.value;
+                        temp[0] = value!;
+                        searchType.value = temp;
+                      },
+                    )),
+                  ])),*/
+      );
+    });
+  }
 
   // 搜索控制
   void searchAnalyzer(
@@ -178,12 +370,12 @@ class _ViewerState extends State<Viewer> {
       if (success) {
         resultDialog(context.mounted ? context : null, 'Search', true,
             description: 'Found $reslength results!');
-        maxpage = (reslength / pagesize).ceil();
+        maxpage.value = (reslength / pagesize).ceil();
         Timer.periodic(Durations.short2, (timer) {
           if ((searchResults.length >= 8) ||
               (searchResults.length == reslength)) {
             _isLoading.value = false;
-            changePage();
+            changePage(1);
             timer.cancel();
           }
         });
@@ -203,7 +395,6 @@ class _ViewerState extends State<Viewer> {
       return false;
     } else {
       searchResults.clear();
-      page = 1;
       widget.backupcollection
           .find(selector.sortBy('id', descending: true).excludeFields(['_id']))
           .forEach((info) {
@@ -217,39 +408,9 @@ class _ViewerState extends State<Viewer> {
     }
   }
 
-  // 通信信息处理
-  void dataHander(data) {}
-
-  // 翻页控制
-  void prevPage() {
-    if (page > 1) {
-      page -= 1;
-      changePage();
-    }
-  }
-
-  void jumpToPage() {
-    int newpage =
-        int.parse(_pageController.text.replaceFirst(RegExp('/.+'), ''));
-    if (page == newpage) {
-    } else if ((0 < newpage) && (newpage <= maxpage)) {
-      page = newpage;
-      changePage();
-    } else {
-      _pageController.text = '$page/$maxpage';
-    }
-  }
-
-  void nextPage() {
-    if (page < maxpage) {
-      page += 1;
-      changePage();
-    }
-  }
-
-  void changePage() async {
+  void changePage(int page) async {
     final List<WorkInfo> workInfos = [];
-    if (page < maxpage) {
+    if (page < maxpage.value) {
       List<dynamic> info =
           searchResults.sublist((page - 1) * pagesize, page * pagesize);
       for (int i = 0; i < pagesize; i++) {
@@ -267,267 +428,6 @@ class _ViewerState extends State<Viewer> {
       }
     }
     workInfosNotifer.setInfos(workInfos);
-    _pageController.text = '$page/$maxpage';
-  }
-
-  // 构造界面
-  @override
-  Widget build(BuildContext context) {
-    return FittedBox(
-        child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Stack(children: [
-              NotificationListener<ShowInfoNotification>(
-                  // showinfo信号监听
-                  onNotification: (notification) {
-                    showingInfo.setInfo(notification.msg);
-                    return true;
-                  },
-                  child: Row(spacing: 20, children: [
-                    SizedBox(
-                        width: 400,
-                        height: 1080,
-                        child: ListView(
-                          shrinkWrap: true,
-                          children: [
-                            // 搜索控件
-                            TextField(
-                              controller: _searchController,
-                              maxLength: 100,
-                              decoration: InputDecoration(
-                                labelText: "Ciallo~(∠・ω< )⌒☆",
-                                icon: Icon(Icons.search),
-                              ),
-                            ),
-                            /*Divider(),
-                            ValueListenableBuilder(
-                                valueListenable: searchType,
-                                builder: (context, _searchType, child) => Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Expanded(
-                                              child: CheckboxListTile(
-                                            title: Text('Id'),
-                                            value: _searchType[0],
-                                            onChanged: (value) {
-                                              List<bool> temp =
-                                                  searchType.value;
-                                              temp[0] = value!;
-                                              searchType.value = temp;
-                                            },
-                                          )),
-                                          Expanded(
-                                              child: CheckboxListTile(
-                                            title: Text('Uid'),
-                                            value: _searchType[1],
-                                            onChanged: (value) {
-                                              List<bool> temp =
-                                                  searchType.value;
-                                              temp[0] = value!;
-                                              searchType.value = temp;
-                                            },
-                                          )),
-                                          Expanded(
-                                              child: CheckboxListTile(
-                                            title: Text('Tag'),
-                                            value: _searchType[2],
-                                            onChanged: (value) {
-                                              List<bool> temp =
-                                                  searchType.value;
-                                              temp[0] = value!;
-                                              searchType.value = temp;
-                                            },
-                                          )),
-                                        ])),*/
-                            Divider(),
-                            ElevatedButton.icon(
-                              onPressed: searchAnalyzer,
-                              icon: Icon(
-                                Icons.search,
-                                size: 30,
-                              ),
-                              label: Text('Search',
-                                  style: TextStyle(fontSize: 20)),
-                            ),
-                            Divider(),
-                            ElevatedButton(
-                                onPressed: () {
-                                  advancedSearch(context).then((advancedtext) {
-                                    // TODO 高级搜索
-                                    searchAnalyzer(advancedtext: advancedtext);
-                                  });
-                                },
-                                child: Text('Advanced Search',
-                                    style: TextStyle(fontSize: 20))),
-                            Divider(),
-                            // 信息显示部件
-                            ValueListenableBuilder(
-                                valueListenable: showingInfo,
-                                builder: (context, workInfo, child) => Consumer<
-                                        UIConfigUpdateNotifier>(
-                                    builder: (context, value, child) =>
-                                        InfoContainer(
-                                          workInfo: workInfo,
-                                          onTapUser: (userName) {
-                                            value.uiConfigs.autoOpen
-                                                ? context
-                                                    .read<StackChangeNotifier>()
-                                                    .addStack(
-                                                        userName,
-                                                        UserDetailsDisplayer(
-                                                          hostPath: widget
-                                                              .basicConfigs
-                                                              .savePath,
-                                                          /*cacheRate:
-                                                            configNotifier
-                                                                .uiConfigs
-                                                                .imageCacheRate,*/
-                                                          userName: userName,
-                                                          pixivDb:
-                                                              widget.pixivDb,
-                                                          // TODO 同步信息
-                                                          onWorkBookmarked: (isLiked,
-                                                                  workId,
-                                                                  userName) =>
-                                                              Provider.of<WorkBookmarkModel>(
-                                                                      context,
-                                                                      listen:
-                                                                          false)
-                                                                  .changebookmark(
-                                                            isLiked,
-                                                            workId,
-                                                            userName,
-                                                          ),
-                                                        ))
-                                                : {};
-                                          },
-                                          onTapTag: (tag) {
-                                            value.uiConfigs.autoSearch
-                                                ? searchAnalyzer(
-                                                    advancedtext: null,
-                                                    finishedselector: where
-                                                        .exists('tags.$tag'))
-                                                : {};
-                                          },
-                                        )))
-                          ],
-                        )),
-                    // 作品展示网格
-                    Column(
-                        spacing: 8,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ConstrainedBox(
-                              constraints: const BoxConstraints(
-                                maxWidth: 1920,
-                                // maxHeight: 1080,
-                              ),
-                              child: ValueListenableBuilder(
-                                  valueListenable: workInfosNotifer,
-                                  builder: (context, workInfos, child) =>
-                                      GridView.count(
-                                        scrollDirection: Axis.vertical,
-                                        shrinkWrap: true,
-                                        crossAxisCount: 4,
-                                        childAspectRatio: 10 / 12, //宽比高
-                                        mainAxisSpacing: 16,
-                                        crossAxisSpacing: 16,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
-                                        children: <Widget>[
-                                          for (int i = 0; i < pagesize; i++)
-                                            WorkContainer(
-                                              hostPath:
-                                                  widget.basicConfigs.savePath,
-                                              workInfo: workInfos[i],
-                                              //cacheRate: widget.uiConfigs.imageCacheRate,
-                                              onBookmarked: (isLiked, workId,
-                                                      userName) =>
-                                                  Provider.of<WorkBookmarkModel>(
-                                                          context,
-                                                          listen: false)
-                                                      .changebookmark(
-                                                isLiked,
-                                                workId,
-                                                userName,
-                                              ),
-                                            ),
-                                        ],
-                                      ))),
-                          // 翻页控件
-                          Row(
-                            spacing: 300,
-                            children: [
-                              ElevatedButton.icon(
-                                onPressed: prevPage,
-                                icon: Icon(
-                                  Icons.navigate_before,
-                                  size: 30,
-                                ),
-                                label: Text('Prev',
-                                    style: TextStyle(fontSize: 20)),
-                              ),
-                              SizedBox(
-                                  width: 300,
-                                  child: TextField(
-                                    controller: _pageController,
-                                    maxLength: 10,
-                                    decoration: InputDecoration(
-                                      labelText: "Page",
-                                    ),
-                                  )),
-                              ElevatedButton.icon(
-                                  onPressed: jumpToPage,
-                                  icon: Icon(
-                                    Icons.next_plan_outlined,
-                                    size: 30,
-                                  ),
-                                  label: Text("Jump",
-                                      style: TextStyle(fontSize: 20))),
-                              ElevatedButton.icon(
-                                  onPressed: nextPage,
-                                  icon: Icon(
-                                    Icons.navigate_next,
-                                    size: 30,
-                                  ),
-                                  iconAlignment: IconAlignment.end,
-                                  label: Text("Next",
-                                      style: TextStyle(fontSize: 20))),
-                            ],
-                          )
-                        ])
-                  ])),
-
-              // 加载指示器
-              ValueListenableBuilder(
-                  valueListenable: _isLoading,
-                  builder: (context, value, child) {
-                    return Positioned.fill(
-                      child:
-                          // 当不加载时不显示
-                          Offstage(
-                              offstage: !value,
-                              child: Stack(children: [
-                                ModalBarrier(
-                                  color:
-                                      const Color.fromARGB(150, 160, 160, 160),
-                                  dismissible: true,
-                                  onDismiss: () => {
-                                    cancelevent = true,
-                                    _isLoading.value = false
-                                  },
-                                ),
-                                Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.blueAccent,
-                                    strokeWidth: 6,
-                                    semanticsLabel: 'Loading......',
-                                  ),
-                                ),
-                              ])),
-                    );
-                  }),
-            ])));
   }
 }
 

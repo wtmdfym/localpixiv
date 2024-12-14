@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:localpixiv/common/defaultdatas.dart';
 import 'package:localpixiv/models.dart';
 
 /// 作品信息变更捕捉器
@@ -58,12 +59,6 @@ class WorkInfoNotifier extends ValueNotifier<WorkInfo> {
   }
 }
 
-/// 作品信息显示通知器
-class ShowInfoNotification extends Notification {
-  ShowInfoNotification(this.msg);
-  final WorkInfo msg;
-}
-
 /// 自定义的作者信息变更捕捉器
 class UserInfoNotifier extends ValueNotifier<UserInfo> {
   UserInfoNotifier(super.workInfo);
@@ -83,12 +78,22 @@ class UserInfoNotifier extends ValueNotifier<UserInfo> {
   }
 }
 
-/// 信息变更捕捉器
+/// 信息变更通知器
 class InfosNotifier<T> extends ValueNotifier<List<T>> {
   InfosNotifier(super.info);
 
   void setInfos(List<T> newinfo) {
     value = newinfo;
+    notifyListeners();
+  }
+}
+
+/// 作品信息显示通知器
+class ShowInfoNotifier with ChangeNotifier {
+  WorkInfo _workInfo = defaultWorkInfo;
+  WorkInfo get workInfo => _workInfo;
+  void updateInfo(WorkInfo newworkInfo) {
+    _workInfo = newworkInfo;
     notifyListeners();
   }
 }
@@ -289,6 +294,24 @@ class UIConfigUpdateNotifier with ChangeNotifier {
     // notifyListeners();
   }
   */
+  void updateUiConfigsMap(Map<String, dynamic> updates) {
+    for (MapEntry entry in updates.entries) {
+      if (entry.key == 'autoOpen') {
+        _uiConfigs.autoOpen = entry.value;
+      } else if (entry.key == 'autoSearch') {
+        _uiConfigs.autoSearch = entry.value;
+      } else if (entry.key == 'imageCacheRate') {
+        _uiConfigs.imageCacheRate = entry.value;
+      } else if (entry.key == 'fontSize') {
+        _uiConfigs.fontSize = entry.value;
+      } else {
+        throw 'Invalid key!';
+      }
+    }
+
+    notifyListeners();
+  }
+
   void updateUiConfigs(String key, dynamic value) {
     if (key == 'autoOpen') {
       _uiConfigs.autoOpen = value;
@@ -296,9 +319,12 @@ class UIConfigUpdateNotifier with ChangeNotifier {
       _uiConfigs.autoSearch = value;
     } else if (key == 'imageCacheRate') {
       _uiConfigs.imageCacheRate = value;
+    } else if (key == 'fontSize') {
+      _uiConfigs.fontSize = value;
     } else {
       throw 'Invalid key!';
     }
+
     notifyListeners();
   }
 }

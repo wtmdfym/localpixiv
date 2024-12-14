@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
 import 'package:localpixiv/widgets/workloader.dart';
+import 'package:provider/provider.dart';
 
 /// 显示作品信息的容器
 class InfoContainer extends StatelessWidget {
@@ -20,31 +21,28 @@ class InfoContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> tags = [];
+    final List<Widget> tags = [];
     workInfo.tags.forEach((key, value) {
       tags.add(SelectableText.rich(
-          style: TextStyle(fontSize: 20, backgroundColor: Colors.amberAccent),
+          style: TextStyle(backgroundColor: Colors.amberAccent),
           TextSpan(
               text: '$key ($value)',
               recognizer: (TapGestureRecognizer()
                 ..onTap = () => onTapTag(key)))));
     });
-    return Column(children: [
-      SelectableText.rich(
-          style: TextStyle(fontSize: 20),
-          TextSpan(children: [
-            TextSpan(
-                text: 'Title: ${workInfo.title}\n',
-                style: TextStyle(fontSize: 25)),
-            TextSpan(
-              text:
-                  'UserId: ${workInfo.userId}\nUserName: ${workInfo.userName}\n',
-              style: TextStyle(color: Colors.lightBlue, fontSize: 25),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () => onTapUser(workInfo.userName),
-            ),
-            TextSpan(text: 'Description: ${workInfo.description}\n'),
-          ])),
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      SelectableText.rich(TextSpan(children: [
+        TextSpan(
+          text: 'Title: ${workInfo.title}\n',
+        ),
+        TextSpan(
+          text: 'UserId: ${workInfo.userId}\nUserName: ${workInfo.userName}\n',
+          style: TextStyle(color: Colors.lightBlue),
+          recognizer: TapGestureRecognizer()
+            ..onTap = () => onTapUser(workInfo.userName),
+        ),
+        TextSpan(text: 'Description: ${workInfo.description}\n'),
+      ])),
       Wrap(
         spacing: 20,
         runSpacing: 20,
@@ -54,14 +52,14 @@ class InfoContainer extends StatelessWidget {
   }
 }
 
-/// 展示作品的容器
+/// 展示作品的容器(使用fittedbox或expanded包裹避免'size.isFinite': is not true错误)
 class WorkContainer extends StatefulWidget {
   const WorkContainer({
     super.key,
     required this.hostPath,
     this.width = 400,
     this.height = 480,
-    // required this.cacheRate,
+    required this.cacheRate,
     required this.workInfo,
     required this.onBookmarked,
     this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
@@ -69,7 +67,7 @@ class WorkContainer extends StatefulWidget {
   final String hostPath;
   final int width;
   final int height;
-  // final double cacheRate;
+  final double cacheRate;
   final WorkInfo workInfo;
   final WorkBookmarkCallback onBookmarked;
   final Color backgroundColor;
@@ -112,25 +110,22 @@ class _WorkContainerState extends State<WorkContainer>
         onEnter: (details) => _mouseEOAnimationController.forward(),
         // 离开
         onExit: (details) => _mouseEOAnimationController.reverse(),
-        child: FittedBox(
-                child: Stack(alignment: Alignment.center, children: [
-          GestureDetector(
-            // 点击事件监听
-            onTap: () {
-              ShowInfoNotification(widget.workInfo).dispatch(context);
-            },
-            child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
-                    color: widget.backgroundColor),
-                width: widget.width + 8,
-                height: widget.height + 8,
+        child: Animate(
+            autoPlay: false,
+            controller: _mouseEOAnimationController,
+            effects: [
+              ScaleEffect(
+                  begin: Offset(1.0, 1.0),
+                  end: Offset(1.02, 1.02),
+                  duration: 100.ms)
+            ],
+            child: RepaintBoundary(
                 child: LongPressDraggable<(String, WorkInfo)>(
                     data: (widget.hostPath, widget.workInfo),
                     delay: Durations.medium2,
                     dragAnchorStrategy: (draggable, context, position) =>
                         Offset(-12, 32),
+                    childWhenDragging: SizedBox(),
                     feedback: Material(
                         borderRadius: BorderRadius.circular(5),
                         color: Color.fromARGB(0, 0, 0, 0),
@@ -142,69 +137,106 @@ class _WorkContainerState extends State<WorkContainer>
                             child: Text(
                               widget.workInfo.title,
                               style: TextStyle(
-                                color: Colors.amber,
-                                fontSize: 16,
-                              ),
+                                  color: Colors.amber,
+                                  fontSize: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.fontSize),
                             ))),
-                    child: widget.workInfo.type == 'novel'
-                        ? NovelLoader(
-                            coverImagePath: '',
-                            title: widget.workInfo.title,
-                          )
-                        : ImageLoader(
-                            path:
-                                '${widget.hostPath}${widget.workInfo.imagePath![0]}',
-                            width: widget.width,
-                            height: widget.height,
-                            // cacheRate: widget.cacheRate,
-                          ))),
-          ),
+                    child: Container(
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            color: widget.backgroundColor),
+                        width: widget.width + 8,
+                        height: widget.height + 8,
+                        child: Stack(
+                            alignment: Alignment.center,
+                            fit: StackFit.expand,
+                            children: [
+                              Positioned.fill(
+                                top: 8,
+                                left: 8,
+                                bottom: 8,
+                                right: 8,
+                                child: widget.workInfo.type == 'novel'
+                                    ? NovelLoader(
+                                        coverImagePath:
+                                            widget.workInfo.coverImagePath!,
+                                        title: widget.workInfo.title,
+                                        width: widget.width,
+                                        height: widget.height,
+                                        cacheRate: widget.cacheRate,
+                                      )
+                                    : ImageLoader(
+                                        path:
+                                            '${widget.hostPath}${widget.workInfo.imagePath![0]}',
+                                        width: widget.width,
+                                        height: widget.height,
+                                        cacheRate: widget.cacheRate,
+                                      ),
+                              ),
+                              // 在最顶层显示墨水效果
+                              Positioned.fill(
+                                  child: Material(
+                                      type: MaterialType.transparency,
+                                      child: InkWell(
+                                        onTap: () => context
+                                            .read<ShowInfoNotifier>()
+                                            .updateInfo(widget.workInfo),
+                                        hoverColor: const Color.fromARGB(
+                                            80, 24, 255, 255),
+                                        splashColor: const Color.fromARGB(
+                                            80, 0, 187, 212),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ))),
 
-          // 图片数量/小说字数显示
-          Positioned(
-              top: 5,
-              right: 5,
-              width: widget.workInfo.type == 'novel' ? 90 : 30,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                    color: Colors.grey[500],
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(
-                  widget.workInfo.type == 'novel'
-                      ? widget.workInfo.characterCount.toString()
-                      : widget.workInfo.imageCount.toString(),
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white,
-                      decorationStyle: TextDecorationStyle.wavy),
-                ),
-              )),
-          // 收藏作品
-          Positioned(
-              bottom: 5,
-              left: 5,
-              child: ValueListenableBuilder<IconData>(
-                  valueListenable: _icon,
-                  builder: (context, iconvalue, child) => RepaintBoundary(
-                          child: IconButton(
-                        onPressed: () {
-                          // 通信更新信息
-                          _icon.value = widget.workInfo.isLiked
-                              ? Icons.favorite_border
-                              : Icons.favorite;
-                          widget.workInfo.isLiked = !widget.workInfo.isLiked;
-                          widget.onBookmarked(widget.workInfo.isLiked,
-                              widget.workInfo.id, widget.workInfo.userName);
-                        },
-                        icon: Icon(iconvalue),
-                        iconSize: 30,
-                        color: Colors.white,
-                        style:
-                            IconButton.styleFrom(backgroundColor: Colors.grey),
-                      ))))
-        ]))
-            .animate(controller: _mouseEOAnimationController, autoPlay: false)
-            .scaleXY(begin: 1.0, end: 1.02, duration: 100.ms));
+                              // 图片数量/小说字数显示
+                              Positioned(
+                                  top: 5,
+                                  right: 5,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                        color: Colors.grey[500],
+                                        borderRadius: BorderRadius.circular(8)),
+                                    child: Text(
+                                      widget.workInfo.type == 'novel'
+                                          ? ' ${widget.workInfo.characterCount} '
+                                          : ' ${widget.workInfo.imageCount} ',
+                                      textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          decorationStyle:
+                                              TextDecorationStyle.wavy),
+                                    ),
+                                  )),
+                              // 收藏作品
+                              Positioned(
+                                  bottom: 5,
+                                  left: 5,
+                                  child: ValueListenableBuilder<IconData>(
+                                      valueListenable: _icon,
+                                      builder: (context, iconvalue, child) =>
+                                          RepaintBoundary(
+                                              child: IconButton(
+                                            onPressed: () {
+                                              // 通信更新信息
+                                              _icon.value =
+                                                  widget.workInfo.isLiked
+                                                      ? Icons.favorite_border
+                                                      : Icons.favorite;
+                                              widget.workInfo.isLiked =
+                                                  !widget.workInfo.isLiked;
+                                              widget.onBookmarked(
+                                                  widget.workInfo.isLiked,
+                                                  widget.workInfo.id,
+                                                  widget.workInfo.userName);
+                                            },
+                                            icon: Icon(iconvalue),
+                                            color: Colors.white,
+                                            style: IconButton.styleFrom(
+                                                backgroundColor: Colors.grey),
+                                          ))))
+                            ]))))));
   }
 }
 
@@ -213,14 +245,14 @@ class WorkDetialDisplayer extends StatefulWidget {
   const WorkDetialDisplayer({
     super.key,
     required this.hostPath,
-    // required this.cacheRate,
+    required this.cacheRate,
     required this.onBookmarked,
     required this.workInfo,
     this.backgroundColor = const Color.fromARGB(255, 214, 214, 214),
   });
 
   final String hostPath;
-  // final double cacheRate;
+  final double cacheRate;
   final WorkInfo workInfo;
   final WorkBookmarkCallback onBookmarked;
   final Color backgroundColor;
@@ -236,110 +268,123 @@ class _WorkDetialDisplayerState extends State<WorkDetialDisplayer> {
   @override
   void initState() {
     super.initState();
+
     _icon = ValueNotifier<IconData>(
         widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border);
   }
 
   @override
+  void didUpdateWidget(covariant WorkDetialDisplayer oldWidget) {
+    if (oldWidget.workInfo != widget.workInfo) {
+      super.didUpdateWidget(oldWidget);
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    index.dispose();
+    _icon.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Material(
-        child: FittedBox(
-            child: Stack(
-      children: [
-        Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: widget.backgroundColor),
-            width: 2560,
-            height: 1440,
-            child: ValueListenableBuilder(
-                valueListenable: index,
-                builder: (context, index, child) =>
-                    widget.workInfo.type == 'novel'
+    return Material(child: LayoutBuilder(
+      builder: (context, constraints) {
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Positioned(
+                top: 8,
+                left: 60,
+                width: constraints.maxWidth - 120,
+                height: constraints.maxHeight - 16,
+                child: ValueListenableBuilder(
+                    valueListenable: index,
+                    builder: (context, index, child) => widget.workInfo.type ==
+                            'novel'
                         ? NovelDetialLoader(content: widget.workInfo.content!)
                         : InteractiveViewer(
                             maxScale: 12,
                             child: ImageLoader(
-                              path:
-                                  '${widget.hostPath}${widget.workInfo.imagePath![index]}',
-                              width: 2560,
-                              height: 1440,
-                              // cacheRate: widget.cacheRate
-                            )))),
+                                path:
+                                    '${widget.hostPath}${widget.workInfo.imagePath![index]}',
+                                width: 2560,
+                                height: 1440,
+                                cacheRate: widget.cacheRate)))),
 
-        Positioned(
-            top: 670,
-            left: 10,
-            child: IconButton(
-                onPressed: () {
-                  if (index.value > 0) {
-                    index.value -= 1;
-                  }
-                },
-                icon: Icon(Icons.navigate_before),
-                iconSize: 80,
-                color: Colors.white,
-                style: IconButton.styleFrom(backgroundColor: Colors.grey))),
-        Positioned(
-            top: 670,
-            right: 10,
-            child: IconButton(
-                onPressed: () {
-                  if (index.value < widget.workInfo.imagePath!.length - 1) {
-                    index.value += 1;
-                  }
-                },
-                icon: Icon(Icons.navigate_next),
-                iconSize: 80,
-                color: Colors.white,
-                style: IconButton.styleFrom(backgroundColor: Colors.grey))),
-        // 收藏作品
-        Positioned(
-            bottom: 5,
-            left: 5,
-            child: ValueListenableBuilder<IconData>(
-                valueListenable: _icon,
-                builder: (context, iconvalue, child) => RepaintBoundary(
-                        child: IconButton(
-                      onPressed: () {
-                        // 通信更新信息
-                        _icon.value = widget.workInfo.isLiked
-                            ? Icons.favorite_border
-                            : Icons.favorite;
-                        widget.workInfo.isLiked = !widget.workInfo.isLiked;
-                        widget.onBookmarked(
-                          widget.workInfo.isLiked,
-                          widget.workInfo.id,
-                          widget.workInfo.userName,
-                        );
-                      },
-                      icon: Icon(iconvalue),
-                      iconSize: 60,
-                      color: Colors.white,
-                      style: IconButton.styleFrom(backgroundColor: Colors.grey),
-                    )))),
-        widget.workInfo.type == 'novel'
-            ? SizedBox()
-            : ValueListenableBuilder(
-                valueListenable: index,
-                builder: (context, value, child) => Positioned(
-                    bottom: 20,
-                    right: 1225,
-                    width: 150,
-                    child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: Colors.grey,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${value + 1}/${widget.workInfo.imagePath!.length}',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            letterSpacing: 5,
-                            fontSize: 30,
-                            color: Colors.white,
-                          ),
-                        ))))
-      ],
-    )));
+            Positioned(
+                top: constraints.maxHeight / 2,
+                left: 20,
+                child: IconButton(
+                    onPressed: () {
+                      if (index.value > 0) {
+                        index.value -= 1;
+                      }
+                    },
+                    icon: Icon(Icons.navigate_before),
+                    color: Colors.white,
+                    style: IconButton.styleFrom(backgroundColor: Colors.grey))),
+            Positioned(
+                top: constraints.maxHeight / 2,
+                right: 20,
+                child: IconButton(
+                    onPressed: () {
+                      if (index.value < widget.workInfo.imagePath!.length - 1) {
+                        index.value += 1;
+                      }
+                    },
+                    icon: Icon(Icons.navigate_next),
+                    color: Colors.white,
+                    style: IconButton.styleFrom(backgroundColor: Colors.grey))),
+            // 收藏作品
+            Positioned(
+                bottom: 5,
+                left: 5,
+                child: ValueListenableBuilder<IconData>(
+                    valueListenable: _icon,
+                    builder: (context, iconvalue, child) => RepaintBoundary(
+                            child: IconButton(
+                          onPressed: () {
+                            // 通信更新信息
+                            _icon.value = widget.workInfo.isLiked
+                                ? Icons.favorite_border
+                                : Icons.favorite;
+                            widget.workInfo.isLiked = !widget.workInfo.isLiked;
+                            widget.onBookmarked(
+                              widget.workInfo.isLiked,
+                              widget.workInfo.id,
+                              widget.workInfo.userName,
+                            );
+                          },
+                          icon: Icon(iconvalue),
+                          color: Colors.white,
+                          style: IconButton.styleFrom(
+                              backgroundColor: Colors.grey),
+                        )))),
+            widget.workInfo.type == 'novel'
+                ? SizedBox()
+                : ValueListenableBuilder(
+                    valueListenable: index,
+                    builder: (context, value, child) => Positioned(
+                        bottom: 20,
+                        left: constraints.maxWidth / 2,
+                        child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Colors.grey,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              ' ${value + 1}/${widget.workInfo.imagePath!.length}  ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                letterSpacing: 5,
+                                color: Colors.white,
+                              ),
+                            ))))
+          ],
+        );
+      },
+    ));
   }
 }

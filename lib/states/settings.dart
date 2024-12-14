@@ -82,6 +82,7 @@ class _SettingsState extends State<Settings> {
               children: [
                 Tabbutton(
                   text: 'Main',
+                  style: Theme.of(context).textTheme.titleMedium,
                   onTap: (_) {
                     index.value = 0;
                     _scrollController.jumpTo(0);
@@ -91,6 +92,7 @@ class _SettingsState extends State<Settings> {
                 ),
                 Tabbutton(
                   text: 'Web Crawler',
+                  style: Theme.of(context).textTheme.titleMedium,
                   onTap: (_) {
                     index.value = 1;
                     _scrollController.jumpTo(scrollOffsets[0]!);
@@ -102,6 +104,7 @@ class _SettingsState extends State<Settings> {
                 ),
                 Tabbutton(
                   text: 'UI',
+                  style: Theme.of(context).textTheme.titleMedium,
                   onTap: (_) {
                     index.value = 2;
                     _scrollController

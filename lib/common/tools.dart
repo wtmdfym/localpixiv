@@ -46,7 +46,8 @@ Future<Configs> configReader(String configfilepath) async {
 Future<bool> configWriter(String configfilepath, Configs configs) async {
   File configFile = File(configfilepath);
   try {
-    if (!await configFile.exists()) {
+    bool isexist = await configFile.exists();
+    if (!isexist) {
       await configFile.create(recursive: true, exclusive: true);
     }
     configFile.writeAsString(jsonEncode(configs.toJson()), flush: true);
@@ -74,8 +75,8 @@ Future<ImageProvider> imageFileLoader(String imagePath,
   return cacheRate == 0
       ? image
       : ResizeImage(image,
-          width: width * cacheRate.toInt(),
-          height: height * cacheRate.toInt(),
+          width: (width * cacheRate).toInt(),
+          height: (height * cacheRate).toInt(),
           policy: policy,
           allowUpscaling: true);
 }

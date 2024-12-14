@@ -26,9 +26,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
             child: Column(spacing: 20, children: [
               TextField(
                 controller: andkeywords,
-                style: TextStyle(
-                  fontSize: 20,
-                ),
                 decoration: InputDecoration(
                   hintText:
                       'Keywords that must be included (separated by spaces)',
@@ -39,9 +36,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
               ),
               TextField(
                 controller: notkeywords,
-                style: TextStyle(
-                  fontSize: 20,
-                ),
                 decoration: InputDecoration(
                   hintText: 'Keywords not contained (separated by spaces)',
                   border: OutlineInputBorder(
@@ -51,9 +45,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
               ),
               TextField(
                 controller: orkeywords,
-                style: TextStyle(
-                  fontSize: 20,
-                ),
                 decoration: InputDecoration(
                   hintText:
                       'Keywords that may be included (separated by spaces)',
@@ -68,7 +59,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                   children: [
                     Text(
                       'Search Range',
-                      style: TextStyle(fontSize: 20),
                     ),
                     ValueListenableBuilder(
                         valueListenable: searchType,
@@ -94,7 +84,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                                   value: value,
                                   child: Text(
                                     value,
-                                    style: TextStyle(fontSize: 20),
                                   ),
                                 );
                               }).toList(),
@@ -117,7 +106,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                                   value: value,
                                   child: Text(
                                     value,
-                                    style: TextStyle(fontSize: 20),
                                   ),
                                 );
                               }).toList(),
@@ -128,7 +116,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                   builder: (context, value, child) => SwitchListTile(
                         title: Text(
                           'original only',
-                          style: TextStyle(fontSize: 20),
                         ),
                         value: value, //当前状态
                         onChanged: (value) {
@@ -140,7 +127,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                   builder: (context, value, child) => SwitchListTile(
                         title: Text(
                           'R-18',
-                          style: TextStyle(fontSize: 20),
                         ),
                         value: value, //当前状态
                         onChanged: (value) {
@@ -152,7 +138,6 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
                   builder: (context, value, child) => SwitchListTile(
                         title: Text(
                           'liked only',
-                          style: TextStyle(fontSize: 20),
                         ),
                         value: value, //当前状态
                         onChanged: (value) {
@@ -162,10 +147,9 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
             ])),
         actions: <Widget>[
           TextButton(
-            child: Text('Apply',
-                style: TextStyle(
-                  fontSize: 20,
-                )),
+            child: Text(
+              'Apply',
+            ),
             onPressed: () {
               submitContent.addAll({
                 'AND': andkeywords.text.split(RegExp(r'\s+')),
@@ -182,10 +166,9 @@ Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
             },
           ),
           TextButton(
-            child: Text('Cancel',
-                style: TextStyle(
-                  fontSize: 20,
-                )),
+            child: Text(
+              'Cancel',
+            ),
             onPressed: () {
               Navigator.of(context).pop(); // 关闭对话框
             },
@@ -230,9 +213,6 @@ Future<String> addClient(
             child: Column(spacing: 30, children: [
               TextField(
                 controller: accountNameController,
-                style: TextStyle(
-                  fontSize: 25,
-                ),
                 decoration: InputDecoration(
                   hintText: '输入账号名或E-mail地址',
                   border: OutlineInputBorder(
@@ -249,9 +229,6 @@ Future<String> addClient(
                 controller: accountCookieController,
                 minLines: 10,
                 maxLines: 10,
-                style: TextStyle(
-                  fontSize: 25,
-                ),
                 decoration: InputDecoration(
                   hintText: '输入账号的Cookies',
                   border: OutlineInputBorder(
@@ -267,10 +244,9 @@ Future<String> addClient(
             ])),
         actions: <Widget>[
           TextButton(
-            child: Text('确定',
-                style: TextStyle(
-                  fontSize: 25,
-                )),
+            child: Text(
+              '确定',
+            ),
             onPressed: () {
               Map<String, String> cookies =
                   cookiesFormater(accountCookieController.text);
@@ -284,10 +260,9 @@ Future<String> addClient(
             },
           ),
           TextButton(
-            child: Text('取消',
-                style: TextStyle(
-                  fontSize: 25,
-                )),
+            child: Text(
+              '取消',
+            ),
             onPressed: () {
               Navigator.of(context).pop(); // 关闭对话框
             },
@@ -314,22 +289,7 @@ void resultDialog(BuildContext? context, String operation, bool success,
     autoCloseDuration: Duration(seconds: 3),
     title: Text(
       success ? '$operation successful' : '$operation failed',
-      style: TextStyle(fontSize: 18),
     ),
-    description: Text(
-      description ?? '',
-      style: TextStyle(fontSize: 16),
-    ),
+    description: description != null ? Text(description) : null,
   );
-  /*
-  showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-            title: Text(
-              success ? '$operation successful' : '$operation failed',
-              textAlign: TextAlign.center,
-            ),
-            titleTextStyle: TextStyle(
-                color: success ? Colors.black : Colors.redAccent, fontSize: 20),
-          ));*/
 }

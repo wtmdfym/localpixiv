@@ -24,6 +24,7 @@
     "UIConfigs": {
         "autoOpen": true,
         "autoSearch": true,
-        "imageCacheRate": 1.0
+        "imageCacheRate": 1.0,
+        "fontSize": 16.0
     }
 }

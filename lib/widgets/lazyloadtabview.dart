@@ -6,12 +6,10 @@ import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 
 /// 使用多个tabbar控制同一个indexedstage
-class MutiTabbar extends StatefulWidget implements PreferredSizeWidget {
+class MutiTabbar extends StatefulWidget {
   const MutiTabbar({super.key, required this.mainTabs});
   final List<Tab> mainTabs;
 
-  @override
-  Size get preferredSize => Size.fromHeight(72.0 + 52.0);
   @override
   State<StatefulWidget> createState() {
     return MutiTabbarState();
@@ -60,8 +58,11 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
               details.data.$2.title,
               WorkDetialDisplayer(
                 hostPath: details.data.$1,
+                cacheRate: context
+                    .read<UIConfigUpdateNotifier>()
+                    .uiConfigs
+                    .imageCacheRate,
                 workInfo: details.data.$2,
-                // cacheRate: widget.cacheRate,
                 onBookmarked: (isLiked, workId, userName) =>
                     Provider.of<WorkBookmarkModel>(context, listen: false)
                         .changebookmark(
@@ -72,64 +73,69 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
               ));
         },
         builder: (context, candidateData, rejectedData) {
-          return Column(
+          return RepaintBoundary(
+              child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
               TabBar(
                   onTap: (value) => context
                       .read<StackChangeNotifier>()
                       .changeIndex(value, true),
                   tabs: widget.mainTabs),
-              Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back,
+              Offstage(
+                offstage: titles.isEmpty,
+                child: Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_back,
+                      ),
+                      onPressed: _moveToPreviousTab,
                     ),
-                    onPressed: _moveToPreviousTab,
-                  ),
-                  Expanded(
-                      child: TabBar(
-                          isScrollable: true,
-                          controller: _tabController,
-                          onTap: (value) => context
-                              .read<StackChangeNotifier>()
-                              .changeIndex(value, false),
-                          tabs: [
-                        for (int index = 0; index < titles.length; index++)
-                          SizedBox(
-                              width: 300,
-                              child: ListTile(
-                                title: Text(titles[index],
-                                    maxLines: 1,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                    )),
-                                trailing: IconButton(
-                                  icon: Icon(Icons.close),
-                                  onPressed: () {
-                                    context
-                                        .read<StackChangeNotifier>()
-                                        .removeAt(
-                                          index,
-                                        );
-                                  },
-                                ),
-                              ))
-                      ])),
-                  IconButton(
-                    icon: const Icon(
-                      Icons.arrow_forward,
+                    Expanded(
+                        child: TabBar(
+                            isScrollable: true,
+                            controller: _tabController,
+                            onTap: (value) => context
+                                .read<StackChangeNotifier>()
+                                .changeIndex(value, false),
+                            tabs: [
+                          for (int index = 0; index < titles.length; index++)
+                            SizedBox(
+                                width: 300,
+                                child: ListTile(
+                                  title: Text(titles[index],
+                                      maxLines: 1,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall),
+                                  trailing: IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      context
+                                          .read<StackChangeNotifier>()
+                                          .removeAt(
+                                            index,
+                                          );
+                                    },
+                                  ),
+                                ))
+                        ])),
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward,
+                      ),
+                      onPressed: _moveToNextTab,
                     ),
-                    onPressed: _moveToNextTab,
-                  ),
-                ],
+                  ],
+                ),
               )
             ],
-          );
+          )
+                  .animate(controller: _dargEOController, autoPlay: false)
+                  .color(blendMode: BlendMode.darken));
         },
-      )
-          .animate(controller: _dargEOController, autoPlay: false)
-          .color(blendMode: BlendMode.darken);
+      );
     });
   }
 
@@ -147,9 +153,9 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
     if (_tabController.index > 0) {
       _tabController.animateTo(_tabController.index - 1);
     } else {
-      // ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      //   content: Text("Can't go back"),
-      // ));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Can't go back"),
+      ));
     }
   }
 }

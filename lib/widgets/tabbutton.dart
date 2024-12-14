@@ -2,18 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:localpixiv/models.dart';
 
 class Tabbutton extends StatefulWidget implements PreferredSizeWidget {
-  const Tabbutton(
-      {super.key,
-      required this.onTap,
-      required this.index,
-      required this.indexNotifier,
-      required this.text});
+  const Tabbutton({
+    super.key,
+    required this.onTap,
+    required this.index,
+    required this.indexNotifier,
+    required this.text,
+    this.style,
+  });
   final ChangeIndexCallback onTap;
   final int index;
   final ValueNotifier<int> indexNotifier;
   final double width = 200;
   //final double height = 30;
   final String text;
+  final TextStyle? style;
 
   @override
   State<StatefulWidget> createState() => TabbuttonState();
@@ -39,13 +42,15 @@ class TabbuttonState extends State<Tabbutton> {
               builder: (context, index, child) => CustomPaint(
                 willChange: true,
                 painter: LinePainter(
-                    length: 30,
-                    startOffset: Offset(5, 2),
+                    length: (widget.style?.fontSize ?? 21.7) * 1.38,
+                    startOffset: Offset(
+                        (widget.style?.fontSize ?? 14.4) * 0.345,
+                        (widget.style?.fontSize ?? 14.5) * 0.138),
                     needpaint: index == widget.index),
                 child: Text(
                   '   ${widget.text} ',
                   textAlign: TextAlign.start,
-                  style: TextStyle(fontSize: 20),
+                  style: widget.style ?? TextStyle(fontSize: 20),
                 ),
               ),
             )));

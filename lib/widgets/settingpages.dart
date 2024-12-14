@@ -21,16 +21,11 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
       // 基本设置
       Text(
         'Basic Settings',
-        style: TextStyle(
-          fontSize: 20,
-        ),
+        style: Theme.of(context).textTheme.titleMedium
       ),
       TextFormField(
         initialValue: widget.configs.basicConfigs.savePath,
         maxLength: 100,
-        style: TextStyle(
-          fontSize: 20,
-        ),
         decoration: getInputDecoration('Save Path'),
         validator: (value) {
           var pathre = RegExp(r'^[C-Z]\:[\\,\/].*');
@@ -81,19 +76,13 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         // pixiv爬虫相关设置
         Text(
           'Web Crawler Settings',
-          style: TextStyle(
-            fontSize: 20,
-          ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         TextFormField(
           controller: _cookiecontroller,
           minLines: 5,
           maxLines: 5,
-          style: TextStyle(
-            fontSize: 20,
-          ),
           decoration: InputDecoration(
-            labelStyle: TextStyle(fontSize: 24),
             labelText: 'Cookies',
             hintText: '请输入你要爬取的账号的Cookies',
             border: OutlineInputBorder(
@@ -127,7 +116,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         SwitchListTile(
           title: Text(
             'Enable Proxy',
-            style: TextStyle(fontSize: 20),
           ),
           value: widget.configs.webCrawlerConfigs.enableProxy,
           onChanged: (value) {
@@ -139,9 +127,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         TextFormField(
           initialValue: widget.configs.webCrawlerConfigs.httpProxies,
           maxLength: 30,
-          style: TextStyle(
-            fontSize: 20,
-          ),
           decoration: getInputDecoration('Http Proxy'),
           enabled: widget.configs.webCrawlerConfigs.enableProxy,
           onChanged: (value) {
@@ -173,9 +158,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         TextFormField(
           initialValue: widget.configs.webCrawlerConfigs.httpsProxies,
           maxLength: 30,
-          style: TextStyle(
-            fontSize: 20,
-          ),
           decoration: getInputDecoration('Https Proxy'),
           enabled: widget.configs.webCrawlerConfigs.enableProxy,
           onChanged: (value) {
@@ -206,7 +188,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         SwitchListTile(
           title: Text(
             'Enable Pixiv Resverse Proxy',
-            style: TextStyle(fontSize: 20),
           ),
           value: widget.configs.webCrawlerConfigs.enableIPixiv,
           onChanged: (value) {
@@ -218,9 +199,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         TextFormField(
           initialValue: widget.configs.webCrawlerConfigs.ipixivHostPath,
           maxLength: 30,
-          style: TextStyle(
-            fontSize: 20,
-          ),
           decoration: getInputDecoration('Resverse Proxy (eg i.pximg.net)'),
           enabled: widget.configs.webCrawlerConfigs.enableIPixiv,
           onChanged: (value) {
@@ -244,16 +222,10 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         ),
         Text(
           'Download Style',
-          style: TextStyle(
-            fontSize: 20,
-          ),
         ),
         CheckboxListTile(
           title: Text(
             'Illust',
-            style: TextStyle(
-              fontSize: 20,
-            ),
           ),
           value: widget.configs.webCrawlerConfigs.downloadType.illust,
           onChanged: (value) {
@@ -265,9 +237,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         CheckboxListTile(
           title: Text(
             'Manga',
-            style: TextStyle(
-              fontSize: 20,
-            ),
           ),
           value: widget.configs.webCrawlerConfigs.downloadType.manga,
           onChanged: (value) {
@@ -279,9 +248,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         CheckboxListTile(
           title: Text(
             'Novel',
-            style: TextStyle(
-              fontSize: 20,
-            ),
           ),
           value: widget.configs.webCrawlerConfigs.downloadType.novel,
           onChanged: (value) {
@@ -293,9 +259,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         CheckboxListTile(
           title: Text(
             'Ugoira',
-            style: TextStyle(
-              fontSize: 20,
-            ),
           ),
           value: widget.configs.webCrawlerConfigs.downloadType.ugoira,
           onChanged: (value) {
@@ -307,9 +270,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         CheckboxListTile(
           title: Text(
             'Series',
-            style: TextStyle(
-              fontSize: 20,
-            ),
           ),
           value: widget.configs.webCrawlerConfigs.downloadType.series,
           onChanged: (value) {
@@ -321,9 +281,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
         TextFormField(
           initialValue: '2',
           maxLength: 2,
-          style: TextStyle(
-            fontSize: 20,
-          ),
           decoration: getInputDecoration('Concurrency'),
           onChanged: (value) {
             // 处理文本变化
@@ -353,7 +310,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                   child: SwitchListTile(
                 title: Text(
                   'Enable Client Pool',
-                  style: TextStyle(fontSize: 20),
                 ),
                 value: widget.configs.webCrawlerConfigs.enableClientPool,
                 onChanged: (value) {
@@ -378,10 +334,9 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                         });
                       })
                     : {},
-                child: Text('Add Client',
-                    style: TextStyle(
-                      fontSize: 20,
-                    )),
+                child: Text(
+                  'Add Client',
+                ),
               ),
             ]),
         Offstage(
@@ -398,10 +353,8 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                     itemBuilder: (context, index) {
                       return ListTile(
                         title: Text(
-                            'Email: ${widget.configs.webCrawlerConfigs.clientPool[index]!.email}  ||  Cookies: ${widget.configs.webCrawlerConfigs.clientPool[index]!.cookies.toString()}',
-                            style: TextStyle(
-                              fontSize: 16,
-                            )),
+                          'Email: ${widget.configs.webCrawlerConfigs.clientPool[index]!.email}  ||  Cookies: ${widget.configs.webCrawlerConfigs.clientPool[index]!.cookies.toString()}',
+                        ),
                         trailing: IconButton(
                           icon: Icon(Icons.delete),
                           onPressed: () {
@@ -439,9 +392,6 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
             },
             child: Text(
               'Save',
-              style: TextStyle(
-                fontSize: 20,
-              ),
             ),
           );
         }),
@@ -458,13 +408,21 @@ class UISettingsPage extends StatefulWidget {
 }
 
 class _UISettingsPageState extends State<UISettingsPage> {
-  double cacheRate = 1.0;
+  late double cacheRate;
+  late double _fontSize;
   // 自动保存
   void autoSaveUIConfigs() {
     configWriter('jsons/config.json', widget.configs).then((success) => success
         ? {}
         : resultDialog(
             context.mounted ? context : null, 'Save configs', false));
+  }
+
+  @override
+  void initState() {
+    cacheRate = context.read<UIConfigUpdateNotifier>().uiConfigs.imageCacheRate;
+    _fontSize = context.read<UIConfigUpdateNotifier>().uiConfigs.fontSize;
+    super.initState();
   }
 
   @override
@@ -477,14 +435,11 @@ class _UISettingsPageState extends State<UISettingsPage> {
         // 自动保存
         Text(
           'UI Settings',
-          style: TextStyle(
-            fontSize: 20,
-          ),
+          style: Theme.of(context).textTheme.titleMedium,
         ),
         SwitchListTile(
           title: Text(
             'Auto open user detial page when click user infos',
-            style: TextStyle(fontSize: 20),
           ),
           value: context.read<UIConfigUpdateNotifier>().uiConfigs.autoOpen,
           onChanged: (value) {
@@ -501,7 +456,6 @@ class _UISettingsPageState extends State<UISettingsPage> {
         SwitchListTile(
           title: Text(
             'Auto search when click tag',
-            style: TextStyle(fontSize: 20),
           ),
           value: context.read<UIConfigUpdateNotifier>().uiConfigs.autoSearch,
           onChanged: (value) {
@@ -520,7 +474,6 @@ class _UISettingsPageState extends State<UISettingsPage> {
           children: [
             Text(
               '  ImageCacheRate',
-              style: TextStyle(fontSize: 20),
             ),
             Expanded(
                 child: Slider(
@@ -546,8 +499,40 @@ class _UISettingsPageState extends State<UISettingsPage> {
             )),
           ],
         ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              '  FontSize (This is an example.)',
+              style: TextStyle(fontSize: _fontSize),
+            ),
+            Expanded(
+                child: Slider(
+              min: 8,
+              max: 24,
+              divisions: 8,
+              label: '$_fontSize',
+              value: _fontSize,
+              onChanged: (value) {
+                setState(() {
+                  _fontSize = value;
+                });
+              },
+              onChangeEnd: (value) {
+                // 重新构建页面
+                setState(() {
+                  // 通知UI更新
+                  context
+                      .read<UIConfigUpdateNotifier>()
+                      .updateUiConfigs('fontSize', value);
+                  autoSaveUIConfigs();
+                });
+              },
+            )),
+          ],
+        ),
         Divider(
-          height: 400,
+          height: 900,
           color: Color.fromARGB(0, 0, 0, 0),
         )
       ],
@@ -557,7 +542,6 @@ class _UISettingsPageState extends State<UISettingsPage> {
 
 InputDecoration getInputDecoration(String tip) {
   return InputDecoration(
-    labelStyle: TextStyle(fontSize: 24),
     labelText: tip,
     hintText: '请输入$tip',
     border: OutlineInputBorder(

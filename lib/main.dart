@@ -21,8 +21,8 @@ void main() async {
   // 读取配置文件
   Configs configs = await configReader('jsons/config.json');
   WindowOptions windowOptions = WindowOptions(
-    minimumSize: Size(1080, 720),
-    size: Size(1440, 900),
+    minimumSize: Size(1440, 900),
+    size: Size(1600, 960),
     center: true,
     backgroundColor: Colors.grey,
     skipTaskbar: false,

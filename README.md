@@ -23,11 +23,21 @@ samples, guidance on mobile development, and a full API reference.
  - [x] following viewer
  - [x] settings
  - [x] 自定义图片缓存大小
+ - [x] 自定义字体大小
+ - [ ] 多主题，暗色模式
  - [ ] 完整的高级搜索功能
- - [ ] pixivcat代理
+ - [x] pixivcat代理
  - [ ] 数据分块加载
  - [ ] 支持不使用mongoDB
 ## Update History
+ - Version 1.0.9
+
+    - 为workContainer添加了InkWell效果。
+    - 实现了可调整左右或上下比例的Stack组件，并封装为StatefulWidget。
+    - 把翻页部件封装为StatefulWidget。
+    - 实现了字体大小控制，使用全局设置。
+    - 增强了UI的响应性。
+    - 修复了一些bug
  - Version 1.0.8
 
     - 修改了Config的结构。

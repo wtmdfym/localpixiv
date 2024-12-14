@@ -55,8 +55,12 @@ class WorkInfo {
 
   factory WorkInfo.fromJson(Map<String, dynamic> json) {
     int imageCount = json['relative_path']?.length ?? 0;
-    //TODO novelcovers/id.png
-    String coverImagePath = json['coverImagePath'] ?? '';
+    String coverImagePath = '';
+    if (json['type'] == "novel") {
+      RegExp imagere = RegExp("(jpg|jpeg|png|gif)");
+      coverImagePath =
+          'novelcover/${json['id']}.${imagere.stringMatch(json['coverUrl']!) ?? "no"}';
+    }
     return WorkInfo(
         id: json['id'],
         title: json['title'],
@@ -102,13 +106,12 @@ class UserInfo {
   });
 
   factory UserInfo.fromJson(Map<String, dynamic> json) {
-    //RegExp regExp = RegExp(r'bird');
-    //regExp.allMatches(json['profileImageUrl'],);
+    RegExp imagere = RegExp("(jpg|jpeg|png|gif)");
     return UserInfo(
         userId: json['userId'],
         userName: json['userName'],
         profileImage:
-            'userprofileimage/${json['userId']}.${json['profileImageUrl']?.substring(103) ?? 'no'}',
+            'userprofileimage/${json['userId']}.${imagere.stringMatch(json['profileImageUrl'] ?? "no") ?? "no"}',
         userComment: json['userComment'],
         workInfos: json['workInfos'],
         notFollowingNow: json['not_following_now'] ?? false);
@@ -328,19 +331,25 @@ class UIConfigs {
   bool autoSearch = true;
 
   /// 图片的最大缓存大小与窗口大小的比值，0为无限制，
-  double imageCacheRate = 0;
+  double imageCacheRate = 1.0;
+
+  /// 字体大小
+  double fontSize = 16;
 
   UIConfigs({
     required this.autoOpen,
     required this.autoSearch,
     required this.imageCacheRate,
+    required this.fontSize,
   });
 
   factory UIConfigs.fromJson(Map<String, dynamic> json) {
     return UIConfigs(
-        autoOpen: json['autoSearch'],
-        autoSearch: json['autoSearch'],
-        imageCacheRate: json['imageCacheRate']);
+      autoOpen: json['autoSearch'],
+      autoSearch: json['autoSearch'],
+      imageCacheRate: json['imageCacheRate'],
+      fontSize: json['fontSize'],
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -348,6 +357,7 @@ class UIConfigs {
     data['autoOpen'] = autoOpen;
     data['autoSearch'] = autoSearch;
     data['imageCacheRate'] = imageCacheRate;
+    data['fontSize'] = fontSize;
     return data;
   }
 }
@@ -378,3 +388,6 @@ typedef WorkBookmarkCallback = void Function(
 
 /// 改变index回调函数
 typedef ChangeIndexCallback = void Function(int index);
+
+/// 改变page
+typedef ChangePageCallback = void Function(int index);
