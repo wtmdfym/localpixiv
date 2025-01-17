@@ -1,7 +1,9 @@
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
 import 'package:localpixiv/common/customnotifier.dart';
+import 'package:localpixiv/widgets/InfoDisplayer/list_displayer.dart';
 import 'package:localpixiv/widgets/divided_stack.dart';
+import 'package:localpixiv/widgets/should_rebuild_widget.dart';
 import 'package:mongo_dart/mongo_dart.dart' show Db, where;
 
 import 'package:localpixiv/common/defaultdatas.dart';
@@ -190,13 +192,14 @@ class UserDetailsDisplayer extends StatefulWidget {
 }
 
 class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
-  final int rawCount = 6;
+  int rawCount = 6;
   final int onceLoad = 4;
   late final ScrollController _scrollController = ScrollController();
   int loadIndex = 0;
   final ValueNotifier<int> pages = ValueNotifier(0);
   final List<WorkInfo> loadedList = [];
   UserInfo _userInfo = defaultUserInfo;
+  // TODO 优化数据加载
   void _retrieveData() {
     Future.delayed(Durations.medium1, () {
       if ((loadIndex + 1) * onceLoad * rawCount <= _userInfo.workInfos.length) {
@@ -212,9 +215,11 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
     });
   }
 
+  late int totalloadCount;
   @override
   void initState() {
     super.initState();
+    totalloadCount = (_userInfo.workInfos.length / rawCount / onceLoad).ceil();
     /*_scrollController.addListener(() {
       if (_scrollController.offset >
           _scrollController.position.maxScrollExtent * 0.75) {
@@ -275,82 +280,92 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
               )),
         ],
       ),
-      rightWidget: LayoutBuilder(
-        builder: (context, constraints) {
-          int rawCount = (constraints.maxWidth / 400).ceil();
-          int totalloadCount =
-              (_userInfo.workInfos.length / rawCount / onceLoad).ceil();
-          //pages.value = (loadedList.length / rawCount).ceil();
-          return ValueListenableBuilder(
-            valueListenable: pages,
-            builder: (context, value, child) {
-              int pages = (loadedList.length / rawCount).ceil();
-              return ListView.separated(
-                controller: _scrollController,
-                itemCount: pages + 1,
-                itemBuilder: (context, index) {
-                  if (index == pages) {
-                    if (loadIndex + 1 < totalloadCount) {
-                      _retrieveData();
-                      return Container(
-                        padding: const EdgeInsets.all(16.0),
-                        alignment: Alignment.center,
-                        child: SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: CircularProgressIndicator(strokeWidth: 6),
-                        ),
-                      );
-                    } else {
-                      return Container(
-                        padding: const EdgeInsets.all(16.0),
-                        alignment: Alignment.center,
-                        child: SizedBox(
-                          height: 48,
-                          child: Text(
-                            'No more data',
+      rightWidget: LayoutBuilder(builder: (context, constraints) {
+        int newRawCount = (constraints.maxWidth / 400).ceil();
+
+        //pages.value = (loadedList.length / rawCount).ceil();
+        return ShouldRebuildWidget(
+            shouldRebuild: (oldWidget, newWidget) {
+              if (rawCount != newRawCount) {
+                rawCount = newRawCount;
+                totalloadCount =
+                    (_userInfo.workInfos.length / newRawCount / onceLoad)
+                        .ceil();
+                return true;
+              } else {
+                return false;
+              }
+            },
+            child: ValueListenableBuilder(
+              valueListenable: pages,
+              builder: (context, value, child) {
+                int pages = (loadedList.length / rawCount).ceil();
+                return ListView.separated(
+                  controller: _scrollController,
+                  itemCount: pages + 1,
+                  itemBuilder: (context, index) {
+                    if (index == pages) {
+                      if (loadIndex + 1 < totalloadCount) {
+                        _retrieveData();
+                        return Container(
+                          padding: const EdgeInsets.all(16.0),
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: CircularProgressIndicator(strokeWidth: 6),
                           ),
-                        ),
-                      );
-                    }
-                  } else {
-                    List<WorkInfo> rowInfos;
-                    if ((index + 1) * rawCount <= loadedList.length) {
-                      rowInfos = loadedList.sublist(
-                          index * rawCount, (index + 1) * rawCount);
+                        );
+                      } else {
+                        return Container(
+                          padding: const EdgeInsets.all(16.0),
+                          alignment: Alignment.center,
+                          child: SizedBox(
+                            height: 48,
+                            child: Text(
+                              'No more data',
+                            ),
+                          ),
+                        );
+                      }
                     } else {
-                      rowInfos = loadedList.sublist(
-                          index * rawCount, loadedList.length);
+                      List<WorkInfo> rowInfos;
+                      if ((index + 1) * rawCount <= loadedList.length) {
+                        rowInfos = loadedList.sublist(
+                            index * rawCount, (index + 1) * rawCount);
+                      } else {
+                        rowInfos = loadedList.sublist(
+                            index * rawCount, loadedList.length);
+                      }
+                      return Padding(
+                          padding: EdgeInsets.only(right: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            spacing: 16,
+                            children: [
+                              for (WorkInfo info in rowInfos)
+                                Expanded(
+                                    child: WorkContainer(
+                                  hostPath: widget.hostPath,
+                                  workInfo: info,
+                                  cacheRate: widget.cacheRate,
+                                  onBookmarked: (isLiked, workId, userName) =>
+                                      widget.onWorkBookmarked(
+                                    isLiked,
+                                    workId,
+                                    userName,
+                                  ),
+                                ))
+                            ],
+                          ));
                     }
-                    return Padding(
-                        padding: EdgeInsets.only(right: 20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          spacing: 16,
-                          children: [
-                            for (WorkInfo info in rowInfos)
-                              Expanded(
-                                  child: WorkContainer(
-                                hostPath: widget.hostPath,
-                                workInfo: info,
-                                cacheRate: widget.cacheRate,
-                                onBookmarked: (isLiked, workId, userName) =>
-                                    widget.onWorkBookmarked(
-                                  isLiked,
-                                  workId,
-                                  userName,
-                                ),
-                              ))
-                          ],
-                        ));
-                  }
-                },
-                separatorBuilder: (context, index) => Divider(
-                  height: 30,
-                ),
-              );
-              //int pages = value;
-              /*final List<Widget> children = [];
+                  },
+                  separatorBuilder: (context, index) => Divider(
+                    height: 30,
+                  ),
+                );
+                //int pages = value;
+                /*final List<Widget> children = [];
               for (int index = 0; index < pages; index++) {
                 if (index == pages) {
                   if (loadIndex + 1 < totalloadCount) {
@@ -415,10 +430,116 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
                 controller: _scrollController,
                 children: children,
               );*/
-            },
-          );
-        },
+              },
+            ));
+      }),
+      additionalWidgets: [
+        Positioned(
+            right: 5,
+            bottom: 5,
+            child: IconButton(
+              icon: Icon(Icons.arrow_upward),
+              style: ButtonStyle(
+                  backgroundColor: WidgetStatePropertyAll(
+                      const Color.fromARGB(125, 158, 158, 158))),
+              onPressed: () => _scrollController.jumpTo(0),
+            ))
+      ],
+    );
+  }
+}
+
+class UserDetailsDisplayer2 extends StatefulWidget {
+  UserDetailsDisplayer2({
+    super.key,
+    required this.hostPath,
+    required this.cacheRate,
+    this.userInfo,
+    this.userName,
+    this.pixivDb,
+    required this.onWorkBookmarked,
+  }) {
+    assert((userInfo != null) || ((pixivDb != null) && (userName != null)));
+  }
+
+  final String hostPath;
+  final double cacheRate;
+  final UserInfo? userInfo;
+  final String? userName;
+  final Db? pixivDb;
+  final WorkBookmarkCallback onWorkBookmarked;
+
+  @override
+  State<StatefulWidget> createState() => _UserDetailsDisplayer2State();
+}
+
+class _UserDetailsDisplayer2State extends State<UserDetailsDisplayer2> {
+  int rawCount = 6;
+  final int onceLoad = 4;
+  late final ScrollController _scrollController = ScrollController();
+  int loadIndex = 0;
+  final ValueNotifier<int> pages = ValueNotifier(0);
+  final List<WorkInfo> loadedList = [];
+  UserInfo _userInfo = defaultUserInfo;
+
+  late int totalloadCount;
+  @override
+  void initState() {
+    super.initState();
+    if (widget.userInfo != null) {
+      _userInfo = widget.userInfo!;
+    } else {
+      widget.pixivDb!
+          .collection('All Followings')
+          .findOne(where.eq('userName', widget.userName).excludeFields(['_id']))
+          .then((info) {
+        fetchUserInfo(info!, widget.pixivDb!).then((userinfo) {
+          setState(() {
+            _userInfo = userinfo;
+          });
+        });
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DividedStack(
+      padding: EdgeInsets.all(20),
+      dividedDirection: Axis.vertical,
+      leftWidget: Row(
+        spacing: 30,
+        children: [
+          SizedBox(
+            width: 240,
+            height: 240,
+            child: ImageLoader(
+              path: '${widget.hostPath}${_userInfo.profileImage}',
+              width: 240,
+              height: 240,
+              cacheRate: widget.cacheRate,
+            ),
+          ),
+          Expanded(
+              child: Text(
+            'UserName: ${_userInfo.userName}',
+            style: TextStyle(
+                fontSize:
+                    context.watch<UIConfigUpdateNotifier>().uiConfigs.fontSize +
+                        4),
+          )),
+          Expanded(
+              flex: 2,
+              child: Text(
+                _userInfo.userComment,
+              )),
+        ],
       ),
+      rightWidget: ListDisplayer(
+          hostPath: widget.hostPath,
+          cacheRate: widget.cacheRate,
+          infoStream: Stream.fromIterable(_userInfo.workInfos),
+          onWorkBookmarked: widget.onWorkBookmarked),
       additionalWidgets: [
         Positioned(
             right: 5,

@@ -185,6 +185,7 @@ class _SettingsState extends State<Settings> {
   }
 }
 
+/// Copy from https://github.com/flutterchina/flukit
 class AfterLayout extends SingleChildRenderObjectWidget {
   const AfterLayout({
     super.key,

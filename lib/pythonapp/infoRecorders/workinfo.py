@@ -497,10 +497,12 @@ class InfoParsel:
                 self.work_type = "manga"
             elif work_type == 2:
                 self.work_type = "ugoira"
-            self.work_info = work_info
+            else:
+                print(work_type)
+                print(6)
         elif self.infos[0] == "novel":
             self.work_type = "novel"
-            self.work_info = work_info
+        self.work_info = work_info
         # 共有作品信息
         tags = {}
         for text in self.work_info.get("tags").get("tags"):
@@ -624,7 +626,7 @@ class InfoParsel:
             if (
                 (self.work_type == "illust")
                 or (self.work_type == "manga")
-                or (self.work_type == "ugoria")
+                or (self.work_type == "ugoira")
             ):
                 result = await self.fetch_artworks_links()
             elif self.work_type == "novel":

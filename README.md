@@ -25,11 +25,18 @@ samples, guidance on mobile development, and a full API reference.
  - [x] 自定义图片缓存大小
  - [x] 自定义字体大小
  - [ ] 多主题，暗色模式
+ - [ ] 多语言
  - [ ] 完整的高级搜索功能
  - [x] pixivcat代理
  - [ ] 数据分块加载
  - [ ] 支持不使用mongoDB
+ - [ ] 同步收藏作品
 ## Update History
+ - Version 1.1.0
+
+    - 实现了选择性rebulid（From https://github.com/fantasy525/should_rebuild）
+    - 实现了LazyLoadIndexedStack，使用uniquekey解决了组件state丢失的问题。
+    - 解决了画面溢出的问题。
  - Version 1.0.9
 
     - 为workContainer添加了InkWell效果。

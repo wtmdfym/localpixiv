@@ -138,6 +138,7 @@ class AsyncThreadingManager(threading.Thread):
             self.config_dict["download_type"],
             self.semaphore,
             self.asyncbackup_collection,
+            self.asyncdb["All Followings"],
             self.logger,
         )
         self.loop.run_until_complete(

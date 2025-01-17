@@ -27,8 +27,8 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   // 初始化
   ValueNotifier<int> maxpage = ValueNotifier(1);
   int reslength = 0;
-  final int pagesize = 4;
-  final InfosNotifier<UserInfo> userInfosNotifer = InfosNotifier([
+  final int pagesize = 8;
+  final ListNotifier<UserInfo> userInfosNotifer = ListNotifier([
     defaultUserInfo,
     defaultUserInfo,
     defaultUserInfo,
@@ -93,7 +93,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
         ]);
       }
     }
-    userInfosNotifer.setInfos(info);
+    userInfosNotifer.setList(info);
   }
 
   @override
@@ -101,7 +101,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     void openTabCallback(String userName) {
       context.read<StackChangeNotifier>().addStack(
           userName,
-          UserDetailsDisplayer(
+          UserDetailsDisplayer2(
             hostPath: widget.hostPath,
             userName: userName,
             pixivDb: widget.pixivDb,
@@ -121,39 +121,37 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
-          spacing: 16,
           children: [
-            ValueListenableBuilder(
-                valueListenable: userInfosNotifer,
-                builder: (context, userInfos, child) => ListView(
-                      shrinkWrap: true,
-                      children: [
-                        for (int i = 0; i < pagesize; i++)
-                          Padding(
-                              padding: EdgeInsets.only(top: 4, bottom: 4),
-                              child: FollowingInfoDisplayer(
-                                hostPath: widget.hostPath,
-                                cacheRate: widget.cacheRate,
-                                userInfo: userInfos[i],
-                                onTab: (userName) => openTabCallback(userName),
-                                onWorkBookmarked: (isLiked, workId, userName) =>
-                                    Provider.of<WorkBookmarkModel>(context,
-                                            listen: false)
-                                        .changebookmark(
-                                  isLiked,
-                                  workId,
-                                  userName,
-                                ),
-                              )),
-                      ],
-                    )),
-            // 翻页控件
             Expanded(
-                child: PageControllerRow(
+                child: ValueListenableBuilder(
+                    valueListenable: userInfosNotifer,
+                    builder: (context, userInfos, child) => ListView.separated(
+                          padding: EdgeInsets.only(left: 12, right: 20),
+                          shrinkWrap: true,
+                          itemCount: pagesize,
+                          itemBuilder: (context, index) =>
+                              FollowingInfoDisplayer(
+                            hostPath: widget.hostPath,
+                            cacheRate: widget.cacheRate,
+                            userInfo: userInfos[index],
+                            onTab: (userName) => openTabCallback(userName),
+                            onWorkBookmarked: (isLiked, workId, userName) =>
+                                Provider.of<WorkBookmarkModel>(context,
+                                        listen: false)
+                                    .changebookmark(
+                              isLiked,
+                              workId,
+                              userName,
+                            ),
+                          ),
+                          separatorBuilder: (context, index) => Divider(),
+                        ))),
+            // 翻页控件
+            PageControllerRow(
               maxpage: maxpage,
               pagesize: pagesize,
               onPageChange: (page) => changePage(page),
-            ))
+            )
           ],
         ));
   }

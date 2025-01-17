@@ -79,11 +79,11 @@ class UserInfoNotifier extends ValueNotifier<UserInfo> {
 }
 
 /// 信息变更通知器
-class InfosNotifier<T> extends ValueNotifier<List<T>> {
-  InfosNotifier(super.info);
+class ListNotifier<T> extends ValueNotifier<List<T>> {
+  ListNotifier(super._value);
 
-  void setInfos(List<T> newinfo) {
-    value = newinfo;
+  void setList(List<T> newList) {
+    value = newList;
     notifyListeners();
   }
 }
@@ -140,31 +140,30 @@ class CmdData extends InheritedWidget {
   bool updateShouldNotify(CmdData oldWidget) => data != oldWidget.data;
 }*/
 
+enum StackOperation { init, add, remove, changeIndex }
+
 /// stack 变更通知器
+
 class StackChangeNotifier with ChangeNotifier {
   late final int _mainTabCount;
-  int historyIndex = 0;
-  //int _lastremoved = -1;
-  // index of stake that not be removed
-  final List<int> alive = [];
-
+  StackOperation operation = StackOperation.init;
   final List<String> _titles = [];
   final List<StackData> _stackDatas = [];
-  List<int> _loadedIndex = [];
   int _index = 0;
+  int _historyIndex = 0;
+  int _removeIndex = 0;
 
   int get mainTabCount => _mainTabCount;
   List<String> get titles => _titles;
   List<StackData> get stackDatas => _stackDatas;
-  List<int> get loadedIndex => _loadedIndex;
   int get index => _index;
-  //int get lastremoved => _lastremoved;
+  int get removeIndex => _removeIndex;
 
   void initData(
-      int mainTabCount, List<StackData> stackDatas, List<int> preloadIndexes) {
+      int mainTabCount, List<StackData> stackDatas, int initialIndex) {
     _mainTabCount = mainTabCount;
     _stackDatas.addAll(stackDatas);
-    _loadedIndex = preloadIndexes;
+    _index = initialIndex;
   }
 
   void addStack(String title, Widget newStack) {
@@ -172,81 +171,41 @@ class StackChangeNotifier with ChangeNotifier {
         StackData(index: _stackDatas.length, title: title, child: newStack));
     _titles.add(title);
     _index = _stackDatas.length - 1;
-    alive.add(_index - _mainTabCount);
+    operation = StackOperation.add;
     notifyListeners();
   }
 
   void removeAt(int findex) {
-    //_lastremoved = index + _mainTabCount;
-    int trueindex = alive[findex];
     _titles.removeAt(findex);
-    alive.removeAt(findex);
-
-    // jump removed widgets
-    /*
-    int count = index;
-    while (count >= 0) {
-      if (stackDatas[index + _mainTabCount].notRemoved) {
-        count--;
-        continue;
-      }
-      index++;
-    }*/
-
     // update current index
     // is tail
-    //if (newindex + _mainTabCount == _stackDatas.length) {
-    if (findex == alive.length) {
-      if (alive.isEmpty) {
-        _index = historyIndex;
+    if (findex == _titles.length) {
+      if (_titles.isEmpty) {
+        _index = _historyIndex;
       } else {
-        //_index--;
-        _index = alive[findex - 1] + _mainTabCount;
+        _index--;
       }
     }
     // medium
     else {
       // next one
-      _index = alive[findex] + _mainTabCount;
+      _index = findex + _mainTabCount;
     }
-
-    /*else {
-      // update following children
-      for (StackData data in _stackDatas.sublist(newindex + _mainTabCount)) {
-        data.index--;
-      }
-    }*/
-
-    //_stackDatas.removeAt(index + _mainTabCount);
-
-    // use Container replace child
-    _stackDatas[trueindex + _mainTabCount].child = Container();
-    _stackDatas[trueindex + _mainTabCount].notRemoved = false;
-
-    // update loadedindexs
-    for (int i = 0; i < _loadedIndex.length; i++) {
-      if (trueindex == _loadedIndex[i]) {
-        loadedIndex.removeAt(i);
-      } else if (trueindex < _loadedIndex[i]) {
-        _loadedIndex[i]--;
-      }
-    }
+    _stackDatas.removeAt(findex + _mainTabCount);
+    _removeIndex = findex + _mainTabCount;
+    operation = StackOperation.remove;
     notifyListeners();
   }
 
   void changeIndex(int findex, bool ismainTabs) {
     if (ismainTabs) {
       _index = findex;
-      historyIndex = findex;
+      _historyIndex = findex;
     } else {
-      int trueindex = alive[findex];
-      _index = trueindex + _mainTabCount;
+      _index = findex + _mainTabCount;
     }
+    operation = StackOperation.changeIndex;
     notifyListeners();
-  }
-
-  void updateLoadedIndex(int index) {
-    _loadedIndex.add(index);
   }
 }
 

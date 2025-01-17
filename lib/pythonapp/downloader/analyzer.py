@@ -144,12 +144,12 @@ class Analyzer:
                     "作品:%s---类型%s不在下载范围内" % (doc.get("id"), type)
                 )
                 continue
-            if type == "illust":
-                continue
-            if type == "manga":
-                continue
-            if type == "ugoira":
-                continue
+            # if type == "illust":
+            #     continue
+            # if type == "manga":
+            #     continue
+            # if type == "ugoira":
+            #     continue
             uid = doc.get("userId")
             # print(doc)
             for info in self._info_maker(doc=doc):

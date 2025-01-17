@@ -61,7 +61,7 @@ class ImageLoader extends StatelessWidget {
 }
 
 /// 小说异步加载器
-/// TODO
+
 class NovelLoader extends StatelessWidget {
   const NovelLoader({
     super.key,
@@ -80,19 +80,22 @@ class NovelLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
+    return Row(
       children: [
-        ImageLoader(
-            path: coverImagePath,
-            width: width,
-            height: height,
-            cacheRate: cacheRate),
-        Positioned(bottom: 8, child: Text(title))
+        Expanded(
+            flex: 4,
+            child: ImageLoader(
+                path: coverImagePath,
+                width: width,
+                height: height,
+                cacheRate: cacheRate)),
+        Expanded(child: Text(title))
       ],
     );
   }
 }
 
+/// TODO
 class NovelDetialLoader extends StatelessWidget {
   const NovelDetialLoader({super.key, required this.content});
 

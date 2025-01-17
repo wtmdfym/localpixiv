@@ -32,12 +32,12 @@ class Viewer extends StatefulWidget {
 
 class _ViewerState extends State<Viewer> {
   // 初始化
-  ValueNotifier<int> maxpage = ValueNotifier(1);
+  final ValueNotifier<int> maxpage = ValueNotifier(1);
   final int pagesize = 8;
   bool cancelevent = false;
   final List<dynamic> searchedInfos = [];
-  final InfosNotifier<WorkInfo> workInfosNotifer =
-      InfosNotifier([for (int i = 0; i < 8; i++) defaultWorkInfo]);
+  final ListNotifier<WorkInfo> workInfosNotifer =
+      ListNotifier([for (int i = 0; i < 8; i++) defaultWorkInfo]);
   final List<dynamic> searchResults = [];
   final TextEditingController _searchController = TextEditingController();
   /*ValueNotifier<List<bool>> searchType =
@@ -138,39 +138,42 @@ class _ViewerState extends State<Viewer> {
                   ))),
           rightWidget: // 作品展示网格
               Column(children: [
-            ValueListenableBuilder(
-                valueListenable: workInfosNotifer,
-                builder: (context, workInfos, child) => GridView.count(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      crossAxisCount: 4,
-                      childAspectRatio: 10 / 12, //宽比高
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      physics: const NeverScrollableScrollPhysics(),
-                      children: <Widget>[
-                        for (int i = 0; i < pagesize; i++)
-                          WorkContainer(
-                            hostPath: widget.basicConfigs.savePath,
-                            workInfo: workInfos[i],
-                            cacheRate: notifier.uiConfigs.imageCacheRate,
-                            onBookmarked: (isLiked, workId, userName) => context
-                                .read<WorkBookmarkModel>()
-                                .changebookmark(
-                                  isLiked,
-                                  workId,
-                                  userName,
-                                ),
-                          ),
-                      ],
-                    )),
+            for (int j = 0; j < pagesize / 4; j++)
+              Expanded(
+                  child: Padding(
+                padding: EdgeInsets.only(
+                    top: j == 0 ? 0 : 6, bottom: j == 1 ? 0 : 6),
+                child: ValueListenableBuilder(
+                    valueListenable: workInfosNotifer,
+                    builder: (context, workInfos, child) => Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          spacing: 12,
+                          children: [
+                            for (int i = j * 4; i < pagesize - (1 - j) * 4; i++)
+                              Expanded(
+                                  child: WorkContainer(
+                                hostPath: widget.basicConfigs.savePath,
+                                workInfo: workInfos[i],
+                                cacheRate: notifier.uiConfigs.imageCacheRate,
+                                onBookmarked: (isLiked, workId, userName) =>
+                                    context
+                                        .read<WorkBookmarkModel>()
+                                        .changebookmark(
+                                          isLiked,
+                                          workId,
+                                          userName,
+                                        ),
+                              )),
+                          ],
+                        )),
+              )),
+
             // 翻页控件
-            Expanded(
-                child: PageControllerRow(
-                          maxpage: maxpage,
-                          pagesize: pagesize,
-                          onPageChange: (page) => changePage(page),
-                        ))
+            PageControllerRow(
+              maxpage: maxpage,
+              pagesize: pagesize,
+              onPageChange: (page) => changePage(page),
+            )
           ]),
           additionalWidgets: [
             // 加载指示器
@@ -427,7 +430,7 @@ class _ViewerState extends State<Viewer> {
         }
       }
     }
-    workInfosNotifer.setInfos(workInfos);
+    workInfosNotifer.setList(workInfos);
   }
 }
 

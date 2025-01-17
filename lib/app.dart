@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
           ListenableProvider<StackChangeNotifier>(
             create: (context) {
               StackChangeNotifier stackDataModel = StackChangeNotifier();
-              stackDataModel.initData(mainTabCount, stackDatas, [1, 2]);
+              stackDataModel.initData(mainTabCount, stackDatas, 1);
               return stackDataModel;
             },
           ),
@@ -79,40 +79,50 @@ class MyApp extends StatelessWidget {
           )
         ],
         builder: (context, child) {
-          return Consumer<UIConfigUpdateNotifier>(
+          return Selector<UIConfigUpdateNotifier, double>(
+              selector: (p0, p1) => p1.uiConfigs.fontSize,
               builder: (context, value, child) {
-            final double bodyMediumfontSize = value.uiConfigs.fontSize;
-            final double bodyLargeFontSize = bodyMediumfontSize + 2;
-            final double bodySmallFontSize = bodyMediumfontSize - 2;
-            final double iconSize = bodyMediumfontSize * 1.5;
-            return MaterialApp(
-                title: 'Local Pixiv',
-                theme: ThemeData(
-                  colorScheme: ColorScheme.fromSeed(
-                      seedColor: const Color.fromARGB(255, 88, 253, 247)),
-                  useMaterial3: true,
-                  textTheme: TextTheme(
-                    displayLarge: TextStyle(fontSize: bodyLargeFontSize + 41),
-                    displayMedium: TextStyle(fontSize: bodyMediumfontSize + 31),
-                    displaySmall: TextStyle(fontSize: bodySmallFontSize + 24),
-                    headlineLarge: TextStyle(fontSize: bodyLargeFontSize + 16),
-                    headlineMedium:
-                        TextStyle(fontSize: bodyMediumfontSize + 14),
-                    headlineSmall: TextStyle(fontSize: bodySmallFontSize + 12),
-                    titleLarge: TextStyle(fontSize: bodyLargeFontSize + 6),
-                    titleMedium: TextStyle(fontSize: bodyMediumfontSize + 2),
-                    titleSmall: TextStyle(fontSize: bodySmallFontSize + 2),
-                    bodyLarge: TextStyle(fontSize: bodyLargeFontSize),
-                    bodyMedium: TextStyle(fontSize: bodyMediumfontSize),
-                    bodySmall: TextStyle(fontSize: bodySmallFontSize),
-                    labelLarge: TextStyle(fontSize: bodyLargeFontSize - 2),
-                    labelMedium: TextStyle(fontSize: bodyMediumfontSize - 2),
-                    labelSmall: TextStyle(fontSize: bodySmallFontSize - 1),
-                  ),
-                  iconTheme:
-                      IconThemeData(size: iconSize, opticalSize: iconSize * 2),
-                ),
-                /*
+                final double bodyMediumfontSize = value;
+                final double bodyLargeFontSize = bodyMediumfontSize + 2;
+                final double bodySmallFontSize = bodyMediumfontSize - 2;
+                final double iconSize = bodyMediumfontSize * 1.5;
+                return MaterialApp(
+                    title: 'Local Pixiv',
+                    theme: ThemeData(
+                      colorScheme: ColorScheme.fromSeed(
+                          seedColor: Colors.cyan,
+                          //const Color.fromARGB(255, 88, 253, 247),
+                          brightness: Brightness.light),
+                      useMaterial3: true,
+                      textTheme: TextTheme(
+                        displayLarge:
+                            TextStyle(fontSize: bodyLargeFontSize + 41),
+                        displayMedium:
+                            TextStyle(fontSize: bodyMediumfontSize + 31),
+                        displaySmall:
+                            TextStyle(fontSize: bodySmallFontSize + 24),
+                        headlineLarge:
+                            TextStyle(fontSize: bodyLargeFontSize + 16),
+                        headlineMedium:
+                            TextStyle(fontSize: bodyMediumfontSize + 14),
+                        headlineSmall:
+                            TextStyle(fontSize: bodySmallFontSize + 12),
+                        titleLarge: TextStyle(fontSize: bodyLargeFontSize + 6),
+                        titleMedium:
+                            TextStyle(fontSize: bodyMediumfontSize + 2),
+                        titleSmall: TextStyle(fontSize: bodySmallFontSize + 2),
+                        bodyLarge: TextStyle(fontSize: bodyLargeFontSize),
+                        bodyMedium: TextStyle(fontSize: bodyMediumfontSize),
+                        bodySmall: TextStyle(fontSize: bodySmallFontSize),
+                        labelLarge: TextStyle(fontSize: bodyLargeFontSize - 2),
+                        labelMedium:
+                            TextStyle(fontSize: bodyMediumfontSize - 2),
+                        labelSmall: TextStyle(fontSize: bodySmallFontSize - 1),
+                      ),
+                      iconTheme: IconThemeData(
+                          size: iconSize, opticalSize: iconSize * 2),
+                    ),
+                    /*
                 localizationsDelegates: [
                   // 本地化的代理类
                   GlobalMaterialLocalizations.delegate,
@@ -123,119 +133,76 @@ class MyApp extends StatelessWidget {
                   const Locale('zh', 'CN'), // 中文简体
                   // 其他Locales
                 ],*/
-                builder: (context, child) {
-                  final mediaQueryData = MediaQuery.of(context);
-                  final constrainedTextScaler = mediaQueryData.textScaler.clamp(
-                    minScaleFactor: 1.0,
-                    maxScaleFactor: 1.3,
-                  );
-                  return MediaQuery(
-                    data: mediaQueryData.copyWith(
-                      textScaler: constrainedTextScaler,
-                    ),
-                    child: child!,
-                  );
-                },
-                home: MainTabPage(
-                  pixivDb: pixivDb,
-                  backupcollection: backupcollection,
-                  configs: configs,
-                  mainTabCount: mainTabCount,
-                  stackDatas: stackDatas,
-                ));
-          });
+                    builder: (context, child) {
+                      final mediaQueryData = MediaQuery.of(context);
+                      final constrainedTextScaler =
+                          mediaQueryData.textScaler.clamp(
+                        minScaleFactor: 1.0,
+                        maxScaleFactor: 1.3,
+                      );
+                      return MediaQuery(
+                        data: mediaQueryData.copyWith(
+                          textScaler: constrainedTextScaler,
+                        ),
+                        child: child!,
+                      );
+                    },
+                    home: Scaffold(
+                        backgroundColor:
+                            const Color.fromARGB(255, 212, 252, 255),
+                        body: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            MutiTabbar(
+                              initialIndex: 1,
+                              mainTabs: const [
+                                Tab(text: 'Home', icon: Icon(Icons.home)),
+                                Tab(
+                                    text: 'Viewer',
+                                    icon: Icon(Icons.view_quilt_rounded)),
+                                Tab(
+                                    text: 'Followings',
+                                    icon: Icon(Icons.view_list)),
+                                Tab(
+                                    text: 'Settings',
+                                    icon: Icon(Icons.settings)),
+                                Tab(text: 'Test', icon: Icon(Icons.build))
+                              ],
+                            ),
+                            Consumer<WorkBookmarkModel>(
+                              builder: (context, value, child) {
+                                if (value.workId != 114514 &&
+                                    value.userName != 'Man') {
+                                  // 更新数据库
+                                  pixivDb
+                                      .collection(value.userName)
+                                      .updateOne(
+                                          mongo.where.eq('id', value.workId),
+                                          mongo.modify.set(
+                                              'likeData', value.bookmarked))
+                                      .then((res) => res.isSuccess
+                                          ? {}
+                                          : throw 'update failed');
+                                  backupcollection
+                                      .updateOne(
+                                          mongo.where.eq('id', value.workId),
+                                          mongo.modify.set(
+                                              'likeData', value.bookmarked))
+                                      .then((res) => res.isSuccess
+                                          ? {}
+                                          : throw 'update failed');
+                                }
+                                return child!;
+                              },
+                              child: Expanded(
+                                  child: LazyLoadIndexedStack(
+                                datas: stackDatas,
+                                preloadIndex: [1, 2],
+                              )),
+                            )
+                          ],
+                        )));
+              });
         });
-  }
-}
-
-// This widget is the root of the application.
-class MainTabPage extends StatefulWidget {
-  const MainTabPage({
-    super.key,
-    required this.pixivDb,
-    required this.backupcollection,
-    required this.configs,
-    required this.mainTabCount,
-    required this.stackDatas,
-  });
-  final mongo.Db pixivDb;
-  final mongo.DbCollection backupcollection;
-  final Configs configs;
-  final int mainTabCount;
-  final List<StackData> stackDatas;
-
-  @override
-  State<StatefulWidget> createState() {
-    return MainTabPageState();
-  }
-}
-
-class MainTabPageState extends State<MainTabPage>
-    with TickerProviderStateMixin {
-  @override
-  Widget build(BuildContext context) {
-    /*final int mainTabCount = 5;
-    final List<StackData> stackDatas = [
-      StackData(index: 0, child: MyHomePage()),
-      StackData(
-          index: 1,
-          child: Viewer(
-            pixivDb: widget.pixivDb,
-            backupcollection: widget.backupcollection,
-            basicConfigs: widget.configs.basicConfigs,
-          )),
-      StackData(
-          index: 2,
-          child: FollowingsDisplayer(
-            hostPath: widget.configs.basicConfigs.savePath,
-            // cacheRate: widget.uiConfigs.imageCacheRate,
-            pixivDb: widget.pixivDb,
-          )),
-      StackData(
-          index: 3,
-          child: Settings(
-            configs: widget.configs,
-          )),
-      StackData(index: 4, child: ResizableWidget()),
-    ];*/
-    return DefaultTabController(
-        length: widget.mainTabCount,
-        child: Scaffold(
-            backgroundColor: const Color.fromARGB(255, 212, 252, 255),
-            body: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                MutiTabbar(
-                  mainTabs: const [
-                    Tab(text: 'Home', icon: Icon(Icons.home)),
-                    Tab(text: 'Viewer', icon: Icon(Icons.view_quilt_rounded)),
-                    Tab(text: 'Followings', icon: Icon(Icons.view_list)),
-                    Tab(text: 'Settings', icon: Icon(Icons.settings)),
-                    Tab(text: 'Test', icon: Icon(Icons.build))
-                  ],
-                ),
-                Consumer<WorkBookmarkModel>(
-                  builder: (context, value, child) {
-                    if (value.workId != 114514 && value.userName != 'Man') {
-                      // 更新数据库
-                      widget.pixivDb
-                          .collection(value.userName)
-                          .updateOne(mongo.where.eq('id', value.workId),
-                              mongo.modify.set('likeData', value.bookmarked))
-                          .then((res) =>
-                              res.isSuccess ? {} : throw 'update failed');
-                      widget.backupcollection
-                          .updateOne(mongo.where.eq('id', value.workId),
-                              mongo.modify.set('likeData', value.bookmarked))
-                          .then((res) =>
-                              res.isSuccess ? {} : throw 'update failed');
-                    }
-                    return child!;
-                  },
-                  child: Expanded(
-                      child: LazyLoadIndexedStack(children: widget.stackDatas)),
-                )
-              ],
-            )));
   }
 }

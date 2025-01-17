@@ -177,16 +177,16 @@ class _MyHomePageState extends State<MyHomePage> {
                         _sendCommand(_controller.text);
                         _controller.clear();
                       } else {
-                        // TODO python location
+                        /*// TODO python location
                         String location =
                             'c:/Users/Administrator/Desktop/pixiv-crawler';
                         _sendCommand(
                             '$location/.venv/Scripts/python.exe -u lib/pythonapp/cmd_app.py  --configfile jsons/config.json'
                             //'cd asset/lib/pythonapp/build/exe.win-amd64-3.12/'
                             //'"lib/pythonapp/build/exe.win-amd64-3.12/cmd_app.exe" --configfile jsons/config.json'
-                            );
-                        //_sendCommand(
-                        //    'cmd_app.exe --configfile jsons/config.json');
+                            );*/
+                        _sendCommand(
+                            'cmd_app.exe --configfile jsons/config.json');
                       }
                       setState(() => isstart = true);
                     },

@@ -94,6 +94,15 @@ class _WorkContainerState extends State<WorkContainer>
   }
 
   @override
+  void didUpdateWidget(covariant WorkContainer oldWidget) {
+    if (oldWidget.workInfo != widget.workInfo) {
+      _icon.value =
+          widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border;
+      super.didUpdateWidget(oldWidget);
+    }
+  }
+
+  @override
   void dispose() {
     _mouseEOAnimationController.dispose();
     _icon.dispose();
@@ -102,24 +111,21 @@ class _WorkContainerState extends State<WorkContainer>
 
   @override
   Widget build(BuildContext context) {
-    _icon.value =
-        widget.workInfo.isLiked ? Icons.favorite : Icons.favorite_border;
-
-    return MouseRegion(
-        // 进入
-        onEnter: (details) => _mouseEOAnimationController.forward(),
-        // 离开
-        onExit: (details) => _mouseEOAnimationController.reverse(),
-        child: Animate(
-            autoPlay: false,
-            controller: _mouseEOAnimationController,
-            effects: [
-              ScaleEffect(
-                  begin: Offset(1.0, 1.0),
-                  end: Offset(1.02, 1.02),
-                  duration: 100.ms)
-            ],
-            child: RepaintBoundary(
+    return RepaintBoundary(
+        child: MouseRegion(
+            // 进入
+            onEnter: (details) => _mouseEOAnimationController.forward(),
+            // 离开
+            onExit: (details) => _mouseEOAnimationController.reverse(),
+            child: Animate(
+                autoPlay: false,
+                controller: _mouseEOAnimationController,
+                effects: [
+                  ScaleEffect(
+                      begin: Offset(1.0, 1.0),
+                      end: Offset(1.02, 1.02),
+                      duration: 100.ms)
+                ],
                 child: LongPressDraggable<(String, WorkInfo)>(
                     data: (widget.hostPath, widget.workInfo),
                     delay: Durations.medium2,
@@ -161,7 +167,7 @@ class _WorkContainerState extends State<WorkContainer>
                                 child: widget.workInfo.type == 'novel'
                                     ? NovelLoader(
                                         coverImagePath:
-                                            widget.workInfo.coverImagePath!,
+                                            '${widget.hostPath}${widget.workInfo.coverImagePath!}',
                                         title: widget.workInfo.title,
                                         width: widget.width,
                                         height: widget.height,
