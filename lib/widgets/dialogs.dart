@@ -279,10 +279,9 @@ Future<String> addClient(
   }
 }
 
-void resultDialog(BuildContext? context, String operation, bool success,
+void resultDialog(String operation, bool success,
     {String? description}) async {
   toastification.show(
-    context: context,
     type: success ? ToastificationType.success : ToastificationType.error,
     style: ToastificationStyle.flatColored,
     alignment: Alignment.bottomLeft,

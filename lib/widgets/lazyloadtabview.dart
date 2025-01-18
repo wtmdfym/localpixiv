@@ -1,6 +1,7 @@
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/models.dart';
+import 'package:localpixiv/settings/settings_controller.dart';
 import 'package:localpixiv/widgets/workcontainer.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
@@ -8,9 +9,13 @@ import 'package:flutter/material.dart';
 /// 使用多个tabbar控制同一个indexedstage
 class MutiTabbar extends StatefulWidget {
   const MutiTabbar(
-      {super.key, required this.mainTabs, required this.initialIndex});
+      {super.key,
+      required this.mainTabs,
+      required this.initialIndex,
+      required this.controller});
   final List<Tab> mainTabs;
   final int initialIndex;
+  final SettingsController controller;
 
   @override
   State<StatefulWidget> createState() {
@@ -35,8 +40,8 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
   @override
   void dispose() {
     _dargEOController.dispose();
-    _tabController.dispose();
     _maintabController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
@@ -56,10 +61,7 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
             details.data.$2.title,
             WorkDetialDisplayer(
               hostPath: details.data.$1,
-              cacheRate: context
-                  .read<UIConfigUpdateNotifier>()
-                  .uiConfigs
-                  .imageCacheRate,
+              cacheRate: widget.controller.imageCacheRate,
               workInfo: details.data.$2,
               onBookmarked: (isLiked, workId, userName) =>
                   Provider.of<WorkBookmarkModel>(context, listen: false)
@@ -187,7 +189,7 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
 // 2024.12.15 -> 使用key即可解决
 // 猜测是indexedstack在列表长度不变时只改变了child但是没有改变key
 
-class LazyLoadIndexedStack extends StatelessWidget {
+class LazyLoadIndexedStack extends StatefulWidget {
   late final Widget unloadWidget;
   final List<StackData> datas;
 
@@ -201,17 +203,34 @@ class LazyLoadIndexedStack extends StatelessWidget {
   }
 
   final List<int> preloadIndex;
+  @override
+  State<StatefulWidget> createState() => LazyLoadIndexedStackState();
+}
+
+class LazyLoadIndexedStackState extends State<LazyLoadIndexedStack> {
   final List<int> loadedIndex = [];
   final List<UniqueKey> keys = [];
   final List<Widget> children = [];
 
   @override
-  Widget build(final BuildContext context) {
-    loadedIndex.addAll(preloadIndex);
-    for (StackData data in datas) {
+  void initState() {
+    loadedIndex.addAll(widget.preloadIndex);
+    for (StackData data in widget.datas) {
       keys.add(UniqueKey());
       children.add(data.child);
     }
+    for (StackData data in context
+        .read<StackChangeNotifier>()
+        .stackDatas
+        .sublist(widget.datas.length)) {
+      keys.add(UniqueKey());
+      children.add(data.child);
+      super.initState();
+    }
+  }
+
+  @override
+  Widget build(final BuildContext context) {
     return Consumer<StackChangeNotifier>(builder: (context, notifier, child) {
       if (!loadedIndex.contains(notifier.index)) {
         loadedIndex.add(notifier.index);
@@ -234,7 +253,7 @@ class LazyLoadIndexedStack extends StatelessWidget {
                     key: keys[i],
                     offstage: notifier.index != i,
                     child: children[i])
-                : SizedBox()
+                : widget.unloadWidget
         ],
       );
     });

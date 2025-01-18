@@ -1,0 +1,51 @@
+{
+  "@@last_modified": "2025-01-18T14:41:32.328660",
+  "appTitle": "Local Pixiv",
+  "@appTitle": {
+    "description": "Title for the application",
+    "type": "text",
+    "placeholders": {}
+  },
+  "inputHintText": "Please input {hintText}",
+  "@inputHintText": {
+    "type": "text",
+    "placeholders": {
+      "hintText": {}
+    }
+  },
+  "invalidFormat": "Invalid format of {text}",
+  "@invalidFormat": {
+    "type": "text",
+    "placeholders": {
+      "text": {}
+    }
+  },
+  "settingsTitle": "{choice,select, basic{Basic Settings}theme{Theme Settings}search{Search Settings}performance{Performance Settings}webCrawler{WebCrawler Settings}other{Other Settings}}",
+  "@settingsTitle": {
+    "description": "Titles of different settingPages",
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "theme": "{choice,select, system{System Theme}light{Light Theme}dark{Dark Theme}other{}}",
+  "@theme": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "setFontSize": "FontSize (This is an example.)",
+  "@setFontSize": {
+    "description": "FontSize example",
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsContain": "{choice,select, hostPath{Host Path}chooseColor{Click to select color you want to change}enable{Enable}proxy{Proxy}resverseProxy{Resverse Proxy}resverseProxyExample{Resverse Proxy (eg i.pximg.net)}downloadstyle{Download Style}concurrency{Concurrency}largerThanOne{Concurrency must large than 1}clientPool{ClientPool}add{Add}other{Select key error}}",
+  "@settingsContain": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  }
+}

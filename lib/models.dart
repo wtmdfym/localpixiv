@@ -119,48 +119,165 @@ class UserInfo {
 }
 
 /// 总配置信息
-class Configs {
-  BasicConfigs basicConfigs;
-  WebCrawlerConfigs webCrawlerConfigs;
-  UIConfigs uiConfigs;
+class Settings {
+  final String hostPath;
+  //BasicConfigs basicConfigs;
+  final Locale locale;
+  final ThemeMode themeMode;
+  final Color color;
 
-  Configs(
-      {required this.basicConfigs,
-      required this.webCrawlerConfigs,
-      required this.uiConfigs});
+  /// 是否在点击userinfo时自动打开
+  final bool autoOpen;
 
-  factory Configs.fromJson(Map<String, dynamic> json) {
-    return Configs(
-        basicConfigs: BasicConfigs.fromJson(json['BasicConfigs']),
-        webCrawlerConfigs:
-            WebCrawlerConfigs.fromJson(json['WebCrawlerConfigs']),
-        uiConfigs: UIConfigs.fromJson(json['UIConfigs']));
+  /// 是否在点击tag时自动搜索
+  final bool autoSearch;
+
+  /// 图片的最大缓存大小与窗口大小的比值，0为无限制，
+  final double imageCacheRate;
+
+  /// 字体大小
+  final double fontSize;
+  WebCrawlerSettings webCrawlerSettings;
+  //UIConfigs uiConfigs;
+
+  Settings({
+    this.hostPath = "C:/pixiv/",
+    this.fontSize = 16,
+    //required this.basicConfigs,
+    required this.locale,
+    required this.themeMode,
+    required this.color,
+    this.autoOpen = true,
+    this.autoSearch = true,
+    this.imageCacheRate = 1.0,
+    required this.webCrawlerSettings,
+
+    //required this.uiConfigs
+  });
+
+  factory Settings.fromJson(Map<String, dynamic> json,
+      [WebCrawlerSettings? webCrawlerSettings]) {
+    Map<String, ThemeMode> themeModeMap = {
+      'system': ThemeMode.system,
+      'light': ThemeMode.light,
+      'dark': ThemeMode.dark
+    };
+
+    return Settings(
+      hostPath: json['host_path'],
+      fontSize: json['fontSize'],
+      //basicConfigs: BasicConfigs.fromJson(json['BasicConfigs']),
+      locale: Locale(json['locale']),
+      themeMode: themeModeMap[json['themeMode']]!,
+      color: Color.from(
+          alpha: json['color']['a'],
+          red: json['color']['r'],
+          green: json['color']['g'],
+          blue: json['color']['b']),
+
+      autoOpen: json['autoSearch'],
+      autoSearch: json['autoSearch'],
+
+      imageCacheRate: json['imageCacheRate'],
+
+      webCrawlerSettings: webCrawlerSettings ??
+          WebCrawlerSettings.fromJson(json['WebCrawlerSettings']),
+      //uiConfigs: UIConfigs.fromJson(json['UIConfigs'])
+    );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toJson(bool withWebCrawlerSettings) {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['BasicConfigs'] = basicConfigs.toJson();
-    data['WebCrawlerConfigs'] = webCrawlerConfigs.toJson();
-    data['UIConfigs'] = uiConfigs.toJson();
+    data['host_path'] = hostPath;
+    data['fontSize'] = fontSize;
+    //data['BasicConfigs'] = basicConfigs.toJson();
+    data['locale'] = locale.languageCode;
+    data['themeMode'] = themeMode.name;
+    data['color'] = {'a': color.a, 'r': color.r, 'g': color.g, 'b': color.b};
+
+    data['autoOpen'] = autoOpen;
+    data['autoSearch'] = autoSearch;
+
+    data['imageCacheRate'] = imageCacheRate;
+    if (withWebCrawlerSettings) {
+      data['WebCrawlerSettings'] = webCrawlerSettings.toJson();
+    }
+    //data['UIConfigs'] = uiConfigs.toJson();
     return data;
   }
 }
 
-/// 基本配置信息
-class BasicConfigs {
-  String savePath;
-
-  BasicConfigs({
-    this.savePath = 'C:/',
+/// WebCrawler(python app)配置信息
+class WebCrawlerSettings {
+  final String hostPath;
+  Cookies cookies;
+  bool enableProxy;
+  String httpProxies;
+  String httpsProxies;
+  bool enableIPixiv;
+  String ipixivHostPath;
+  int semaphore;
+  DownloadType downloadType;
+  String lastRecordTime;
+  bool enableClientPool;
+  List<ClientPool?> clientPool;
+  WebCrawlerSettings({
+    required this.hostPath,
+    required this.cookies,
+    required this.enableProxy,
+    required this.httpProxies,
+    required this.httpsProxies,
+    required this.enableIPixiv,
+    required this.ipixivHostPath,
+    required this.semaphore,
+    required this.downloadType,
+    required this.lastRecordTime,
+    required this.enableClientPool,
+    required this.clientPool,
   });
 
-  factory BasicConfigs.fromJson(Map<String, dynamic> json) {
-    return BasicConfigs(savePath: json['save_path']);
+  factory WebCrawlerSettings.fromJson(Map<String, dynamic> json) {
+    if (json['client_pool'] != null) {
+      for (var clientinfo in json['client_pool']) {
+        ClientPool.fromJson(clientinfo);
+      }
+    }
+    return WebCrawlerSettings(
+        hostPath: json['host_path'],
+        cookies: Cookies.fromJson(json['cookies']),
+        enableProxy: json['enable_proxy'],
+        httpProxies: json['http_proxies'],
+        httpsProxies: json['https_proxies'],
+        enableIPixiv: json['enableIPixiv'],
+        ipixivHostPath: json['ipixivHostPath'],
+        semaphore: json['semaphore'],
+        downloadType: DownloadType.fromJson(json['download_type']),
+        lastRecordTime: json['last_record_time'],
+        enableClientPool: json['enable_client_pool'],
+        clientPool: json['client_pool'] != null
+            ? [
+                for (var clientinfo in json['client_pool'])
+                  ClientPool.fromJson(clientinfo)
+              ]
+            :
+    [
+          ]);
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = <String, dynamic>{};
-    data['save_path'] = savePath;
+    data['host_path'] = hostPath;
+    data['cookies'] = cookies.toJson();
+    data['enable_proxy'] = enableProxy;
+    data['http_proxies'] = httpProxies;
+    data['https_proxies'] = httpsProxies;
+    data['enableIPixiv'] = enableIPixiv;
+    data['ipixivHostPath'] = ipixivHostPath;
+    data['semaphore'] = semaphore;
+    data['download_type'] = downloadType.toJson();
+    data['last_record_time'] = lastRecordTime;
+    data['enable_client_pool'] = enableClientPool;
+    data['client_pool'] = clientPool.map((v) => v?.toJson() ?? {}).toList();
     return data;
   }
 }
@@ -247,117 +364,6 @@ class ClientPool {
     data['email'] = email;
     data['passward'] = passward;
     data['cookies'] = cookies.toJson();
-    return data;
-  }
-}
-
-/// web crawler(python app)配置信息
-class WebCrawlerConfigs {
-  Cookies cookies;
-  bool enableProxy;
-  String httpProxies;
-  String httpsProxies;
-  bool enableIPixiv;
-  String ipixivHostPath;
-  int semaphore;
-  DownloadType downloadType;
-  String lastRecordTime;
-  bool enableClientPool;
-  List<ClientPool?> clientPool;
-  WebCrawlerConfigs({
-    required this.cookies,
-    required this.enableProxy,
-    required this.httpProxies,
-    required this.httpsProxies,
-    required this.enableIPixiv,
-    required this.ipixivHostPath,
-    required this.semaphore,
-    required this.downloadType,
-    required this.lastRecordTime,
-    required this.enableClientPool,
-    required this.clientPool,
-  });
-
-  factory WebCrawlerConfigs.fromJson(Map<String, dynamic> json) {
-    if (json['client_pool'] != null) {
-      for (var clientinfo in json['client_pool']) {
-        ClientPool.fromJson(clientinfo);
-      }
-    }
-    return WebCrawlerConfigs(
-        cookies: Cookies.fromJson(json['cookies']),
-        enableProxy: json['enable_proxy'],
-        httpProxies: json['http_proxies'],
-        httpsProxies: json['https_proxies'],
-        enableIPixiv: json['enableIPixiv'],
-        ipixivHostPath: json['ipixivHostPath'],
-        semaphore: json['semaphore'],
-        downloadType: DownloadType.fromJson(json['download_type']),
-        lastRecordTime: json['last_record_time'],
-        enableClientPool: json['enable_client_pool'],
-        clientPool: json['client_pool'] != null
-            ? [
-                for (var clientinfo in json['client_pool'])
-                  ClientPool.fromJson(clientinfo)
-              ]
-            :
-    [
-          ]);
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['cookies'] = cookies.toJson();
-    data['enable_proxy'] = enableProxy;
-    data['http_proxies'] = httpProxies;
-    data['https_proxies'] = httpsProxies;
-    data['enableIPixiv'] = enableIPixiv;
-    data['ipixivHostPath'] = ipixivHostPath;
-    data['semaphore'] = semaphore;
-    data['download_type'] = downloadType.toJson();
-    data['last_record_time'] = lastRecordTime;
-    data['enable_client_pool'] = enableClientPool;
-    data['client_pool'] = clientPool.map((v) => v?.toJson() ?? {}).toList();
-    return data;
-  }
-}
-
-/// UI界面配置信息
-class UIConfigs {
-  /// 是否在点击userinfo时自动打开
-  bool autoOpen = true;
-
-  /// 是否在点击tag时自动搜索
-  bool autoSearch = true;
-
-  /// 图片的最大缓存大小与窗口大小的比值，0为无限制，
-  double imageCacheRate = 1.0;
-
-  /// 字体大小
-  double fontSize = 16;
-
-  UIConfigs({
-    required this.autoOpen,
-    required this.autoSearch,
-    required this.imageCacheRate,
-    required this.fontSize,
-  });
-
-  factory UIConfigs.fromJson(Map<String, dynamic> json) {
-    return UIConfigs(
-      autoOpen: json['autoSearch'],
-      autoSearch: json['autoSearch'],
-      imageCacheRate: json['imageCacheRate'],
-      fontSize: json['fontSize'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['autoOpen'] = autoOpen;
-    data['autoSearch'] = autoSearch;
-    data['imageCacheRate'] = imageCacheRate;
-    data['fontSize'] = fontSize;
     return data;
   }
 }

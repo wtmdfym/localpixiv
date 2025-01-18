@@ -1,0 +1,71 @@
+{
+  "@@locale": "zh",
+  "@@last_modified": "2025-01-14T11:22:12.685305",
+  "appTitle": "Flutter APP",
+  "@appTitle": {
+    "description": "Title for the Demo application",
+    "type": "text",
+    "placeholders": {}
+  },
+  "appBarTitle": "重庆大学平均绩点计算器",
+  "@appBarTitle": {
+    "description": "Title for the appBar",
+    "type": "text",
+    "placeholders": {}
+  },
+  "scoreInput": "分数",
+  "@scoreInput": {
+    "description": "scoreInput hintText",
+    "type": "text",
+    "placeholders": {}
+  },
+  "creditInput": "学分",
+  "@creditInput": {
+    "description": "creditInput hintText",
+    "type": "text",
+    "placeholders": {}
+  },
+  "gradePoint": "绩点",
+  "@gradePoint": {
+    "description": "Grade Point hintText",
+    "type": "text",
+    "placeholders": {}
+  },
+  "creditGradePoint": "学分绩点",
+  "@creditGradePoint": {
+    "description": "Credit Grade Point hintText",
+    "type": "text",
+    "placeholders": {}
+  },
+  "scoreType": "{index,select, a{百分制成绩}b{五级制成绩}c{两级制成绩}d{补考、重修}other{}}",
+  "@scoreType": {
+    "description": "scoreType",
+    "type": "text",
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "fivePoint": "{index,select, a{优}b{良}c{中}d{及格}e{不及格}other{}}",
+  "@fivePoint": {
+    "description": "Five-point score",
+    "type": "text",
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "twoLevel": "{index,select, p{合格}f{不合格}other{}}",
+  "@twoLevel": {
+    "description": "twoLevel score",
+    "type": "text",
+    "placeholders": {
+      "index": {}
+    }
+  },
+  "theme": "{choice,select, auto{跟随系统}light{亮色主题}dark{暗色主题}other{}}",
+  "@theme": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  }
+}

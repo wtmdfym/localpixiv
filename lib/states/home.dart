@@ -186,7 +186,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             //'"lib/pythonapp/build/exe.win-amd64-3.12/cmd_app.exe" --configfile jsons/config.json'
                             );*/
                         _sendCommand(
-                            'cmd_app.exe --configfile jsons/config.json');
+                            'cmd_app.exe --configfile jsons/webCrawler_config.json');
                       }
                       setState(() => isstart = true);
                     },

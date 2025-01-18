@@ -5,20 +5,21 @@ import 'package:localpixiv/common/customnotifier.dart';
 import 'package:localpixiv/common/defaultdatas.dart';
 import 'package:localpixiv/common/tools.dart';
 import 'package:localpixiv/models.dart';
+import 'package:localpixiv/settings/settings_controller.dart';
 import 'package:localpixiv/widgets/page_controller_row.dart';
 import 'package:localpixiv/widgets/userdisplayer.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 import 'package:provider/provider.dart';
 
 class FollowingsDisplayer extends StatefulWidget {
-  const FollowingsDisplayer(
-      {super.key,
-      required this.hostPath,
-      required this.cacheRate,
-      required this.pixivDb});
-  final String hostPath;
-  final double cacheRate;
+  const FollowingsDisplayer({
+    super.key,
+    required this.controller,
+    required this.pixivDb,
+  });
+  final SettingsController controller;
   final mongo.Db pixivDb;
+
   @override
   State<StatefulWidget> createState() => _FollowingsDisplayerState();
 }
@@ -28,12 +29,8 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   ValueNotifier<int> maxpage = ValueNotifier(1);
   int reslength = 0;
   final int pagesize = 8;
-  final ListNotifier<UserInfo> userInfosNotifer = ListNotifier([
-    defaultUserInfo,
-    defaultUserInfo,
-    defaultUserInfo,
-    defaultUserInfo,
-  ]);
+  final int workCountOnSisplay = 4;
+  late final ListNotifier<UserInfo> userInfosNotifer;
   final List<UserInfo> userInfos = [];
 
   void dataLoader() async {
@@ -52,10 +49,12 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
             WorkInfo.fromJson(workinfojson)
         ];
         // 检查workInfos数量是否正常
-        assert(workInfo.length <= 4);
-        if (workInfo.length < 4) {
-          workInfo.addAll(
-              [for (int i = workInfo.length; i <= 4; i++) defaultWorkInfo]);
+        assert(workInfo.length <= pagesize);
+        if (workInfo.length < pagesize) {
+          workInfo.addAll([
+            for (int i = workInfo.length; i <= workCountOnSisplay; i++)
+              defaultWorkInfo
+          ]);
         }
         following['workInfos'] = workInfo;
         userInfos.add(UserInfo.fromJson(following));
@@ -67,7 +66,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     });
     // 当有足够数据或加载完成时显示
     Timer.periodic(Durations.medium1, (timer) {
-      if ((userInfos.length > 4) || (userInfos.length == reslength)) {
+      if ((userInfos.length > pagesize) || (userInfos.length == reslength)) {
         changePage(1);
         timer.cancel();
       }
@@ -77,6 +76,8 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   @override
   void initState() {
     super.initState();
+    userInfosNotifer =
+        ListNotifier([for (int i = 0; i <= pagesize; i++) defaultUserInfo]);
     dataLoader();
   }
 
@@ -101,11 +102,10 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     void openTabCallback(String userName) {
       context.read<StackChangeNotifier>().addStack(
           userName,
-          UserDetailsDisplayer2(
-            hostPath: widget.hostPath,
+          UserDetailsDisplayer(
+            controller: widget.controller,
             userName: userName,
             pixivDb: widget.pixivDb,
-            cacheRate: widget.cacheRate,
             onWorkBookmarked: (isLiked, workId, userName) =>
                 Provider.of<WorkBookmarkModel>(context, listen: false)
                     .changebookmark(
@@ -131,8 +131,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
                           itemCount: pagesize,
                           itemBuilder: (context, index) =>
                               FollowingInfoDisplayer(
-                            hostPath: widget.hostPath,
-                            cacheRate: widget.cacheRate,
+                            controller: widget.controller,
                             userInfo: userInfos[index],
                             onTab: (userName) => openTabCallback(userName),
                             onWorkBookmarked: (isLiked, workId, userName) =>

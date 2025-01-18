@@ -53,8 +53,7 @@ class AsyncThreadingManager(threading.Thread):
         # 初始化配置信息
         logger.info("初始化配置信息......")
         self.ifstop = False
-        self.config_dict_1 = config_dict
-        self.config_dict = config_dict["WebCrawlerConfigs"]
+        self.config_dict = config_dict
         self.config_save_path = config_save_path
         self.loop = loop
         self.asyncdb = asyncdb
@@ -94,7 +93,7 @@ class AsyncThreadingManager(threading.Thread):
             )
             # success = await self.followings_recorder.following_work_fetcher()
             if not success:
-                sys.stdin.write("OVER\n")
+                sys.stdout.write("OVER\n")
                 self.loop.stop()
                 return
             del self.followings_recorder
@@ -102,7 +101,7 @@ class AsyncThreadingManager(threading.Thread):
             ### 获取关注的作者的信息
             if self.ifstop:
                 self.loop.stop()
-                sys.stdin.write("OVER\n")
+                sys.stdout.write("OVER\n")
                 return
             self.info_getter = WorkInfoRecorder(
                 self.clientpool,
@@ -120,8 +119,7 @@ class AsyncThreadingManager(threading.Thread):
             # success = await self.info_getter.start_get_info()
             if success:
                 self.config_dict.update({"last_record_time": newtime})
-                self.config_dict_1.update({"WebCrawlerConfigs": self.config_dict})
-                ConfigSetter.set_config(self.config_save_path, self.config_dict_1)
+                ConfigSetter.set_config(self.config_save_path, self.config_dict)
             del self.info_getter
         else:
             self.logger.info("最近已获取,跳过")
@@ -130,10 +128,10 @@ class AsyncThreadingManager(threading.Thread):
         ### 下载作品
         if self.ifstop:
             self.loop.stop()
-            sys.stdin.write("OVER\n")
+            sys.stdout.write("OVER\n")
             return
         self.downloader = Analyzer(
-            config_dict["BasicConfigs"]["save_path"],
+            self.config_dict["save_path"],
             self.clientpool,
             self.config_dict["download_type"],
             self.semaphore,
@@ -148,8 +146,8 @@ class AsyncThreadingManager(threading.Thread):
         del self.downloader
 
         # 退出程序
-        sys.stdin.write("OVER\n")
-        sys.stdin.flush()
+        sys.stdout.write("OVER\n")
+        sys.stdout.flush()
         self.loop.stop()
         return
 
@@ -310,7 +308,7 @@ if __name__ == "__main__":
     asyncbackupcollection = asyncclient["backup"]["backup of pixiv infos"]
     """
     # 初始化连接池
-    clientPool = ClientPool(config_dict["WebCrawlerConfigs"], config_save_path, logger)
+    clientPool = ClientPool(config_dict, config_save_path, logger)
     # 实例化爬虫管理类
     manager = AsyncThreadingManager(config_dict, config_save_path, logger)
 

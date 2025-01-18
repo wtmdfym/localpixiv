@@ -24,7 +24,7 @@ samples, guidance on mobile development, and a full API reference.
  - [x] settings
  - [x] 自定义图片缓存大小
  - [x] 自定义字体大小
- - [ ] 多主题，暗色模式
+ - [x] 多主题，暗色模式
  - [ ] 多语言
  - [ ] 完整的高级搜索功能
  - [x] pixivcat代理
@@ -33,6 +33,14 @@ samples, guidance on mobile development, and a full API reference.
  - [ ] 同步收藏作品
 ## Update History
  - Version 1.1.0
+
+    - 对设置界面和设置更新进行了调整。
+    - 实现自定义主题，更改主题模式。
+    - 实现了部分的国际化。
+    - 修改了配置文件的结构。
+    - 修改了项目结构。
+    - 意外收获=>将LazyLoadIndexedStack改为StatefulWidget实现在更换主题等操作时保持State
+ - Version 1.0.10
 
     - 实现了选择性rebulid（From https://github.com/fantasy525/should_rebuild）
     - 实现了LazyLoadIndexedStack，使用uniquekey解决了组件state丢失的问题。

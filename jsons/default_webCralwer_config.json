@@ -1,0 +1,22 @@
+{
+    "host_path": "C:/pixiv/",
+    "cookies": {
+        "PHPSESSID": ""
+    },
+    "enable_proxy": false,
+    "http_proxies": "",
+    "https_proxies": "",
+    "enableIPixiv": true,
+    "ipixivHostPath": "i.pixiv.re",
+    "semaphore": 2,
+    "download_type": {
+        "illust": true,
+        "manga": true,
+        "novel": false,
+        "ugoira": true,
+        "series": false
+    },
+    "last_record_time": "0",
+    "enable_client_pool": false,
+    "client_pool": []
+}

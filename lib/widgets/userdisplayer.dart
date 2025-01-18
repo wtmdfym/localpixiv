@@ -1,33 +1,29 @@
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/common/customnotifier.dart';
-import 'package:localpixiv/widgets/InfoDisplayer/list_displayer.dart';
-import 'package:localpixiv/widgets/divided_stack.dart';
-import 'package:localpixiv/widgets/should_rebuild_widget.dart';
 import 'package:mongo_dart/mongo_dart.dart' show Db, where;
 
-import 'package:localpixiv/common/defaultdatas.dart';
-import 'package:localpixiv/common/tools.dart';
-import 'package:localpixiv/models.dart';
-import 'package:localpixiv/widgets/workloader.dart';
-import 'package:localpixiv/widgets/workcontainer.dart';
-import 'package:provider/provider.dart';
+import '../settings/settings_controller.dart';
+import '../common/defaultdatas.dart';
+import '../common/tools.dart';
+import '../models.dart';
+import 'divided_stack.dart';
+import 'should_rebuild_widget.dart';
+import 'workloader.dart';
+import 'workcontainer.dart';
 
 class FollowingInfoDisplayer extends StatefulWidget {
   const FollowingInfoDisplayer({
     super.key,
-    required this.hostPath,
+    required this.controller,
     this.width = 2320,
     this.height = 300,
-    required this.cacheRate,
     required this.userInfo,
     required this.onTab,
     required this.onWorkBookmarked,
   });
-  final String hostPath;
+  final SettingsController controller;
   final int width;
   final int height;
-  final double cacheRate;
   final UserInfo userInfo;
   final OpenTabCallback onTab;
   final WorkBookmarkCallback onWorkBookmarked;
@@ -99,10 +95,10 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                               height: 240,
                               child: ImageLoader(
                                 path:
-                                    '${widget.hostPath}${widget.userInfo.profileImage}',
+                                    '${widget.controller.hostPath}${widget.userInfo.profileImage}',
                                 width: 240,
                                 height: 240,
-                                cacheRate: widget.cacheRate,
+                                cacheRate: widget.controller.imageCacheRate,
                               )),
                           // 作者名字和描述
                           Container(
@@ -117,13 +113,12 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                                 children: [
                                   SelectableText(
                                     widget.userInfo.userName,
-                                    style: TextStyle(
+                                    style:
+                                        Theme.of(context).textTheme.titleMedium
+                                    /*TextStyle(
                                         color: Colors.blueAccent,
-                                        fontSize: context
-                                                .watch<UIConfigUpdateNotifier>()
-                                                .uiConfigs
-                                                .fontSize +
-                                            4),
+                                        fontSize: )*/
+                                    ,
                                     maxLines: 1,
                                   ),
                                   SizedBox(
@@ -140,11 +135,11 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
                           for (int i = 0; i < 4; i++)
                             Expanded(
                                 child: WorkContainer(
-                              hostPath: widget.hostPath,
+                              hostPath: widget.controller.hostPath,
                               workInfo: workInfos[i],
                               width: 360,
                               height: widget.height - 20,
-                              cacheRate: widget.cacheRate,
+                              cacheRate: widget.controller.imageCacheRate,
                               onBookmarked: (isLiked, workId, userName) =>
                                   widget.onWorkBookmarked(
                                 isLiked,
@@ -170,8 +165,7 @@ class _FollowingInfoDisplayerState extends State<FollowingInfoDisplayer>
 class UserDetailsDisplayer extends StatefulWidget {
   UserDetailsDisplayer({
     super.key,
-    required this.hostPath,
-    required this.cacheRate,
+    required this.controller,
     this.userInfo,
     this.userName,
     this.pixivDb,
@@ -180,8 +174,7 @@ class UserDetailsDisplayer extends StatefulWidget {
     assert((userInfo != null) || ((pixivDb != null) && (userName != null)));
   }
 
-  final String hostPath;
-  final double cacheRate;
+  final SettingsController controller;
   final UserInfo? userInfo;
   final String? userName;
   final Db? pixivDb;
@@ -259,19 +252,16 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
             width: 240,
             height: 240,
             child: ImageLoader(
-              path: '${widget.hostPath}${_userInfo.profileImage}',
+              path: '${widget.controller.hostPath}${_userInfo.profileImage}',
               width: 240,
               height: 240,
-              cacheRate: widget.cacheRate,
+              cacheRate: widget.controller.imageCacheRate,
             ),
           ),
           Expanded(
               child: Text(
             'UserName: ${_userInfo.userName}',
-            style: TextStyle(
-                fontSize:
-                    context.watch<UIConfigUpdateNotifier>().uiConfigs.fontSize +
-                        4),
+            style: Theme.of(context).textTheme.titleMedium,
           )),
           Expanded(
               flex: 2,
@@ -346,9 +336,9 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
                               for (WorkInfo info in rowInfos)
                                 Expanded(
                                     child: WorkContainer(
-                                  hostPath: widget.hostPath,
+                                  hostPath: widget.controller.hostPath,
                                   workInfo: info,
-                                  cacheRate: widget.cacheRate,
+                                  cacheRate: widget.controller.imageCacheRate,
                                   onBookmarked: (isLiked, workId, userName) =>
                                       widget.onWorkBookmarked(
                                     isLiked,
@@ -433,113 +423,6 @@ class _UserDetailsDisplayerState extends State<UserDetailsDisplayer> {
               },
             ));
       }),
-      additionalWidgets: [
-        Positioned(
-            right: 5,
-            bottom: 5,
-            child: IconButton(
-              icon: Icon(Icons.arrow_upward),
-              style: ButtonStyle(
-                  backgroundColor: WidgetStatePropertyAll(
-                      const Color.fromARGB(125, 158, 158, 158))),
-              onPressed: () => _scrollController.jumpTo(0),
-            ))
-      ],
-    );
-  }
-}
-
-class UserDetailsDisplayer2 extends StatefulWidget {
-  UserDetailsDisplayer2({
-    super.key,
-    required this.hostPath,
-    required this.cacheRate,
-    this.userInfo,
-    this.userName,
-    this.pixivDb,
-    required this.onWorkBookmarked,
-  }) {
-    assert((userInfo != null) || ((pixivDb != null) && (userName != null)));
-  }
-
-  final String hostPath;
-  final double cacheRate;
-  final UserInfo? userInfo;
-  final String? userName;
-  final Db? pixivDb;
-  final WorkBookmarkCallback onWorkBookmarked;
-
-  @override
-  State<StatefulWidget> createState() => _UserDetailsDisplayer2State();
-}
-
-class _UserDetailsDisplayer2State extends State<UserDetailsDisplayer2> {
-  int rawCount = 6;
-  final int onceLoad = 4;
-  late final ScrollController _scrollController = ScrollController();
-  int loadIndex = 0;
-  final ValueNotifier<int> pages = ValueNotifier(0);
-  final List<WorkInfo> loadedList = [];
-  UserInfo _userInfo = defaultUserInfo;
-
-  late int totalloadCount;
-  @override
-  void initState() {
-    super.initState();
-    if (widget.userInfo != null) {
-      _userInfo = widget.userInfo!;
-    } else {
-      widget.pixivDb!
-          .collection('All Followings')
-          .findOne(where.eq('userName', widget.userName).excludeFields(['_id']))
-          .then((info) {
-        fetchUserInfo(info!, widget.pixivDb!).then((userinfo) {
-          setState(() {
-            _userInfo = userinfo;
-          });
-        });
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return DividedStack(
-      padding: EdgeInsets.all(20),
-      dividedDirection: Axis.vertical,
-      leftWidget: Row(
-        spacing: 30,
-        children: [
-          SizedBox(
-            width: 240,
-            height: 240,
-            child: ImageLoader(
-              path: '${widget.hostPath}${_userInfo.profileImage}',
-              width: 240,
-              height: 240,
-              cacheRate: widget.cacheRate,
-            ),
-          ),
-          Expanded(
-              child: Text(
-            'UserName: ${_userInfo.userName}',
-            style: TextStyle(
-                fontSize:
-                    context.watch<UIConfigUpdateNotifier>().uiConfigs.fontSize +
-                        4),
-          )),
-          Expanded(
-              flex: 2,
-              child: Text(
-                _userInfo.userComment,
-              )),
-        ],
-      ),
-      rightWidget: ListDisplayer(
-          hostPath: widget.hostPath,
-          cacheRate: widget.cacheRate,
-          infoStream: Stream.fromIterable(_userInfo.workInfos),
-          onWorkBookmarked: widget.onWorkBookmarked),
       additionalWidgets: [
         Positioned(
             right: 5,

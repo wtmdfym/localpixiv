@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:localpixiv/settings/settings_controller.dart';
 import 'package:localpixiv/widgets/divided_stack.dart';
 import 'package:localpixiv/widgets/page_controller_row.dart';
 import 'package:mongo_dart/mongo_dart.dart'
@@ -16,13 +17,13 @@ import 'package:localpixiv/models.dart';
 class Viewer extends StatefulWidget {
   const Viewer({
     super.key,
+    required this.controller,
     required this.pixivDb,
     required this.backupcollection,
-    required this.basicConfigs,
   });
+  final SettingsController controller;
   final Db pixivDb;
   final DbCollection backupcollection;
-  final BasicConfigs basicConfigs;
 
   @override
   State<StatefulWidget> createState() {
@@ -50,170 +51,163 @@ class _ViewerState extends State<Viewer> {
   // 构造界面
   @override
   Widget build(BuildContext context) {
-    return Consumer<UIConfigUpdateNotifier>(
-        builder: (context, notifier, child) {
-      return Padding(
-        padding: const EdgeInsets.all(20),
-        child: DividedStack(
-          leftWidget: SingleChildScrollView(
-              child: Padding(
-                  padding: EdgeInsets.only(right: 16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // 搜索控件
-                      TextField(
-                        controller: _searchController,
-                        maxLength: 100,
-                        decoration: InputDecoration(
-                          labelText: "Ciallo~(∠・ω< )⌒☆",
-                          icon: Icon(
-                            Icons.search,
-                          ),
-                        ),
-                      ),
-                      ElevatedButton.icon(
-                        onPressed: searchAnalyzer,
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: DividedStack(
+        leftWidget: SingleChildScrollView(
+            child: Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // 搜索控件
+                    TextField(
+                      controller: _searchController,
+                      maxLength: 100,
+                      decoration: InputDecoration(
+                        labelText: "Ciallo~(∠・ω< )⌒☆",
                         icon: Icon(
                           Icons.search,
                         ),
-                        label: Text(
-                          'Search',
-                        ),
                       ),
-                      SizedBox(
-                        height: 10,
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: searchAnalyzer,
+                      icon: Icon(
+                        Icons.search,
                       ),
-                      ElevatedButton(
-                          onPressed: () {
-                            advancedSearch(context).then((advancedtext) {
-                              // TODO 高级搜索
-                              searchAnalyzer(advancedtext: advancedtext);
-                            });
-                          },
-                          child: Text('Advanced Search')),
-                      Divider(),
-                      // 信息显示部件
-                      Consumer<ShowInfoNotifier>(
-                          builder: (context, workInfoNotifier, child) =>
-                              InfoContainer(
-                                workInfo: workInfoNotifier.workInfo,
-                                onTapUser: (userName) {
-                                  notifier.uiConfigs.autoOpen
-                                      ? context
-                                          .read<StackChangeNotifier>()
-                                          .addStack(
-                                              userName,
-                                              UserDetailsDisplayer(
-                                                hostPath: widget
-                                                    .basicConfigs.savePath,
-                                                cacheRate: notifier
-                                                    .uiConfigs.imageCacheRate,
-                                                userName: userName,
-                                                pixivDb: widget.pixivDb,
-                                                // TODO 同步信息
-                                                onWorkBookmarked: (isLiked,
-                                                        workId, userName) =>
-                                                    context
-                                                        .read<
-                                                            WorkBookmarkModel>()
-                                                        .changebookmark(
-                                                          isLiked,
-                                                          workId,
-                                                          userName,
-                                                        ),
-                                              ))
-                                      : {};
-                                },
-                                onTapTag: (tag) {
-                                  notifier.uiConfigs.autoSearch
-                                      ? searchAnalyzer(
-                                          advancedtext: null,
-                                          finishedselector:
-                                              where.exists('tags.$tag'))
-                                      : {};
-                                },
-                              ))
-                    ],
-                  ))),
-          rightWidget: // 作品展示网格
-              Column(children: [
-            for (int j = 0; j < pagesize / 4; j++)
-              Expanded(
-                  child: Padding(
-                padding: EdgeInsets.only(
-                    top: j == 0 ? 0 : 6, bottom: j == 1 ? 0 : 6),
-                child: ValueListenableBuilder(
-                    valueListenable: workInfosNotifer,
-                    builder: (context, workInfos, child) => Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          spacing: 12,
-                          children: [
-                            for (int i = j * 4; i < pagesize - (1 - j) * 4; i++)
-                              Expanded(
-                                  child: WorkContainer(
-                                hostPath: widget.basicConfigs.savePath,
-                                workInfo: workInfos[i],
-                                cacheRate: notifier.uiConfigs.imageCacheRate,
-                                onBookmarked: (isLiked, workId, userName) =>
-                                    context
-                                        .read<WorkBookmarkModel>()
-                                        .changebookmark(
-                                          isLiked,
-                                          workId,
-                                          userName,
-                                        ),
-                              )),
-                          ],
-                        )),
-              )),
+                      label: Text(
+                        'Search',
+                      ),
+                    ),
+                    SizedBox(
+                      height: 10,
+                    ),
+                    ElevatedButton(
+                        onPressed: () {
+                          advancedSearch(context).then((advancedtext) {
+                            // TODO 高级搜索
+                            searchAnalyzer(advancedtext: advancedtext);
+                          });
+                        },
+                        child: Text('Advanced Search')),
+                    Divider(),
+                    // 信息显示部件
+                    Consumer<ShowInfoNotifier>(
+                        builder: (context, workInfoNotifier, child) =>
+                            InfoContainer(
+                              workInfo: workInfoNotifier.workInfo,
+                              onTapUser: (userName) {
+                                widget.controller.autoOpen
+                                    ? context
+                                        .read<StackChangeNotifier>()
+                                        .addStack(
+                                            userName,
+                                            UserDetailsDisplayer(
+                                              controller: widget.controller,
+                                              userName: userName,
+                                              pixivDb: widget.pixivDb,
+                                              // TODO 同步信息
+                                              onWorkBookmarked: (isLiked,
+                                                      workId, userName) =>
+                                                  context
+                                                      .read<WorkBookmarkModel>()
+                                                      .changebookmark(
+                                                        isLiked,
+                                                        workId,
+                                                        userName,
+                                                      ),
+                                            ))
+                                    : {};
+                              },
+                              onTapTag: (tag) {
+                                widget.controller.autoSearch
+                                    ? searchAnalyzer(
+                                        advancedtext: null,
+                                        finishedselector:
+                                            where.exists('tags.$tag'))
+                                    : {};
+                              },
+                            ))
+                  ],
+                ))),
+        rightWidget: // 作品展示网格
+            Column(children: [
+          for (int j = 0; j < pagesize / 4; j++)
+            Expanded(
+                child: Padding(
+              padding:
+                  EdgeInsets.only(top: j == 0 ? 0 : 6, bottom: j == 1 ? 0 : 6),
+              child: ValueListenableBuilder(
+                  valueListenable: workInfosNotifer,
+                  builder: (context, workInfos, child) => Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        spacing: 12,
+                        children: [
+                          for (int i = j * 4; i < pagesize - (1 - j) * 4; i++)
+                            Expanded(
+                                child: WorkContainer(
+                              hostPath: widget.controller.hostPath,
+                              workInfo: workInfos[i],
+                              cacheRate: widget.controller.imageCacheRate,
+                              onBookmarked: (isLiked, workId, userName) =>
+                                  context
+                                      .read<WorkBookmarkModel>()
+                                      .changebookmark(
+                                        isLiked,
+                                        workId,
+                                        userName,
+                                      ),
+                            )),
+                        ],
+                      )),
+            )),
 
-            // 翻页控件
-            PageControllerRow(
-              maxpage: maxpage,
-              pagesize: pagesize,
-              onPageChange: (page) => changePage(page),
-            )
-          ]),
-          additionalWidgets: [
-            // 加载指示器
-            Positioned.fill(
-                child: ValueListenableBuilder(
-                    valueListenable: _isLoading,
-                    builder: (context, value, child) {
-                      return
-                          // 当不加载时不显示
-                          Offstage(
-                              offstage: !value,
-                              child: Stack(children: [
-                                ModalBarrier(
-                                  color:
-                                      const Color.fromARGB(150, 160, 160, 160),
-                                  dismissible: true,
-                                  onDismiss: () => {
-                                    cancelevent = true,
-                                    _isLoading.value = false
-                                  },
+          // 翻页控件
+          PageControllerRow(
+            maxpage: maxpage,
+            pagesize: pagesize,
+            onPageChange: (page) => changePage(page),
+          )
+        ]),
+        additionalWidgets: [
+          // 加载指示器
+          Positioned.fill(
+              child: ValueListenableBuilder(
+                  valueListenable: _isLoading,
+                  builder: (context, value, child) {
+                    return
+                        // 当不加载时不显示
+                        Offstage(
+                            offstage: !value,
+                            child: Stack(children: [
+                              ModalBarrier(
+                                color: const Color.fromARGB(150, 160, 160, 160),
+                                dismissible: true,
+                                onDismiss: () => {
+                                  cancelevent = true,
+                                  _isLoading.value = false
+                                },
+                              ),
+                              Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.blueAccent,
+                                  strokeWidth: 6,
+                                  semanticsLabel: 'Loading......',
                                 ),
-                                Center(
-                                  child: CircularProgressIndicator(
-                                    color: Colors.blueAccent,
-                                    strokeWidth: 6,
-                                    semanticsLabel: 'Loading......',
-                                  ),
-                                ),
-                              ]));
-                    })),
-            Positioned(
-                left: 2,
-                bottom: 2,
-                child: Tooltip(
-                  message: 'Tips: Testing......',
-                  child: Icon(Icons.info_outlined),
-                ))
-          ],
-        ),
-        /*ValueListenableBuilder(
+                              ),
+                            ]));
+                  })),
+          Positioned(
+              left: 2,
+              bottom: 2,
+              child: Tooltip(
+                message: 'Tips: Testing......',
+                child: Icon(Icons.info_outlined),
+              )),
+        ],
+      ),
+      /*ValueListenableBuilder(
               valueListenable: searchType,
               builder: (context, _searchType, child) =>
                   Row(mainAxisSize: MainAxisSize.min, children: [
@@ -248,15 +242,14 @@ class _ViewerState extends State<Viewer> {
                       },
                     )),
                   ])),*/
-      );
-    });
+    );
   }
 
   // 搜索控制
   void searchAnalyzer(
       {Map<String, dynamic>? advancedtext, SelectorBuilder? finishedselector}) {
     if (onsearching) {
-      resultDialog(context, 'Search', false,
+      resultDialog('Search', false,
           description: 'Searching operation not complete!\nPlease wait.');
       return;
     }
@@ -371,8 +364,7 @@ class _ViewerState extends State<Viewer> {
     }
     searchWork(selector).then((success) {
       if (success) {
-        resultDialog(context.mounted ? context : null, 'Search', true,
-            description: 'Found $reslength results!');
+        resultDialog('Search', true, description: 'Found $reslength results!');
         maxpage.value = (reslength / pagesize).ceil();
         Timer.periodic(Durations.short2, (timer) {
           if ((searchResults.length >= 8) ||
@@ -383,7 +375,7 @@ class _ViewerState extends State<Viewer> {
           }
         });
       } else {
-        resultDialog(context.mounted ? context : null, 'Search', false,
+        resultDialog('Search', false,
             description: 'No matching results found!');
       }
     });

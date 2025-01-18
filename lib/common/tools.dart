@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
 
@@ -27,34 +25,6 @@ Map<String, String> cookiesFormater(String orgcookies) {
     cookies[key] = value;
   }
   return cookies;
-}
-
-/// configs文件管理器
-/// 读取config文件
-Future<Configs> configReader(String configfilepath) async {
-  bool isexist = File(configfilepath).existsSync();
-  Map<String, dynamic> json;
-  if (isexist) {
-    json = jsonDecode(File(configfilepath).readAsStringSync());
-  } else {
-    json = jsonDecode(await rootBundle.loadString('jsons/default_config.json'));
-  }
-  return Configs.fromJson(json);
-}
-
-/// 写入config文件
-Future<bool> configWriter(String configfilepath, Configs configs) async {
-  File configFile = File(configfilepath);
-  try {
-    bool isexist = await configFile.exists();
-    if (!isexist) {
-      await configFile.create(recursive: true, exclusive: true);
-    }
-    configFile.writeAsString(jsonEncode(configs.toJson()), flush: true);
-    return true;
-  } catch (e) {
-    return false;
-  }
 }
 
 /// 异步加载图片

@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:localpixiv/models.dart';
+import '../models.dart';
 
 const _defaultworkdata = {
   "type": "illust",
@@ -38,12 +37,3 @@ final Map<String, dynamic> _defaultuserdata = {
   ]
 };
 final UserInfo defaultUserInfo = UserInfo.fromJson(_defaultuserdata);
-
-// 提供五套可选主题色
-const themes = <MaterialColor>[
-  Colors.blue,
-  Colors.cyan,
-  Colors.teal,
-  Colors.green,
-  Colors.red,
-];
