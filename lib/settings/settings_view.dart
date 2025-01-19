@@ -7,6 +7,7 @@ import 'pages/search_page.dart';
 import 'pages/performance_page.dart';
 import 'pages/web_crawler_page.dart';
 import 'pages/other_page.dart';
+import 'pages/about_page.dart';
 import 'settings_controller.dart';
 
 /// Displays the various settings that can be customized by the user.
@@ -83,6 +84,14 @@ class SettingsView extends StatelessWidget {
                         OtherSettingsPage(controller: controller),
                   )),
               title: Text(MyLocalizations.of(context).settingsTitle('other'),
+                  style: Theme.of(context).textTheme.titleMedium)),
+          ListTile(
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => AboutPage(controller: controller),
+                  )),
+              title: Text(MyLocalizations.of(context).settingsTitle('about'),
                   style: Theme.of(context).textTheme.titleMedium)),
         ],
       ),

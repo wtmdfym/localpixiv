@@ -20,7 +20,7 @@ class _SearchSettingsPageState extends State<SearchSettingsPage> {
         appBar: BackAppBar(
             title: MyLocalizations.of(context).settingsTitle('search')),
         body: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(8),
             child:
                 Column(mainAxisSize: MainAxisSize.min, spacing: 20, children: [
               SwitchListTile(

@@ -32,6 +32,13 @@ samples, guidance on mobile development, and a full API reference.
  - [ ] 支持不使用mongoDB
  - [ ] 同步收藏作品
 ## Update History
+ - Version 1.1.1
+
+    - 修改了部分widget的颜色控制，以便适应自动的主题更改。
+    - 调整了user信息的显示，添加InkWell效果，修复了一些bug。
+    - 移除了不必要的动画。
+    - 实现了TabHideStack。
+    - 为LeftRightStack增加了折叠组件的功能，修复了鼠标指针显示错误的bug。
  - Version 1.1.0
 
     - 对设置界面和设置更新进行了调整。

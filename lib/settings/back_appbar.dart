@@ -18,16 +18,16 @@ class BackAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
         toolbarHeight: preferredSize.height,
         backgroundColor: backgroundColor,
-        leading: Tooltip(
-            message: 'Back',
-            child: IconButton(
-                onPressed: () {
-                  if (onPop != null) {
-                    onPop!();
-                  }
-                  Navigator.pop(context);
-                },
-                icon: Icon(Icons.arrow_back_outlined))),
+        leading: IconButton(
+          onPressed: () {
+            if (onPop != null) {
+              onPop!();
+            }
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back_outlined),
+          tooltip: 'Back',
+        ),
         title: Text(
           title,
           style: Theme.of(context).textTheme.titleMedium,

@@ -1,7 +1,9 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:localpixiv/models.dart';
 import 'package:mongo_dart/mongo_dart.dart' as mongo;
+
+import '../models.dart';
 
 /// cookies 格式化为 map
 Map<String, String> cookiesFormater(String orgcookies) {
@@ -67,4 +69,46 @@ Future<UserInfo> fetchUserInfo(
   following['workInfos'] = workInfos;
   //following['profileImage'] = '';
   return UserInfo.fromJson(following);
+}
+
+/// Convert pixiv jump link to dircect link.
+const Map<String, String> _convertMap = {
+  '!': '%21',
+  '"': '%22',
+  '#': '%23',
+  '\$': '%24',
+  '%': '%25',
+  '&': '%26',
+  '\'': '%27',
+  '(': '%28',
+  ')': '%29',
+  '*': '%2A',
+  '+': '%2B',
+  ',': '%2C',
+  '/': '%2F',
+  ':': '%3A',
+  ';': '%3B',
+  '<': '%3C',
+  '=': '%3D',
+  '>': '%3E',
+  '?': '%3F',
+  '@': '%40',
+  '[': '%5B',
+  ']': '%5D',
+  '^': '%5E',
+  '`': '%60',
+  '{': '%7B',
+  '|': '%7C',
+  '}': '%7D',
+  '~': '%7E'
+};
+
+String linkConverter(String link) {
+  // /jump.php?
+  link = link.replaceAll('/jump.php?', '');
+  // Special character
+  for (MapEntry entry in _convertMap.entries) {
+    link = link.replaceAll(entry.value, entry.key);
+  }
+  return link;
 }

@@ -32,7 +32,7 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
         appBar: BackAppBar(
             title: MyLocalizations.of(context).settingsTitle('basic')),
         body: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(8),
             child: Form(
                 key: _formKey,
                 canPop: true,

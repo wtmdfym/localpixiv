@@ -28,7 +28,7 @@ class _PerformanceSettingsPageState extends State<PerformanceSettingsPage> {
         appBar: BackAppBar(
             title: MyLocalizations.of(context).settingsTitle('performance')),
         body: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(8),
             child:
                 Column(mainAxisSize: MainAxisSize.min, spacing: 20, children: [
               Row(

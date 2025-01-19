@@ -8,13 +8,13 @@ import 'localization/localization_intl.dart';
 import 'models.dart';
 import 'settings/pages/basic_page.dart';
 import 'widgets/lazyloadtabview.dart';
-import 'states/home.dart';
-import 'states/viewer.dart';
-import 'states/followings.dart';
+import 'pages/home_page.dart';
+import 'pages/viewer_page.dart';
+import 'pages/followings_page.dart';
 import 'settings/settings_view.dart';
 import 'settings/settings_controller.dart';
 import 'common/customnotifier.dart';
-import 'common/customwidgets.dart';
+// import 'common/customwidgets.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp(
@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
           child: SettingsView(
             controller: settingsController,
           )),
-      StackData(index: 4, child: ResizableWidget()),
+      StackData(index: 4, child: Text('Working......')),
     ];
     return MultiProvider(
       providers: [
@@ -144,6 +144,7 @@ class MyApp extends StatelessWidget {
                           Tab(text: 'Test', icon: Icon(Icons.build))
                         ],
                         controller: settingsController,
+                        pixivDb: pixivDb,
                       ),
                       Consumer<WorkBookmarkModel>(
                         builder: (context, value, child) {

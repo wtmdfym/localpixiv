@@ -1,10 +1,13 @@
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:localpixiv/common/customnotifier.dart';
-import 'package:localpixiv/models.dart';
-import 'package:localpixiv/settings/settings_controller.dart';
-import 'package:localpixiv/widgets/workcontainer.dart';
+
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
+import 'package:mongo_dart/mongo_dart.dart' show Db;
+
+import '../pages/work_detail_page.dart';
+import '../common/customnotifier.dart';
+import '../models.dart';
+import '../settings/settings_controller.dart';
 
 /// 使用多个tabbar控制同一个indexedstage
 class MutiTabbar extends StatefulWidget {
@@ -12,10 +15,13 @@ class MutiTabbar extends StatefulWidget {
       {super.key,
       required this.mainTabs,
       required this.initialIndex,
-      required this.controller});
+      required this.controller,
+      required this.pixivDb});
   final List<Tab> mainTabs;
   final int initialIndex;
   final SettingsController controller;
+  // TODO 修改
+  final Db pixivDb;
 
   @override
   State<StatefulWidget> createState() {
@@ -59,17 +65,10 @@ class MutiTabbarState extends State<MutiTabbar> with TickerProviderStateMixin {
         _dargEOController.reverse();
         context.read<StackChangeNotifier>().addStack(
             details.data.$2.title,
-            WorkDetialDisplayer(
-              hostPath: details.data.$1,
-              cacheRate: widget.controller.imageCacheRate,
+            WorkDetailPage(
+              controller: widget.controller,
               workInfo: details.data.$2,
-              onBookmarked: (isLiked, workId, userName) =>
-                  Provider.of<WorkBookmarkModel>(context, listen: false)
-                      .changebookmark(
-                isLiked,
-                workId,
-                userName,
-              ),
+              pixivDb: widget.pixivDb,
             ));
       },
       builder: (context, candidateData, rejectedData) {

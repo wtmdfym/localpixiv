@@ -3,10 +3,9 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 
 import '../../localization/localization_intl.dart';
 import '../back_appbar.dart';
+import '../settings_controller.dart';
 
 /// Theme
-
-import '../settings_controller.dart';
 
 class ThemeSettingsPage extends StatefulWidget {
   const ThemeSettingsPage({super.key, required this.controller});
@@ -99,7 +98,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
           backgroundColor: _color,
         ),
         body: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(8),
             child:
                 Column(mainAxisSize: MainAxisSize.min, spacing: 20, children: [
               DropdownButton<ThemeMode>(

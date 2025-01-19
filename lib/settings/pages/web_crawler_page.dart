@@ -67,7 +67,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: SingleChildScrollView(
                 child: Padding(
-                    padding: EdgeInsets.all(20),
+                    padding:const EdgeInsets.all(8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       spacing: 20,

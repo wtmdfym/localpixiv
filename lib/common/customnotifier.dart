@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:localpixiv/common/defaultdatas.dart';
-import 'package:localpixiv/models.dart';
+
+import '../common/defaultdatas.dart';
+import '../models.dart';
 
 /// 作品信息变更捕捉器
 class WorkInfoNotifier extends ValueNotifier<WorkInfo> {

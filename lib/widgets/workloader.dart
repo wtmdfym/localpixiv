@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:localpixiv/common/tools.dart';
+import '../common/tools.dart';
 
 /// 图片异步加载器
 class ImageLoader extends StatelessWidget {

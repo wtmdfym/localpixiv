@@ -1,8 +1,29 @@
 {
   "@@locale": "en",
+  "@@last_modified": "2025-01-19T23:03:00.144067",
   "appTitle": "Local Pixiv",
   "@appTitle": {
     "description": "Title for the application",
+    "type": "text",
+    "placeholders": {}
+  },
+  "like": "{isLiked,select, y{Cancel Bookmark}n{Bookmark}other{}}",
+  "@like": {
+    "description": "Show tooltip to tell user if they click the button what will happen.",
+    "type": "text",
+    "placeholders": {
+      "isLiked": {}
+    }
+  },
+  "page": "{operation,select, p{Prev}j{Jump}n{Next}i{Page}other{}}",
+  "@page": {
+    "type": "text",
+    "placeholders": {
+      "operation": {}
+    }
+  },
+  "notFollowingWarn": "NOT FOLLOWING NOW!",
+  "@notFollowingWarn": {
     "type": "text",
     "placeholders": {}
   },
@@ -20,7 +41,7 @@
       "text": {}
     }
   },
-  "settingsTitle": "{choice,select, basic{Basic Settings}theme{Theme Settings}search{Search Settings}performance{Performance Settings}webCrawler{WebCrawler Settings}other{Other Settings}}",
+  "settingsTitle": "{choice,select, basic{Basic Settings}theme{Theme Settings}search{Search Settings}performance{Performance Settings}webCrawler{WebCrawler Settings}other{Other Settings}about{About}}",
   "@settingsTitle": {
     "description": "Titles of different settingPages",
     "type": "text",
@@ -28,7 +49,7 @@
       "choice": {}
     }
   },
-  "theme": "{choice,select, system{System Theme}light{Light Theme}dark{Dark Theme}other{}}",
+  "theme": "{choice,select, system{System Theme}light{Light Theme}dark{Dark Theme}other{Select key error}}",
   "@theme": {
     "type": "text",
     "placeholders": {
@@ -47,5 +68,24 @@
     "placeholders": {
       "choice": {}
     }
+  },
+  "actions": "{action,select, y{Yes}n{No}a{Apply}c{Cancel}other{}}",
+  "@actions": {
+    "type": "text",
+    "placeholders": {
+      "action": {}
+    }
+  },
+  "account": "{choice,select, ne{Account Name or E-mail}c{Account Cookie}i{Account Info}other{}}",
+  "@account": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "openLink": "Open Link ?",
+  "@openLink": {
+    "type": "text",
+    "placeholders": {}
   }
 }

@@ -1,8 +1,11 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:localpixiv/common/tools.dart';
 import 'package:toastification/toastification.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../common/tools.dart';
+import '../localization/localization_intl.dart';
 
 //高级搜索输入框
 Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
@@ -206,7 +209,7 @@ Future<String> addClient(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text('Account Info'),
+        title: Text(MyLocalizations.of(context).account('i')),
         content: SizedBox(
             height: 640,
             width: 1080,
@@ -214,38 +217,30 @@ Future<String> addClient(
               TextField(
                 controller: accountNameController,
                 decoration: InputDecoration(
-                  hintText: '输入账号名或E-mail地址',
+                  hintText: MyLocalizations.of(context)
+                      .inputHintText(MyLocalizations.of(context).account('ne')),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
                 ),
-                onSubmitted: (value) {
-                  // 处理输入的文本
-                  // print('输入的文本是: $value');
-                  Navigator.of(context).pop(); // 关闭对话框
-                },
               ),
               TextField(
                 controller: accountCookieController,
                 minLines: 10,
                 maxLines: 10,
                 decoration: InputDecoration(
-                  hintText: '输入账号的Cookies',
+                  hintText: MyLocalizations.of(context)
+                      .inputHintText(MyLocalizations.of(context).account('c')),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
                 ),
-                onSubmitted: (value) {
-                  // 处理输入的文本
-                  //print('输入的文本是: $value');
-                  Navigator.of(context).pop(); // 关闭对话框
-                },
               ),
             ])),
         actions: <Widget>[
           TextButton(
             child: Text(
-              '确定',
+              MyLocalizations.of(context).actions('a'),
             ),
             onPressed: () {
               Map<String, String> cookies =
@@ -256,15 +251,15 @@ Future<String> addClient(
                   'cookies': cookies
                 };
               }
-              Navigator.of(context).pop(); // 关闭对话框
+              Navigator.of(context).pop();
             },
           ),
           TextButton(
             child: Text(
-              '取消',
+              MyLocalizations.of(context).actions('c'),
             ),
             onPressed: () {
-              Navigator.of(context).pop(); // 关闭对话框
+              Navigator.of(context).pop();
             },
           ),
         ],
@@ -279,16 +274,48 @@ Future<String> addClient(
   }
 }
 
-void resultDialog(String operation, bool success,
-    {String? description}) async {
+void resultDialog(String operation, bool success, {String? description}) async {
   toastification.show(
     type: success ? ToastificationType.success : ToastificationType.error,
     style: ToastificationStyle.flatColored,
     alignment: Alignment.bottomLeft,
     autoCloseDuration: Duration(seconds: 3),
     title: Text(
-      success ? '$operation successful' : '$operation failed',
+      success ? '$operation success!' : '$operation fail!',
     ),
     description: description != null ? Text(description) : null,
+  );
+}
+
+void openLinkDialog(BuildContext context, Uri url) async {
+  final String title = MyLocalizations.of(context).openLink;
+  await showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(
+        'URL: $url',
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: Text(
+            MyLocalizations.of(context).actions('y'),
+          ),
+          onPressed: () {
+            launchUrl(url).then((success) =>
+                success ? {} : {resultDialog(title.toLowerCase(), success)});
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          child: Text(
+            MyLocalizations.of(context).actions('n'),
+          ),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    ),
   );
 }

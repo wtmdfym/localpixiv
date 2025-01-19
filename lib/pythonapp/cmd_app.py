@@ -131,7 +131,7 @@ class AsyncThreadingManager(threading.Thread):
             sys.stdout.write("OVER\n")
             return
         self.downloader = Analyzer(
-            self.config_dict["save_path"],
+            self.config_dict["host_path"],
             self.clientpool,
             self.config_dict["download_type"],
             self.semaphore,

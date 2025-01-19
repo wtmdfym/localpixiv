@@ -382,18 +382,5 @@ class StackData {
       this.notRemoved = true});
 }
 
-/// 搜索操作回调函数
-typedef NeedSearchCallback = void Function(String needSearch);
-
-/// 打开新窗口操作回调函数
 typedef OpenTabCallback = void Function(String userName);
-
-/// 收藏操作回调函数
-typedef WorkBookmarkCallback = void Function(
-    bool isLiked, int workId, String userName);
-
-/// 改变index回调函数
 typedef ChangeIndexCallback = void Function(int index);
-
-/// 改变page
-typedef ChangePageCallback = void Function(int index);

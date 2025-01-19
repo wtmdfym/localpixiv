@@ -1,15 +1,17 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:localpixiv/common/customnotifier.dart';
-import 'package:localpixiv/common/defaultdatas.dart';
-import 'package:localpixiv/common/tools.dart';
-import 'package:localpixiv/models.dart';
-import 'package:localpixiv/settings/settings_controller.dart';
-import 'package:localpixiv/widgets/page_controller_row.dart';
-import 'package:localpixiv/widgets/userdisplayer.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
+import 'package:mongo_dart/mongo_dart.dart' show Db, DbCollection, where;
 import 'package:provider/provider.dart';
+
+import '../containers/user_container.dart';
+import '../common/customnotifier.dart';
+import '../common/defaultdatas.dart';
+import '../common/tools.dart';
+import '../models.dart';
+import '../settings/settings_controller.dart';
+import '../widgets/page_controller_row.dart';
+import 'user_detail_page.dart';
 
 class FollowingsDisplayer extends StatefulWidget {
   const FollowingsDisplayer({
@@ -18,7 +20,7 @@ class FollowingsDisplayer extends StatefulWidget {
     required this.pixivDb,
   });
   final SettingsController controller;
-  final mongo.Db pixivDb;
+  final Db pixivDb;
 
   @override
   State<StatefulWidget> createState() => _FollowingsDisplayerState();
@@ -34,14 +36,14 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   final List<UserInfo> userInfos = [];
 
   void dataLoader() async {
-    mongo.DbCollection followingCollection =
+    final DbCollection followingCollection =
         widget.pixivDb.collection('All Followings');
     // 计算page
-    reslength = await followingCollection.count(mongo.where.exists('userName'));
+    reslength = await followingCollection.count(where.exists('userName'));
     maxpage.value = (reslength / pagesize).ceil();
     // 异步加载数据
     Stream<Map<String, dynamic>> followings = followingCollection
-        .find(mongo.where.exists('userName').excludeFields(['_id']));
+        .find(where.exists('userName').excludeFields(['_id']));
     followings.forEach((following) {
       if (following['newestWorks'] != null) {
         final List<WorkInfo> workInfo = [
@@ -102,7 +104,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     void openTabCallback(String userName) {
       context.read<StackChangeNotifier>().addStack(
           userName,
-          UserDetailsDisplayer(
+          UserDetailPage(
             controller: widget.controller,
             userName: userName,
             pixivDb: widget.pixivDb,
@@ -117,7 +119,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     }
 
     return Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -125,25 +127,25 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
             Expanded(
                 child: ValueListenableBuilder(
                     valueListenable: userInfosNotifer,
-                    builder: (context, userInfos, child) => ListView.separated(
-                          padding: EdgeInsets.only(left: 12, right: 20),
+                    builder: (context, userInfos, child) => ListView.builder(
+                          padding:const EdgeInsets.only(right: 12),
                           shrinkWrap: true,
                           itemCount: pagesize,
-                          itemBuilder: (context, index) =>
-                              FollowingInfoDisplayer(
+                          cacheExtent: 240,
+                          itemBuilder: (context, index) => UserContainer(
+                            height: 240,
                             controller: widget.controller,
                             userInfo: userInfos[index],
                             onTab: (userName) => openTabCallback(userName),
                             onWorkBookmarked: (isLiked, workId, userName) =>
-                                Provider.of<WorkBookmarkModel>(context,
-                                        listen: false)
+                                context
+                                    .read<WorkBookmarkModel>()
                                     .changebookmark(
-                              isLiked,
-                              workId,
-                              userName,
-                            ),
+                                      isLiked,
+                                      workId,
+                                      userName,
+                                    ),
                           ),
-                          separatorBuilder: (context, index) => Divider(),
                         ))),
             // 翻页控件
             PageControllerRow(

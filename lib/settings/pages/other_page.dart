@@ -21,7 +21,7 @@ class _OtherSettingsPageState extends State<OtherSettingsPage> {
             title: MyLocalizations.of(context).settingsTitle('other')),
         body:
            Padding(
-            padding: EdgeInsets.all(20),
+            padding:const EdgeInsets.all(8),
             child: Column(mainAxisSize: MainAxisSize.min, spacing: 20, children: [])));
   }
 }

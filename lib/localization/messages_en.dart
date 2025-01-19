@@ -21,26 +21,40 @@ class MessageLookup extends MessageLookupByLibrary {
   @override
   String get localeName => 'en';
 
-  static m0(hintText) => "Please input ${hintText}";
+  static m0(choice) => "${Intl.select(choice, {'ne': 'Account Name or E-mail', 'c': 'Account Cookie', 'i': 'Account Info', 'other': '', })}";
 
-  static m1(text) => "Invalid format of ${text}";
+  static m1(action) => "${Intl.select(action, {'y': 'Yes', 'n': 'No', 'a': 'Apply', 'c': 'Cancel', 'other': '', })}";
 
-  static m2(choice) => "${Intl.select(choice, {'hostPath': 'Host Path', 'chooseColor': 'Click to select color you want to change', 'enable': 'Enable', 'proxy': 'Proxy', 'resverseProxy': 'Resverse Proxy', 'resverseProxyExample': 'Resverse Proxy (eg i.pximg.net)', 'downloadstyle': 'Download Style', 'concurrency': 'Concurrency', 'largerThanOne': 'Concurrency must large than 1', 'clientPool': 'ClientPool', 'add': 'Add', 'other': 'Select key error', })}";
+  static m2(hintText) => "Please input ${hintText}";
 
-  static m3(choice) => "${Intl.select(choice, {'basic': 'Basic Settings', 'theme': 'Theme Settings', 'search': 'Search Settings', 'performance': 'Performance Settings', 'webCrawler': 'WebCrawler Settings', 'other': 'Other Settings', })}";
+  static m3(text) => "Invalid format of ${text}";
 
-  static m4(choice) => "${Intl.select(choice, {'system': 'System Theme', 'light': 'Light Theme', 'dark': 'Dark Theme', 'other': '', })}";
+  static m4(isLiked) => "${Intl.select(isLiked, {'y': 'Cancel Bookmark', 'n': 'Bookmark', 'other': '', })}";
+
+  static m5(operation) => "${Intl.select(operation, {'p': 'Prev', 'j': 'Jump', 'n': 'Next', 'i': 'Page', 'other': '', })}";
+
+  static m6(choice) => "${Intl.select(choice, {'hostPath': 'Host Path', 'chooseColor': 'Click to select color you want to change', 'enable': 'Enable', 'proxy': 'Proxy', 'resverseProxy': 'Resverse Proxy', 'resverseProxyExample': 'Resverse Proxy (eg i.pximg.net)', 'downloadstyle': 'Download Style', 'concurrency': 'Concurrency', 'largerThanOne': 'Concurrency must large than 1', 'clientPool': 'ClientPool', 'add': 'Add', 'other': 'Select key error', })}";
+
+  static m7(choice) => "${Intl.select(choice, {'basic': 'Basic Settings', 'theme': 'Theme Settings', 'search': 'Search Settings', 'performance': 'Performance Settings', 'webCrawler': 'WebCrawler Settings', 'other': 'Other Settings', 'about': 'About', })}";
+
+  static m8(choice) => "${Intl.select(choice, {'system': 'System Theme', 'light': 'Light Theme', 'dark': 'Dark Theme', 'other': 'Select key error', })}";
 
   @override
   final Map<String, dynamic> messages = _notInlinedMessages(_notInlinedMessages);
 
   static Map<String, dynamic> _notInlinedMessages(_) => {
-      'appTitle': MessageLookupByLibrary.simpleMessage('Local Pixiv'),
-    'inputHintText': m0,
-    'invalidFormat': m1,
+      'account': m0,
+    'actions': m1,
+    'appTitle': MessageLookupByLibrary.simpleMessage('Local Pixiv'),
+    'inputHintText': m2,
+    'invalidFormat': m3,
+    'like': m4,
+    'notFollowingWarn': MessageLookupByLibrary.simpleMessage('NOT FOLLOWING NOW!'),
+    'openLink': MessageLookupByLibrary.simpleMessage('Open Link ?'),
+    'page': m5,
     'setFontSize': MessageLookupByLibrary.simpleMessage('FontSize (This is an example.)'),
-    'settingsContain': m2,
-    'settingsTitle': m3,
-    'theme': m4
+    'settingsContain': m6,
+    'settingsTitle': m7,
+    'theme': m8
   };
 }

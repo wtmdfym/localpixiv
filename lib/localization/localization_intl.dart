@@ -48,7 +48,25 @@ class MyLocalizations {
     );
   }
 
-  // Setting
+  // Containers
+  String like(String isLiked) => Intl.select(
+      isLiked, {'y': 'Cancel Bookmark', 'n': 'Bookmark', 'other': ''},
+      args: [isLiked],
+      name: 'like',
+      desc:
+          'Show tooltip to tell user if they click the button what will happen.');
+
+  String page(String operation) => Intl.select(
+        operation,
+        {'p': 'Prev', 'j': 'Jump', 'n': 'Next', 'i': 'Page', 'other': ''},
+        args: [operation],
+        name: 'page',
+      );
+
+  String get notFollowingWarn =>
+      Intl.message('NOT FOLLOWING NOW!', name: 'notFollowingWarn');
+
+  // Settings
   String inputHintText(String hintText) =>
       Intl.message('Please input $hintText',
           name: 'inputHintText', args: [hintText]);
@@ -62,14 +80,14 @@ class MyLocalizations {
           'search': 'Search Settings',
           'performance': 'Performance Settings',
           'webCrawler': 'WebCrawler Settings',
-          'other': 'Other Settings'
+          'other': 'Other Settings',
+          'about': 'About',
         },
         name: 'settingsTitle',
         desc: 'Titles of different settingPages',
         args: [choice],
       );
 
-  // Theme
   String theme(String choice) => Intl.select(
       choice,
       {
@@ -107,6 +125,22 @@ class MyLocalizations {
       },
       name: 'settingsContain',
       args: [choice]);
+
+  // Dialogs
+  String actions(String action) => Intl.select(
+      action, {'y': 'Yes', 'n': 'No', 'a': 'Apply', 'c': 'Cancel', 'other': ''},
+      name: 'actions', args: [action]);
+  String account(String choice) => Intl.select(
+      choice,
+      {
+        'ne': 'Account Name or E-mail',
+        'c': 'Account Cookie',
+        'i': 'Account Info',
+        'other': ''
+      },
+      name: 'account',
+      args: [choice]);
+  String get openLink => Intl.message('Open Link ?', name: 'openLink');
 }
 
 //Locale代理类

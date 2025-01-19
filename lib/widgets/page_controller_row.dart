@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:localpixiv/models.dart';
+import '../localization/localization_intl.dart';
+
+typedef ChangePageCallback = void Function(int index);
 
 class PageControllerRow extends StatefulWidget {
   const PageControllerRow({
@@ -82,40 +84,45 @@ class _PageControllerRowState extends State<PageControllerRow> {
                   onPressed: prevPage,
                   icon: Icon(
                     Icons.navigate_before,
+                    size: Theme.of(context).iconTheme.size,
                   ),
                   label: Text(
-                    'Prev',
+                    MyLocalizations.of(context).page('p'),
                   ),
                 ),
                 ConstrainedBox(
-                    constraints: BoxConstraints(maxWidth: 200),
-                    child: TextField(
-                      controller: _pageController,
-                      decoration: InputDecoration(label: Text('Page')),
-                      maxLength: 10,
-                      onTapOutside: (_) {
-                        if (int.tryParse(_pageController.text) == null) {
-                          _pageController.text =
-                              '$_page/${widget.maxpage.value}';
-                        }
-                      },
+                    constraints: BoxConstraints(maxWidth: 300),
+                    child: Row(
+                      spacing: 20,
+                      children: [
+                        Text(MyLocalizations.of(context).page('i')),
+                        Expanded(
+                            child: TextField(
+                          controller: _pageController,
+                          maxLines: 1,
+                          onTapOutside: (_) {
+                            if (int.tryParse(_pageController.text) == null) {
+                              _pageController.text =
+                                  '$_page/${widget.maxpage.value}';
+                            }
+                          },
+                        ))
+                      ],
                     )),
-                ElevatedButton.icon(
+                ElevatedButton(
                     onPressed: jumpToPage,
-                    icon: Icon(
-                      Icons.next_plan_outlined,
-                    ),
-                    label: Text(
-                      "Jump",
+                    child: Text(
+                      MyLocalizations.of(context).page('j'),
                     )),
                 ElevatedButton.icon(
                     onPressed: nextPage,
                     icon: Icon(
                       Icons.navigate_next,
+                      size: Theme.of(context).iconTheme.size,
                     ),
                     iconAlignment: IconAlignment.end,
                     label: Text(
-                      "Next",
+                      MyLocalizations.of(context).page('n'),
                     )),
               ],
             )));

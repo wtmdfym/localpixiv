@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models.dart';
 
+import '../models.dart';
 import 'settings_service.dart';
 
 /// A class that many Widgets can interact with to read user settings, update
@@ -173,6 +173,7 @@ class SettingsController with ChangeNotifier {
 
     // Important! Inform listeners a change has occurred.
     notifyListeners();
+    _save();
   }
 
   /// Update and persist the Fontsize based on the user's selection.
@@ -211,7 +212,9 @@ class SettingsController with ChangeNotifier {
 
   IconThemeData _getIconTheme(double iconSize) {
     return IconThemeData(
-        size: iconSize, opticalSize: iconSize * 2, applyTextScaling: true);
+        size: iconSize * 1.25,
+        opticalSize: iconSize * 2,
+        applyTextScaling: false);
   }
 
   // Search

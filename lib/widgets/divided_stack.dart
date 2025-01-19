@@ -12,7 +12,8 @@ class DividedStack extends StatefulWidget {
       this.dividerSpacing = 8,
       this.minLeftOccupied = 0.2,
       this.maxLeftOccupied = 0.4,
-      this.defaultLeftOccupied = 0.2}) {
+      this.defaultLeftOccupied = 0.2,
+      this.isFoldable = true}) {
     assert((0 <= minLeftOccupied) || (minLeftOccupied < maxLeftOccupied),
         'The value of minLeftOccupied must be positive and smaller than maxLeftOccupied');
     assert((0 < maxLeftOccupied) || (maxLeftOccupied <= 1),
@@ -28,6 +29,9 @@ class DividedStack extends StatefulWidget {
   final double minLeftOccupied;
   final double maxLeftOccupied;
   final double defaultLeftOccupied;
+
+  /// Fold the widget if drag to the edge of stack.
+  final bool isFoldable;
   @override
   State<StatefulWidget> createState() {
     return _DividedStackState();
@@ -35,10 +39,13 @@ class DividedStack extends StatefulWidget {
 }
 
 class _DividedStackState extends State<DividedStack> {
-  late double _dividerPosition; // 分隔条初始位置
-  late double _movingdividerPosition; // 分隔条移动时的位置
-  late bool isLeftRight; // 是否为左右布局（否则为上下布局）
+  late double _dividerPosition; // The initial position of divider.
+  late double _movingdividerPosition; // The position of divider when moving.
+  late bool
+      isLeftRight; // Use LeftRight layout if true, otherwise use UpDown layout.
+  bool isDraging = false;
   bool changeMouseCursor = false;
+  _FoldLeftRight foldLeftRigth = _FoldLeftRight.neither;
 
   @override
   void initState() {
@@ -59,7 +66,7 @@ class _DividedStackState extends State<DividedStack> {
       final double rightSpacing =
           maxSpacing * (1 - _dividerPosition) - widget.dividerSpacing;
       return MouseRegion(
-          cursor: changeMouseCursor
+          cursor: isDraging || changeMouseCursor
               ? isLeftRight
                   ? SystemMouseCursors.resizeLeftRight
                   : SystemMouseCursors.resizeUpDown
@@ -68,60 +75,119 @@ class _DividedStackState extends State<DividedStack> {
             Positioned(
                 left: 0,
                 top: 0,
-                width: isLeftRight ? leftSpacing : constraints.maxWidth,
-                height: isLeftRight ? constraints.maxHeight : leftSpacing,
-                child: widget.leftWidget ?? SizedBox()),
+                width: foldLeftRigth == _FoldLeftRight.left
+                    ? 0
+                    : isLeftRight
+                        ? leftSpacing
+                        : constraints.maxWidth,
+                height: foldLeftRigth == _FoldLeftRight.left
+                    ? 0
+                    : isLeftRight
+                        ? constraints.maxHeight
+                        : leftSpacing,
+                child: Offstage(
+                    offstage: foldLeftRigth == _FoldLeftRight.left,
+                    child: widget.leftWidget ?? SizedBox())),
             Positioned(
                 right: 0,
                 bottom: 0,
-                width: isLeftRight ? rightSpacing : constraints.maxWidth,
-                height: isLeftRight ? constraints.maxHeight : rightSpacing,
-                child: widget.rightWidget ?? SizedBox()),
+                width: foldLeftRigth == _FoldLeftRight.right
+                    ? 0
+                    : isLeftRight
+                        ? rightSpacing
+                        : constraints.maxWidth,
+                height: foldLeftRigth == _FoldLeftRight.right
+                    ? 0
+                    : isLeftRight
+                        ? constraints.maxHeight
+                        : rightSpacing,
+                child: Offstage(
+                    offstage: foldLeftRigth == _FoldLeftRight.right,
+                    child: widget.rightWidget ?? SizedBox())),
             Positioned(
-              left: isLeftRight
-                  ? constraints.maxWidth * _dividerPosition -
-                      (widget.dividerWidth / 2)
-                  : 0,
-              top: isLeftRight
-                  ? 0
-                  : constraints.maxHeight * _dividerPosition -
-                      (widget.dividerWidth / 2),
-              width: isLeftRight ? widget.dividerWidth : constraints.maxWidth,
-              height: isLeftRight ? constraints.maxHeight : widget.dividerWidth,
-              child: Draggable(
-                  axis: widget.dividedDirection,
-                  feedback: ColoredBox(
-                    color: Colors.cyanAccent,
-                  ),
-                  childWhenDragging: ColoredBox(
-                    color: Colors.cyanAccent,
-                  ),
-                  onDragStarted: () => setState(() {
-                        changeMouseCursor = true;
-                      }),
-                  onDragUpdate: (details) {
-                    setState(() {
-                      _movingdividerPosition +=
-                          (isLeftRight ? details.delta.dx : details.delta.dy) /
-                              constraints.maxWidth;
-                      if (_movingdividerPosition > widget.maxLeftOccupied) {
-                        _dividerPosition = widget.maxLeftOccupied;
-                      } else if (_movingdividerPosition <
-                          widget.minLeftOccupied) {
-                        _dividerPosition = widget.minLeftOccupied;
-                      } else {
-                        _dividerPosition = _movingdividerPosition;
-                      }
-                    });
-                  },
-                  onDragEnd: (details) {
-                    setState(() {
-                      changeMouseCursor = false;
-                      _movingdividerPosition = _dividerPosition;
-                    });
-                  },
-                  child: ColoredBox(color: Colors.grey)),
-            ),
+                left: isLeftRight
+                    ? constraints.maxWidth * _dividerPosition -
+                        (widget.dividerWidth / 2)
+                    : 0,
+                top: isLeftRight
+                    ? 0
+                    : constraints.maxHeight * _dividerPosition -
+                        (widget.dividerWidth / 2),
+                width: isLeftRight ? widget.dividerWidth : constraints.maxWidth,
+                height:
+                    isLeftRight ? constraints.maxHeight : widget.dividerWidth,
+                child: MouseRegion(
+                  onEnter: (event) => setState(() => changeMouseCursor = true),
+                  onExit: (event) => setState(() => changeMouseCursor = false),
+                  child: Draggable(
+                      axis: widget.dividedDirection,
+                      feedback: ColoredBox(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      childWhenDragging: ColoredBox(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                      onDragStarted: () => setState(() {
+                            isDraging = true;
+                          }),
+                      onDragUpdate: (details) {
+                        setState(() {
+                          _movingdividerPosition += (isLeftRight
+                                  ? details.delta.dx
+                                  : details.delta.dy) /
+                              (isLeftRight
+                                  ? constraints.maxWidth
+                                  : constraints.maxHeight);
+                          if (foldLeftRigth == _FoldLeftRight.neither) {
+                            if (_movingdividerPosition >
+                                widget.maxLeftOccupied) {
+                              _dividerPosition = widget.maxLeftOccupied;
+                            } else if (_movingdividerPosition <
+                                widget.minLeftOccupied) {
+                              _dividerPosition = widget.minLeftOccupied;
+                            } else {
+                              _dividerPosition = _movingdividerPosition;
+                            }
+                            if (_movingdividerPosition <
+                                widget.minLeftOccupied / 2) {
+                              foldLeftRigth = _FoldLeftRight.left;
+                            } else if (_movingdividerPosition >
+                                (1 + widget.maxLeftOccupied) / 2) {
+                              foldLeftRigth = _FoldLeftRight.right;
+                            }
+                          } else if (foldLeftRigth == _FoldLeftRight.left) {
+                            if (_movingdividerPosition >=
+                                widget.minLeftOccupied / 2) {
+                              foldLeftRigth = _FoldLeftRight.neither;
+                            }
+                            _dividerPosition = widget.dividerWidth /
+                                (isLeftRight
+                                    ? constraints.maxWidth
+                                    : constraints.maxHeight);
+                          } else if (foldLeftRigth == _FoldLeftRight.right) {
+                            if (_movingdividerPosition <=
+                                (1 + widget.maxLeftOccupied) / 2) {
+                              foldLeftRigth = _FoldLeftRight.neither;
+                            }
+                            _dividerPosition = (isLeftRight
+                                    ? constraints.maxWidth - widget.dividerWidth
+                                    : constraints.maxHeight -
+                                        widget.dividerWidth) /
+                                (isLeftRight
+                                    ? constraints.maxWidth
+                                    : constraints.maxHeight);
+                          }
+                        });
+                      },
+                      onDragEnd: (details) {
+                        setState(() {
+                          isDraging = false;
+                          _movingdividerPosition = _dividerPosition;
+                        });
+                      },
+                      child:
+                          ColoredBox(color: Theme.of(context).highlightColor)),
+                )),
             for (Positioned positioned in widget.additionalWidgets ?? [])
               positioned
           ]));
@@ -135,3 +201,5 @@ class _DividedStackState extends State<DividedStack> {
     return current;
   }
 }
+
+enum _FoldLeftRight { left, right, neither }
