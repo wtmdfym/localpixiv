@@ -1,71 +1,124 @@
 {
   "@@locale": "zh",
-  "@@last_modified": "2025-01-14T11:22:12.685305",
-  "appTitle": "Flutter APP",
+  "@@last_modified": "2025-01-21T15:19:25.574947",
+  "appTitle": "Localixiv",
   "@appTitle": {
-    "description": "Title for the Demo application",
+    "description": "应用程序标题",
     "type": "text",
     "placeholders": {}
   },
-  "appBarTitle": "重庆大学平均绩点计算器",
-  "@appBarTitle": {
-    "description": "Title for the appBar",
-    "type": "text",
-    "placeholders": {}
-  },
-  "scoreInput": "分数",
-  "@scoreInput": {
-    "description": "scoreInput hintText",
-    "type": "text",
-    "placeholders": {}
-  },
-  "creditInput": "学分",
-  "@creditInput": {
-    "description": "creditInput hintText",
-    "type": "text",
-    "placeholders": {}
-  },
-  "gradePoint": "绩点",
-  "@gradePoint": {
-    "description": "Grade Point hintText",
-    "type": "text",
-    "placeholders": {}
-  },
-  "creditGradePoint": "学分绩点",
-  "@creditGradePoint": {
-    "description": "Credit Grade Point hintText",
-    "type": "text",
-    "placeholders": {}
-  },
-  "scoreType": "{index,select, a{百分制成绩}b{五级制成绩}c{两级制成绩}d{补考、重修}other{}}",
-  "@scoreType": {
-    "description": "scoreType",
+  "tabTitle": "{choice,select, h{首页}v{查看器}f{关注}s{设置}other{}}",
+  "@tabTitle": {
     "type": "text",
     "placeholders": {
-      "index": {}
+      "choice": {}
     }
   },
-  "fivePoint": "{index,select, a{优}b{良}c{中}d{及格}e{不及格}other{}}",
-  "@fivePoint": {
-    "description": "Five-point score",
+  "loader": "{choice,select, ii{无效的图像数据！图像文件可能已损坏。它将被自动删除。}ei{图像加载错误}other{}}",
+  "@loader": {
     "type": "text",
     "placeholders": {
-      "index": {}
+      "choice": {}
     }
   },
-  "twoLevel": "{index,select, p{合格}f{不合格}other{}}",
-  "@twoLevel": {
-    "description": "twoLevel score",
+  "like": "{isLiked,select, y{取消收藏}n{收藏}other{}}",
+  "@like": {
+    "description": "显示工具提示，告诉用户如果他们点击按钮会发生什么。",
     "type": "text",
     "placeholders": {
-      "index": {}
+      "isLiked": {}
     }
   },
-  "theme": "{choice,select, auto{跟随系统}light{亮色主题}dark{暗色主题}other{}}",
+  "pageController": "{operation,select, p{上一页}j{跳转}n{下一页}i{页码}other{}}",
+  "@pageController": {
+    "type": "text",
+    "placeholders": {
+      "operation": {}
+    }
+  },
+  "notFollowingWarn": "未关注！",
+  "@notFollowingWarn": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "homePage": "{choice,select, ef{( ･ω･)☞   (:3 」∠)}ew{输入作品ID}eu{输入用户ID}ek{输入关键词}er{٩( ᐛ )و}ce{连接错误：\n代理不可访问}ped{请检查代理设置。}b{开始}s{停止}c{清除}cf{关注}ci{ID}cu{用户}ct{标签}cr{排名}other{}}",
+  "@homePage": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "noMoreData": "没有更多数据",
+  "@noMoreData": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "viewerPage": "{choice,select, s{搜索}as{高级搜索}l{加载中……}other{}}",
+  "@viewerPage": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "inputHintText": "请输入 {hintText}",
+  "@inputHintText": {
+    "type": "text",
+    "placeholders": {
+      "hintText": {}
+    }
+  },
+  "invalidFormat": "{text} 格式无效",
+  "@invalidFormat": {
+    "type": "text",
+    "placeholders": {
+      "text": {}
+    }
+  },
+  "settingsTitle": "{choice,select, basic{基本设置}theme{主题设置}search{搜索设置}performance{性能设置}webCrawler{网络爬虫设置}other{其他设置}about{关于}}",
+  "@settingsTitle": {
+    "description": "不同设置页面的标题",
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "theme": "{choice,select, system{系统主题}light{浅色主题}dark{深色主题}other{选择键错误}}",
   "@theme": {
     "type": "text",
     "placeholders": {
       "choice": {}
     }
+  },
+  "setFontSize": "字体大小 (这是一个示例)",
+  "@setFontSize": {
+    "description": "字体大小示例",
+    "type": "text",
+    "placeholders": {}
+  },
+  "settingsContain": "{choice,select, hostPath{主机路径}chooseColor{点击选择要更改的颜色}enable{启用}proxy{代理}resverseProxy{反向代理}resverseProxyExample{反向代理 (例如 i.pximg.net)}downloadstyle{下载样式}concurrency{并发数}largerThanOne{并发数必须大于1}clientPool{客户端池}add{添加}other{选��键错误}}",
+  "@settingsContain": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "actions": "{action,select, y{是}n{否}a{应用}c{取消}other{}}",
+  "@actions": {
+    "type": "text",
+    "placeholders": {
+      "action": {}
+    }
+  },
+  "account": "{choice,select, ne{账户名称或邮箱}c{账户Cookie}i{账户信息}other{}}",
+  "@account": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "openLink": "打开链接？",
+  "@openLink": {
+    "type": "text",
+    "placeholders": {}
   }
 }

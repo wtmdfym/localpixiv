@@ -40,6 +40,8 @@ class MyLocalizations {
     return Localizations.of<MyLocalizations>(context, MyLocalizations)!;
   }
 
+  // App
+
   String get appTitle {
     return Intl.message(
       'Local Pixiv',
@@ -48,6 +50,32 @@ class MyLocalizations {
     );
   }
 
+  /*
+  String tabTitle(String choice) => Intl.select(
+        choice,
+        {
+          'h': 'Home',
+          'v': 'Viewer',
+          'f': 'Following',
+          's': 'Settings',
+          'other': ''
+        },
+        args: [choice],
+        name: 'tabTitle',
+      );
+  */
+  // Loader
+  String loader(String choice) => Intl.select(
+        choice,
+        {
+          'ii':
+              'Invalid image data! The image file may be corrupted. It will be deleted automatically.',
+          'ei': 'Error loading image',
+          'other': ''
+        },
+        args: [choice],
+        name: 'loader',
+      );
   // Containers
   String like(String isLiked) => Intl.select(
       isLiked, {'y': 'Cancel Bookmark', 'n': 'Bookmark', 'other': ''},
@@ -56,16 +84,55 @@ class MyLocalizations {
       desc:
           'Show tooltip to tell user if they click the button what will happen.');
 
-  String page(String operation) => Intl.select(
+  String pageController(String operation) => Intl.select(
         operation,
         {'p': 'Prev', 'j': 'Jump', 'n': 'Next', 'i': 'Page', 'other': ''},
         args: [operation],
-        name: 'page',
+        name: 'pageController',
       );
 
   String get notFollowingWarn =>
       Intl.message('NOT FOLLOWING NOW!', name: 'notFollowingWarn');
 
+  // Pages
+  String homePage(String choice) => Intl.select(
+        choice,
+        {
+          'ef': '( ･ω･)☞   (:3 」∠)',
+          'ew': 'Enter work Id',
+          'eu': 'Enter user Id',
+          'ek': 'Enter keywords',
+          'er': '٩( ᐛ )و',
+          'ce': 'ConnectError:\nProxy inaccessible',
+          'ped': 'Please checking proxy settings.',
+          'b': 'Start',
+          's': 'Stop',
+          'c': 'Clear',
+          'cf': 'Followings',
+          'ci': 'Id',
+          'cu': 'User',
+          'ct': 'Tags',
+          'cr': 'Ranking',
+          'other': ''
+        },
+        args: [choice],
+        name: 'homePage',
+      );
+  String get noMoreData => Intl.message(
+        'No more data',
+        name: 'noMoreData',
+      );
+  String viewerPage(String choice) => Intl.select(
+        choice,
+        {
+          's': 'Search',
+          'as': 'Advanced Search',
+          'l': 'Loading......',
+          'other': ''
+        },
+        args: [choice],
+        name: 'viewerPage',
+      );
   // Settings
   String inputHintText(String hintText) =>
       Intl.message('Please input $hintText',
@@ -121,6 +188,10 @@ class MyLocalizations {
         'largerThanOne': 'Concurrency must large than 1',
         'clientPool': 'ClientPool',
         'add': 'Add',
+        'autoOpen': 'Auto open user detial page when click user infos',
+        'autoSearch': 'Auto search when click tag',
+        'icr': 'ImageCacheRate',
+        'nl': 'Not limited',
         'other': 'Select key error'
       },
       name: 'settingsContain',

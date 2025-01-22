@@ -373,14 +373,10 @@ class StackData {
   int index;
   String? title;
   Widget child;
-  bool notRemoved;
 
-  StackData(
-      {required this.index,
-      this.title,
-      required this.child,
-      this.notRemoved = true});
+  StackData({required this.index, this.title, required this.child});
 }
 
 typedef OpenTabCallback = void Function(String userName);
-typedef ChangeIndexCallback = void Function(int index);
+typedef WorkBookmarkCallback = void Function(
+    bool isLiked, int workId, String userName);

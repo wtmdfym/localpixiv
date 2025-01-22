@@ -23,7 +23,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(8),
       // Glue the SettingsController to the theme selection DropdownButton.
       //
       // When a user selects a theme from the dropdown list, the
@@ -86,13 +86,16 @@ class SettingsView extends StatelessWidget {
               title: Text(MyLocalizations.of(context).settingsTitle('other'),
                   style: Theme.of(context).textTheme.titleMedium)),
           ListTile(
-              onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => AboutPage(controller: controller),
-                  )),
-              title: Text(MyLocalizations.of(context).settingsTitle('about'),
-                  style: Theme.of(context).textTheme.titleMedium)),
+            onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AboutPage(controller: controller),
+                )),
+            leading: Icon(Icons.info_outline),
+            title: Text(MyLocalizations.of(context).settingsTitle('about'),
+                style: Theme.of(context).textTheme.titleMedium),
+            trailing: Icon(Icons.navigate_next),
+          ),
         ],
       ),
     );

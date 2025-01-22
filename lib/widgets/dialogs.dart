@@ -7,7 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../common/tools.dart';
 import '../localization/localization_intl.dart';
 
-//高级搜索输入框
+// Advanced search input dialog
 Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
   Map<String, dynamic> submitContent = {};
   final andkeywords = TextEditingController();

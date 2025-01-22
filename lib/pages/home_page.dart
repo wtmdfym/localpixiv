@@ -4,6 +4,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../localization/localization_intl.dart';
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
     super.key,
@@ -22,16 +24,6 @@ class _MyHomePageState extends State<MyHomePage> {
   int getType = 0;
   bool isstart = false;
   //bool needprint = true;
-  final List<String> hittexts = [
-    '( ･ω･)☞   (:3 」∠)',
-    'Enter work Id',
-    'Enter user Id',
-    'Enter keywords'
-  ];
-  // 0->followings
-  // 1->id
-  // 2->uid
-  // 3->tag
   final ValueNotifier<String> outputs = ValueNotifier('');
   final String addata = '';
   // 限制最大显示文本量
@@ -84,10 +76,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 context: context,
                 builder: (context) {
                   return AlertDialog(
-                    title: Text('ConnectError:\nProxy inaccessible'),
+                    title: Text(
+                      MyLocalizations.of(context).homePage('ce'),
+                    ),
                     titleTextStyle: TextStyle(color: Colors.redAccent),
                     content: Text(
-                      '请检查代理设置是否正确',
+                      MyLocalizations.of(context).homePage('ped'),
                       textAlign: TextAlign.center,
                     ),
                   );
@@ -149,6 +143,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final List<String> hittexts = [
+      MyLocalizations.of(context).homePage('ef'),
+      MyLocalizations.of(context).homePage('ew'),
+      MyLocalizations.of(context).homePage('eu'),
+      MyLocalizations.of(context).homePage('ek'),
+      MyLocalizations.of(context).homePage('er')
+    ];
+    // 0->followings
+    // 1->id
+    // 2->uid
+    // 3->tag
+    // 4->rank
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Column(children: <Widget>[
@@ -189,7 +195,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                       setState(() => isstart = true);
                     },
-              child: Text('Start'),
+              child: Text(MyLocalizations.of(context).homePage('b')),
             ),
             ElevatedButton(
               onPressed: isstart
@@ -198,11 +204,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(() => isstart = false);
                     }
                   : () {},
-              child: Text('Stop'),
+              child: Text(MyLocalizations.of(context).homePage('s')),
             ),
             ElevatedButton(
               onPressed: () => outputs.value = '',
-              child: Text('Clear'),
+              child: Text(MyLocalizations.of(context).homePage('c')),
             ),
           ],
         ),
@@ -210,28 +216,34 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Expanded(
                 child: CheckboxListTile(
-                    title: Text('Followings'),
+                    title: Text(MyLocalizations.of(context).homePage('cf')),
                     value: getType == 0 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 0 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text('Id'),
+                    title: Text(MyLocalizations.of(context).homePage('ci')),
                     value: getType == 1 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 1 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text('userId'),
+                    title: Text(MyLocalizations.of(context).homePage('cu')),
                     value: getType == 2 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 2 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text('Tag'),
+                    title: Text(MyLocalizations.of(context).homePage('ct')),
                     value: getType == 3 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 3 : {}))),
+            Expanded(
+                child: CheckboxListTile(
+                    title: Text(MyLocalizations.of(context).homePage('cr')),
+                    value: getType == 4 ? true : false,
+                    onChanged: (value) =>
+                        setState(() => value! ? getType = 4 : {}))),
           ],
         ),
         Expanded(

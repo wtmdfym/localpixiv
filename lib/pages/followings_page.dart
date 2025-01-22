@@ -18,9 +18,11 @@ class FollowingsDisplayer extends StatefulWidget {
     super.key,
     required this.controller,
     required this.pixivDb,
+    required this.onBookmarked,
   });
   final SettingsController controller;
   final Db pixivDb;
+  final WorkBookmarkCallback onBookmarked;
 
   @override
   State<StatefulWidget> createState() => _FollowingsDisplayerState();
@@ -28,7 +30,7 @@ class FollowingsDisplayer extends StatefulWidget {
 
 class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   // 初始化
-  ValueNotifier<int> maxpage = ValueNotifier(1);
+  int maxpage = 1;
   int reslength = 0;
   final int pagesize = 8;
   final int workCountOnSisplay = 4;
@@ -40,7 +42,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
         widget.pixivDb.collection('All Followings');
     // 计算page
     reslength = await followingCollection.count(where.exists('userName'));
-    maxpage.value = (reslength / pagesize).ceil();
+    maxpage = (reslength / pagesize).ceil();
     // 异步加载数据
     Stream<Map<String, dynamic>> followings = followingCollection
         .find(where.exists('userName').excludeFields(['_id']));
@@ -102,58 +104,41 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   @override
   Widget build(BuildContext context) {
     void openTabCallback(String userName) {
-      context.read<StackChangeNotifier>().addStack(
-          userName,
-          UserDetailPage(
-            controller: widget.controller,
-            userName: userName,
-            pixivDb: widget.pixivDb,
-            onWorkBookmarked: (isLiked, workId, userName) =>
-                Provider.of<WorkBookmarkModel>(context, listen: false)
-                    .changebookmark(
-              isLiked,
-              workId,
-              userName,
-            ),
-          ));
+      context
+          .read<AddStackNotifier>()
+          .addStack<UserDetailPage>(userName, {'userName': userName});
     }
 
     return Padding(
         padding: const EdgeInsets.all(8),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Expanded(
-                child: ValueListenableBuilder(
-                    valueListenable: userInfosNotifer,
-                    builder: (context, userInfos, child) => ListView.builder(
-                          padding:const EdgeInsets.only(right: 12),
-                          shrinkWrap: true,
-                          itemCount: pagesize,
-                          cacheExtent: 240,
-                          itemBuilder: (context, index) => UserContainer(
-                            height: 240,
-                            controller: widget.controller,
-                            userInfo: userInfos[index],
-                            onTab: (userName) => openTabCallback(userName),
-                            onWorkBookmarked: (isLiked, workId, userName) =>
-                                context
-                                    .read<WorkBookmarkModel>()
-                                    .changebookmark(
-                                      isLiked,
-                                      workId,
-                                      userName,
-                                    ),
-                          ),
-                        ))),
-            // 翻页控件
-            PageControllerRow(
-              maxpage: maxpage,
-              pagesize: pagesize,
-              onPageChange: (page) => changePage(page),
-            )
-          ],
+        child: ValueListenableBuilder(
+          valueListenable: userInfosNotifer,
+          builder: (context, userInfos, child) => Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Expanded(
+                  child: ListView.builder(
+                padding: const EdgeInsets.only(right: 12),
+                shrinkWrap: true,
+                itemCount: pagesize,
+                cacheExtent: 240,
+                itemBuilder: (context, index) => UserContainer(
+                  height: 240,
+                  controller: widget.controller,
+                  userInfo: userInfos[index],
+                  onTab: (userName) => openTabCallback(userName),
+                  onWorkBookmarked: widget.onBookmarked,
+                ),
+              )),
+              // 翻页控件
+              PageControllerRow(
+                maxpage: maxpage,
+                pagesize: pagesize,
+                onPageChange: (page) => changePage(page),
+              )
+            ],
+          ),
         ));
   }
 }

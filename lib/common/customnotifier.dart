@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:mongo_dart/mongo_dart.dart';
 
-import '../common/defaultdatas.dart';
+import 'package:localpixiv/pages/user_detail_page.dart';
+import 'package:localpixiv/pages/work_detail_page.dart';
+import 'package:localpixiv/settings/settings_controller.dart';
+import 'package:localpixiv/widgets/super_tabview.dart';
 import '../models.dart';
 
 /// 作品信息变更捕捉器
@@ -89,34 +93,6 @@ class ListNotifier<T> extends ValueNotifier<List<T>> {
   }
 }
 
-/// 作品信息显示通知器
-class ShowInfoNotifier with ChangeNotifier {
-  WorkInfo _workInfo = defaultWorkInfo;
-  WorkInfo get workInfo => _workInfo;
-  void updateInfo(WorkInfo newworkInfo) {
-    _workInfo = newworkInfo;
-    notifyListeners();
-  }
-}
-
-/// 作品收藏操作通知器
-class WorkBookmarkModel with ChangeNotifier {
-  bool _bookmarked = false;
-  int _workId = 114514;
-  String _userName = 'Man';
-
-  bool get bookmarked => _bookmarked;
-  int get workId => _workId;
-  String get userName => _userName;
-
-  void changebookmark(bool bookmarked, int workId, String userName) {
-    _bookmarked = bookmarked;
-    _workId = workId;
-    _userName = userName;
-    notifyListeners();
-  }
-}
-
 /*
 class CmdData extends InheritedWidget {
   const CmdData({
@@ -141,71 +117,52 @@ class CmdData extends InheritedWidget {
   bool updateShouldNotify(CmdData oldWidget) => data != oldWidget.data;
 }*/
 
-enum StackOperation { init, add, remove, changeIndex }
+class AddStackNotifier with ChangeNotifier {
+  late String _newTitle;
+  late Widget _newStack;
+  late SettingsController _controller;
+  late Db _pixivDb;
+  late WorkBookmarkCallback _onWorkBookmarked;
+  bool needAdd = false;
 
-/// stack 变更通知器
-
-class StackChangeNotifier with ChangeNotifier {
-  late final int _mainTabCount;
-  StackOperation operation = StackOperation.init;
-  final List<String> _titles = [];
-  final List<StackData> _stackDatas = [];
-  int _index = 0;
-  int _historyIndex = 0;
-  int _removeIndex = 0;
-
-  int get mainTabCount => _mainTabCount;
-  List<String> get titles => _titles;
-  List<StackData> get stackDatas => _stackDatas;
-  int get index => _index;
-  int get removeIndex => _removeIndex;
-
-  void initData(
-      int mainTabCount, List<StackData> stackDatas, int initialIndex) {
-    _mainTabCount = mainTabCount;
-    _stackDatas.addAll(stackDatas);
-    _index = initialIndex;
-  }
-
-  void addStack(String title, Widget newStack) {
-    _stackDatas.add(
-        StackData(index: _stackDatas.length, title: title, child: newStack));
-    _titles.add(title);
-    _index = _stackDatas.length - 1;
-    operation = StackOperation.add;
-    notifyListeners();
-  }
-
-  void removeAt(int findex) {
-    _titles.removeAt(findex);
-    // update current index
-    // is tail
-    if (findex == _titles.length) {
-      if (_titles.isEmpty) {
-        _index = _historyIndex;
-      } else {
-        _index--;
-      }
-    }
-    // medium
-    else {
-      // next one
-      _index = findex + _mainTabCount;
-    }
-    _stackDatas.removeAt(findex + _mainTabCount);
-    _removeIndex = findex + _mainTabCount;
-    operation = StackOperation.remove;
-    notifyListeners();
-  }
-
-  void changeIndex(int findex, bool ismainTabs) {
-    if (ismainTabs) {
-      _index = findex;
-      _historyIndex = findex;
+  TabData? get newData {
+    if (needAdd) {
+      needAdd = false;
+      return TabData(title: _newTitle, canBeClosed: true, child: _newStack);
     } else {
-      _index = findex + _mainTabCount;
+      return null;
     }
-    operation = StackOperation.changeIndex;
+  }
+
+  void init(SettingsController controller, Db pixivDb,
+      WorkBookmarkCallback onWorkBookmarked) {
+    _controller = controller;
+    _pixivDb = pixivDb;
+    _onWorkBookmarked = onWorkBookmarked;
+  }
+
+  void addStack<T extends Widget>(
+      String title, Map<String, dynamic> arguments) {
+    _newTitle = title;
+    if (T == WorkDetailPage) {
+      assert(arguments.containsKey('workInfo'), 'Argument error.');
+      _newStack = WorkDetailPage(
+        controller: _controller,
+        workInfo: arguments['workInfo'],
+        pixivDb: _pixivDb,
+        onBookmarked: _onWorkBookmarked,
+      );
+    } else if (T == UserDetailPage) {
+      _newStack = UserDetailPage(
+          controller: _controller,
+          userInfo: arguments['userInfo'],
+          userName: arguments['userName'],
+          pixivDb: _pixivDb,
+          onWorkBookmarked: _onWorkBookmarked);
+    } else {
+      throw 'Unsupport Widget!';
+    }
+    needAdd = true;
     notifyListeners();
   }
 }

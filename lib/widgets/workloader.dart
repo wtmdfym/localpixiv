@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+
+import '../localization/localization_intl.dart';
 import '../common/tools.dart';
 
 /// 图片异步加载器
@@ -39,7 +41,7 @@ class ImageLoader extends StatelessWidget {
                       .contains('possibly due to invalid image data.')) {
                     File(path).delete();
                     return Text(
-                      'Invalid image data! The image file may be corrupted. It will be deleted automatically.',
+                      MyLocalizations.of(context).loader('ii'),
                       style: TextStyle(color: Colors.redAccent),
                     );
                   } else {
@@ -51,7 +53,8 @@ class ImageLoader extends StatelessWidget {
                 },
               );
             } else {
-              return const Center(child: Text('Error loading image'));
+              return Center(
+                  child: Text(MyLocalizations.of(context).loader('ei')));
             }
           } else {
             return const Center(child: CircularProgressIndicator());

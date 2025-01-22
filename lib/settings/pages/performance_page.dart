@@ -34,14 +34,14 @@ class _PerformanceSettingsPageState extends State<PerformanceSettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    '  ImageCacheRate',
-                  ),
+                  Text(MyLocalizations.of(context).settingsContain('icr')),
                   Expanded(
                       child: Slider(
                     max: 4,
                     divisions: 8,
-                    label: _cacheRate == 0 ? 'Not limited' : '$_cacheRate',
+                    label: _cacheRate == 0
+                        ? MyLocalizations.of(context).settingsContain('nl')
+                        : '$_cacheRate',
                     value: _cacheRate,
                     onChanged: (value) {
                       setState(() => _cacheRate = value);

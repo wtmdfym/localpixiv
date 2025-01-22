@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:localpixiv/localization/localization_intl.dart';
 import 'package:mongo_dart/mongo_dart.dart'
     show Db, DbCollection, SelectorBuilder, where;
 import 'package:provider/provider.dart';
@@ -16,26 +17,28 @@ import '../containers/info_container.dart';
 import '../containers/work_container.dart';
 import 'user_detail_page.dart';
 
-class Viewer extends StatefulWidget {
-  const Viewer({
+class ViewerPage extends StatefulWidget {
+  const ViewerPage({
     super.key,
     required this.controller,
     required this.pixivDb,
     required this.backupcollection,
+    required this.onBookmarked,
   });
   final SettingsController controller;
   final Db pixivDb;
   final DbCollection backupcollection;
+  final WorkBookmarkCallback onBookmarked;
 
   @override
   State<StatefulWidget> createState() {
-    return _ViewerState();
+    return _ViewerPageState();
   }
 }
 
-class _ViewerState extends State<Viewer> {
+class _ViewerPageState extends State<ViewerPage> {
   // 初始化
-  final ValueNotifier<int> maxpage = ValueNotifier(1);
+  final ValueNotifier<bool> pageControllerUpdater = ValueNotifier(false);
   final int pagesize = 8;
   bool cancelevent = false;
   final List<dynamic> searchedInfos = [];
@@ -46,8 +49,10 @@ class _ViewerState extends State<Viewer> {
   /*ValueNotifier<List<bool>> searchType =
       ValueNotifier([true, false, false]); //id  uid tag*/
   int reslength = 0;
+  int maxpage = 1;
   final int buffer = 200;
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
+  final ValueNotifier<WorkInfo> showingInfo = ValueNotifier(defaultWorkInfo);
   bool onsearching = false;
 
   // 构造界面
@@ -75,7 +80,7 @@ class _ViewerState extends State<Viewer> {
               Icons.search,
             ),
             label: Text(
-              'Search',
+              MyLocalizations.of(context).viewerPage('s'),
             ),
           ),
           SizedBox(
@@ -88,44 +93,30 @@ class _ViewerState extends State<Viewer> {
                   searchAnalyzer(advancedtext: advancedtext);
                 });
               },
-              child: Text('Advanced Search')),
+              child: Text(MyLocalizations.of(context).viewerPage('as'))),
           Divider(),
           // 信息显示部件
-          Consumer<ShowInfoNotifier>(
-              builder: (context, workInfoNotifier, child) => Expanded(
+          ValueListenableBuilder(
+              valueListenable: showingInfo,
+              builder: (context, workInfo, child) => Expanded(
                       child: WorkInfoContainer(
-                    workInfo: workInfoNotifier.workInfo,
-                    onTapUser: (userName) {
-                      widget.controller.autoOpen
-                          ? context.read<StackChangeNotifier>().addStack(
-                              userName,
-                              UserDetailPage(
-                                controller: widget.controller,
-                                userName: userName,
-                                pixivDb: widget.pixivDb,
-                                // TODO 同步信息
-                                onWorkBookmarked: (isLiked, workId, userName) =>
-                                    context
-                                        .read<WorkBookmarkModel>()
-                                        .changebookmark(
-                                          isLiked,
-                                          workId,
-                                          userName,
-                                        ),
-                              ))
-                          : {};
-                    },
-                    onTapTag: (tag) {
-                      widget.controller.autoSearch
-                          ? searchAnalyzer(
-                              advancedtext: null,
-                              finishedselector: where.exists('tags.$tag'))
-                          : {};
-                    },
+                    workInfo: workInfo,
+                    onTapUser: (userName) => widget.controller.autoOpen
+                        ? context
+                            .read<AddStackNotifier>()
+                            .addStack<UserDetailPage>(
+                                userName, {'userName': userName})
+                        : {},
+                    onTapTag: (tag) => widget.controller.autoSearch
+                        ? searchAnalyzer(
+                            advancedtext: null,
+                            finishedselector: where.exists('tags.$tag'))
+                        : {},
                   )))
         ],
       ),
-      rightWidget: // 作品展示网格
+      rightWidget:
+          // Grid like view to show works.
           Column(children: [
         for (int j = 0; j < pagesize / 4; j++)
           Expanded(
@@ -140,64 +131,50 @@ class _ViewerState extends State<Viewer> {
                       children: [
                         for (int i = j * 4; i < pagesize - (1 - j) * 4; i++)
                           Expanded(
-                              child: WorkContainer(
-                            hostPath: widget.controller.hostPath,
-                            workInfo: workInfos[i],
-                            cacheRate: widget.controller.imageCacheRate,
-                            onBookmarked: (isLiked, workId, userName) => context
-                                .read<WorkBookmarkModel>()
-                                .changebookmark(
-                                  isLiked,
-                                  workId,
-                                  userName,
-                                ),
-                          )),
+                            child: WorkContainer(
+                                hostPath: widget.controller.hostPath,
+                                workInfo: workInfos[i],
+                                cacheRate: widget.controller.imageCacheRate,
+                                onTab: () => showingInfo.value = workInfos[i],
+                                onBookmarked: widget.onBookmarked),
+                          ),
                       ],
                     )),
           )),
-
-        // 翻页控件
-        PageControllerRow(
-          maxpage: maxpage,
-          pagesize: pagesize,
-          onPageChange: (page) => changePage(page),
+        ValueListenableBuilder(
+          valueListenable: pageControllerUpdater,
+          builder: (context, value, child) => PageControllerRow(
+            maxpage: maxpage,
+            pagesize: pagesize,
+            onPageChange: (page) => changePage(page),
+          ),
         )
       ]),
       additionalWidgets: [
-        // 加载指示器
+        // Loading indicator
         Positioned.fill(
             child: ValueListenableBuilder(
                 valueListenable: _isLoading,
                 builder: (context, value, child) {
-                  return
-                      // 当不加载时不显示
-                      Offstage(
-                          offstage: !value,
-                          child: Stack(children: [
-                            ModalBarrier(
-                              color: const Color.fromARGB(150, 160, 160, 160),
-                              dismissible: true,
-                              onDismiss: () => {
-                                cancelevent = true,
-                                _isLoading.value = false
-                              },
-                            ),
-                            Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.blueAccent,
-                                strokeWidth: 6,
-                                semanticsLabel: 'Loading......',
-                              ),
-                            ),
-                          ]));
+                  return Offstage(
+                      offstage: !value,
+                      child: Stack(children: [
+                        ModalBarrier(
+                          color: const Color.fromARGB(150, 160, 160, 160),
+                          dismissible: true,
+                          onDismiss: () =>
+                              {cancelevent = true, _isLoading.value = false},
+                        ),
+                        Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.blueAccent,
+                            strokeWidth: 6,
+                            semanticsLabel:
+                                MyLocalizations.of(context).viewerPage('l'),
+                          ),
+                        ),
+                      ]));
                 })),
-        Positioned(
-            left: 2,
-            bottom: 2,
-            child: Tooltip(
-              message: 'Tips: Testing......',
-              child: Icon(Icons.info_outlined),
-            )),
       ],
       /*ValueListenableBuilder(
               valueListenable: searchType,
@@ -357,7 +334,8 @@ class _ViewerState extends State<Viewer> {
     searchWork(selector).then((success) {
       if (success) {
         resultDialog('Search', true, description: 'Found $reslength results!');
-        maxpage.value = (reslength / pagesize).ceil();
+        maxpage = (reslength / pagesize).ceil();
+        pageControllerUpdater.value = !pageControllerUpdater.value;
         Timer.periodic(Durations.short2, (timer) {
           if ((searchResults.length >= 8) ||
               (searchResults.length == reslength)) {
@@ -397,7 +375,7 @@ class _ViewerState extends State<Viewer> {
 
   void changePage(int page) async {
     final List<WorkInfo> workInfos = [];
-    if (page < maxpage.value) {
+    if (page < maxpage) {
       List<dynamic> info =
           searchResults.sublist((page - 1) * pagesize, page * pagesize);
       for (int i = 0; i < pagesize; i++) {

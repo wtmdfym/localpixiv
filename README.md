@@ -21,17 +21,24 @@ samples, guidance on mobile development, and a full API reference.
  - [x] image viewer
  - [ ] novel viewer
  - [x] following viewer
+ - [ ] tag viewer
  - [x] settings
  - [x] 自定义图片缓存大小
  - [x] 自定义字体大小
  - [x] 多主题，暗色模式
- - [ ] 多语言
+ - [x] 多语言支持
  - [ ] 完整的高级搜索功能
  - [x] pixivcat代理
  - [ ] 数据分块加载
  - [ ] 支持不使用mongoDB
- - [ ] 同步收藏作品
+
 ## Update History
+ - Version 1.1.2
+
+    - 移除了不必要的provider。
+    - 修改了pageController。
+    - 修改了控制整个tab显示的widget，修改了传递addtab信息的方式。
+    - 实现了除了dialogs的组件的国际化。
  - Version 1.1.1
 
     - 修改了部分widget的颜色控制，以便适应自动的主题更改。

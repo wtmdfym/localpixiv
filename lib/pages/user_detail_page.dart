@@ -9,6 +9,7 @@ import '../common/tools.dart';
 import '../models.dart';
 import '../widgets/divided_stack.dart';
 import '../widgets/should_rebuild_widget.dart';
+import '../localization/localization_intl.dart';
 
 /// A page to show detail information about a user.
 class UserDetailPage extends StatefulWidget {
@@ -144,7 +145,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                             child: SizedBox(
                               height: 48,
                               child: Text(
-                                'No more data',
+                                MyLocalizations.of(context).noMoreData,
                               ),
                             ),
                           );

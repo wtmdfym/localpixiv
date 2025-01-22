@@ -25,8 +25,7 @@ class _SearchSettingsPageState extends State<SearchSettingsPage> {
                 Column(mainAxisSize: MainAxisSize.min, spacing: 20, children: [
               SwitchListTile(
                 title: Text(
-                  'Auto open user detial page when click user infos',
-                ),
+                    MyLocalizations.of(context).settingsContain('autoOpen')),
                 value: widget.controller.autoOpen,
                 onChanged: (value) {
                   // 通知UI更新
@@ -37,7 +36,7 @@ class _SearchSettingsPageState extends State<SearchSettingsPage> {
               ),
               SwitchListTile(
                   title: Text(
-                    'Auto search when click tag',
+                    MyLocalizations.of(context).settingsContain('autoSearch'),
                   ),
                   value: widget.controller.autoSearch,
                   onChanged: (value) {

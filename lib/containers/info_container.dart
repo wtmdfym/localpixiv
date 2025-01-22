@@ -25,14 +25,6 @@ class WorkInfoContainer extends StatelessWidget {
     final List<Widget> tags = [];
     workInfo.tags.forEach((key, value) {
       tags.add(
-          /*SelectableText.rich(
-          TextSpan(
-              text: '$key ($value)',
-              recognizer: (TapGestureRecognizer()
-                ..onTap = () => onTapTag(key)
-              )
-              )
-          )*/
           TextButton(
         onPressed: () => onTapTag(key),
         child: Text('#$key $value'),
@@ -47,13 +39,13 @@ class WorkInfoContainer extends StatelessWidget {
           children: [
             SelectableText(workInfo.title,
                 style: Theme.of(context).textTheme.titleMedium),
-            RichText(
-              text: HTML.toTextSpan(
+            SelectableText.rich(
+              HTML.toTextSpan(
                 context,
                 workInfo.description,
                 defaultTextStyle: Theme.of(context).textTheme.bodyMedium,
                 linksCallback: (orginalLink) {
-                  // TODO flutter_inappwebview
+                  // TODO flutter_inappwebview?
                   String link = linkConverter(orginalLink);
                   openLinkDialog(context, Uri.parse(link));
                 },

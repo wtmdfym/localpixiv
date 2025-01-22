@@ -8,14 +8,13 @@ import 'settings/settings_controller.dart';
 import 'settings/settings_service.dart';
 
 void main() async {
-  // 初始化窗口
+  // Initi window.
   WidgetsFlutterBinding.ensureInitialized();
   /*if (kIsDesktop) {
     final window = WidgetsBinding.instance.window as FlutterWindow;
     window.minSize = Size(800, 600);
     window.size = Size(1024, 768);
   }*/
-  // 必须加上这一行。
   await windowManager.ensureInitialized();
 
   WindowOptions windowOptions = WindowOptions(

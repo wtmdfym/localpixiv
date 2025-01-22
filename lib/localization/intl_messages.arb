@@ -1,10 +1,24 @@
 {
-  "@@last_modified": "2025-01-19T23:03:00.144067",
+  "@@last_modified": "2025-01-21T15:19:25.574947",
   "appTitle": "Local Pixiv",
   "@appTitle": {
     "description": "Title for the application",
     "type": "text",
     "placeholders": {}
+  },
+  "tabTitle": "{choice,select, h{Home}v{Viewer}f{Following}s{Settings}other{}}",
+  "@tabTitle": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "loader": "{choice,select, ii{Invalid image data! The image file may be corrupted. It will be deleted automatically.}ei{Error loading image}other{}}",
+  "@loader": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
   },
   "like": "{isLiked,select, y{Cancel Bookmark}n{Bookmark}other{}}",
   "@like": {
@@ -14,8 +28,8 @@
       "isLiked": {}
     }
   },
-  "page": "{operation,select, p{Prev}j{Jump}n{Next}i{Page}other{}}",
-  "@page": {
+  "pageController": "{operation,select, p{Prev}j{Jump}n{Next}i{Page}other{}}",
+  "@pageController": {
     "type": "text",
     "placeholders": {
       "operation": {}
@@ -25,6 +39,25 @@
   "@notFollowingWarn": {
     "type": "text",
     "placeholders": {}
+  },
+  "homePage": "{choice,select, ef{( ･ω･)☞   (:3 」∠)}ew{Enter work Id}eu{Enter user Id}ek{Enter keywords}er{٩( ᐛ )و}ce{ConnectError:\nProxy inaccessible}ped{Please checking proxy settings.}b{Start}s{Stop}c{Clear}cf{Followings}ci{Id}cu{User}ct{Tags}cr{Ranking}other{}}",
+  "@homePage": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
+  },
+  "noMoreData": "No more data",
+  "@noMoreData": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "viewerPage": "{choice,select, s{Search}as{Advanced Search}l{Loading......}other{}}",
+  "@viewerPage": {
+    "type": "text",
+    "placeholders": {
+      "choice": {}
+    }
   },
   "inputHintText": "Please input {hintText}",
   "@inputHintText": {

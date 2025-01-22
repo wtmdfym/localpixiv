@@ -106,7 +106,8 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                 // Read the selected themeMode from the controller
                 value: widget.controller.themeMode,
                 // Call the updateThemeMode method any time the user selects a theme.
-                onChanged: widget.controller.updateThemeMode,
+                onChanged: (value) =>
+                    {widget.controller.updateThemeMode(value), setState(() {})},
                 items: [
                   DropdownMenuItem(
                     value: ThemeMode.system,

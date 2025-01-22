@@ -77,7 +77,10 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                         // Read the selected locale from the controller
                         value: widget.controller.locale,
                         // Call the updateLocale method any time the user selects a theme.
-                        onChanged: widget.controller.updateLocale,
+                        onChanged: (value) => {
+                          widget.controller.updateLocale(value),
+                          setState(() {})
+                        },
                         items: const [
                           DropdownMenuItem(
                             value: Locale('en'),

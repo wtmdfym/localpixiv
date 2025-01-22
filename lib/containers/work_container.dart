@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
 
-import '../common/customnotifier.dart';
 import '../localization/localization_intl.dart';
 import '../models.dart';
 import '../widgets/workloader.dart';
-
-typedef WorkBookmarkCallback = void Function(
-    bool isLiked, int workId, String userName);
 
 ///  A widget to show a brief introduction about a work.
 class WorkContainer extends StatefulWidget {
@@ -19,6 +14,7 @@ class WorkContainer extends StatefulWidget {
     this.height = 480,
     required this.cacheRate,
     required this.workInfo,
+    this.onTab,
     required this.onBookmarked,
     this.overBackgroundColor = const Color.fromARGB(180, 160, 160, 160),
   });
@@ -27,6 +23,7 @@ class WorkContainer extends StatefulWidget {
   final int height;
   final double cacheRate;
   final WorkInfo workInfo;
+  final GestureTapCallback? onTab;
   final WorkBookmarkCallback onBookmarked;
   final Color overBackgroundColor;
   @override
@@ -73,8 +70,8 @@ class _WorkContainerState extends State<WorkContainer>
         onEnter: (details) => _mouseEOAnimationController.forward(),
         onExit: (details) => _mouseEOAnimationController.reverse(),
         child:*/
-          LongPressDraggable<(String, WorkInfo)>(
-              data: (widget.hostPath, widget.workInfo),
+          LongPressDraggable<WorkInfo>(
+              data: widget.workInfo,
               delay: Durations.medium2,
               dragAnchorStrategy: (draggable, context, position) =>
                   Offset(-12, 32),
@@ -151,9 +148,7 @@ class _WorkContainerState extends State<WorkContainer>
                             child: Material(
                                 type: MaterialType.transparency,
                                 child: InkWell(
-                                  onTap: () => context
-                                      .read<ShowInfoNotifier>()
-                                      .updateInfo(widget.workInfo),
+                                  onTap: widget.onTab,
                                   borderRadius: BorderRadius.circular(6),
                                 ))),
                         // Bookmark work.
@@ -185,7 +180,7 @@ class _WorkContainerState extends State<WorkContainer>
                                       Theme.of(context).iconTheme.opticalSize!,
                                   height:
                                       Theme.of(context).iconTheme.opticalSize!),
-                              padding:const EdgeInsets.all(0),
+                              padding: const EdgeInsets.all(0),
                             ),
                           ),
                         )

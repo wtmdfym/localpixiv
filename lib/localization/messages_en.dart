@@ -25,19 +25,27 @@ class MessageLookup extends MessageLookupByLibrary {
 
   static m1(action) => "${Intl.select(action, {'y': 'Yes', 'n': 'No', 'a': 'Apply', 'c': 'Cancel', 'other': '', })}";
 
-  static m2(hintText) => "Please input ${hintText}";
+  static m2(choice) => "${Intl.select(choice, {'ef': '( ･ω･)☞   (:3 」∠)', 'ew': 'Enter work Id', 'eu': 'Enter user Id', 'ek': 'Enter keywords', 'er': '٩( ᐛ )و', 'ce': 'ConnectError:\nProxy inaccessible', 'ped': 'Please checking proxy settings.', 'b': 'Start', 's': 'Stop', 'c': 'Clear', 'cf': 'Followings', 'ci': 'Id', 'cu': 'User', 'ct': 'Tags', 'cr': 'Ranking', 'other': '', })}";
 
-  static m3(text) => "Invalid format of ${text}";
+  static m3(hintText) => "Please input ${hintText}";
 
-  static m4(isLiked) => "${Intl.select(isLiked, {'y': 'Cancel Bookmark', 'n': 'Bookmark', 'other': '', })}";
+  static m4(text) => "Invalid format of ${text}";
 
-  static m5(operation) => "${Intl.select(operation, {'p': 'Prev', 'j': 'Jump', 'n': 'Next', 'i': 'Page', 'other': '', })}";
+  static m5(isLiked) => "${Intl.select(isLiked, {'y': 'Cancel Bookmark', 'n': 'Bookmark', 'other': '', })}";
 
-  static m6(choice) => "${Intl.select(choice, {'hostPath': 'Host Path', 'chooseColor': 'Click to select color you want to change', 'enable': 'Enable', 'proxy': 'Proxy', 'resverseProxy': 'Resverse Proxy', 'resverseProxyExample': 'Resverse Proxy (eg i.pximg.net)', 'downloadstyle': 'Download Style', 'concurrency': 'Concurrency', 'largerThanOne': 'Concurrency must large than 1', 'clientPool': 'ClientPool', 'add': 'Add', 'other': 'Select key error', })}";
+  static m6(choice) => "${Intl.select(choice, {'ii': 'Invalid image data! The image file may be corrupted. It will be deleted automatically.', 'ei': 'Error loading image', 'other': '', })}";
 
-  static m7(choice) => "${Intl.select(choice, {'basic': 'Basic Settings', 'theme': 'Theme Settings', 'search': 'Search Settings', 'performance': 'Performance Settings', 'webCrawler': 'WebCrawler Settings', 'other': 'Other Settings', 'about': 'About', })}";
+  static m7(operation) => "${Intl.select(operation, {'p': 'Prev', 'j': 'Jump', 'n': 'Next', 'i': 'Page', 'other': '', })}";
 
-  static m8(choice) => "${Intl.select(choice, {'system': 'System Theme', 'light': 'Light Theme', 'dark': 'Dark Theme', 'other': 'Select key error', })}";
+  static m8(choice) => "${Intl.select(choice, {'hostPath': 'Host Path', 'chooseColor': 'Click to select color you want to change', 'enable': 'Enable', 'proxy': 'Proxy', 'resverseProxy': 'Resverse Proxy', 'resverseProxyExample': 'Resverse Proxy (eg i.pximg.net)', 'downloadstyle': 'Download Style', 'concurrency': 'Concurrency', 'largerThanOne': 'Concurrency must large than 1', 'clientPool': 'ClientPool', 'add': 'Add', 'other': 'Select key error', })}";
+
+  static m9(choice) => "${Intl.select(choice, {'basic': 'Basic Settings', 'theme': 'Theme Settings', 'search': 'Search Settings', 'performance': 'Performance Settings', 'webCrawler': 'WebCrawler Settings', 'other': 'Other Settings', 'about': 'About', })}";
+
+  static m10(choice) => "${Intl.select(choice, {'h': 'Home', 'v': 'Viewer', 'f': 'Following', 's': 'Settings', 'other': '', })}";
+
+  static m11(choice) => "${Intl.select(choice, {'system': 'System Theme', 'light': 'Light Theme', 'dark': 'Dark Theme', 'other': 'Select key error', })}";
+
+  static m12(choice) => "${Intl.select(choice, {'s': 'Search', 'as': 'Advanced Search', 'l': 'Loading......', 'other': '', })}";
 
   @override
   final Map<String, dynamic> messages = _notInlinedMessages(_notInlinedMessages);
@@ -46,15 +54,20 @@ class MessageLookup extends MessageLookupByLibrary {
       'account': m0,
     'actions': m1,
     'appTitle': MessageLookupByLibrary.simpleMessage('Local Pixiv'),
-    'inputHintText': m2,
-    'invalidFormat': m3,
-    'like': m4,
+    'homePage': m2,
+    'inputHintText': m3,
+    'invalidFormat': m4,
+    'like': m5,
+    'loader': m6,
+    'noMoreData': MessageLookupByLibrary.simpleMessage('No more data'),
     'notFollowingWarn': MessageLookupByLibrary.simpleMessage('NOT FOLLOWING NOW!'),
     'openLink': MessageLookupByLibrary.simpleMessage('Open Link ?'),
-    'page': m5,
+    'pageController': m7,
     'setFontSize': MessageLookupByLibrary.simpleMessage('FontSize (This is an example.)'),
-    'settingsContain': m6,
-    'settingsTitle': m7,
-    'theme': m8
+    'settingsContain': m8,
+    'settingsTitle': m9,
+    'tabTitle': m10,
+    'theme': m11,
+    'viewerPage': m12
   };
 }

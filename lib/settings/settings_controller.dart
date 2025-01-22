@@ -121,6 +121,7 @@ class SettingsController with ChangeNotifier {
     if (newLocale == null) return;
     if (newLocale == _locale) return;
     _locale = newLocale;
+    notifyListeners();
     await _save();
   }
 

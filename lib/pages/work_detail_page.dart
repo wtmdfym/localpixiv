@@ -20,11 +20,13 @@ class WorkDetailPage extends StatefulWidget {
     required this.controller,
     required this.workInfo,
     required this.pixivDb,
+    required this.onBookmarked,
   });
 
   final SettingsController controller;
   final WorkInfo workInfo;
   final Db pixivDb;
+  final WorkBookmarkCallback onBookmarked;
 
   @override
   State<StatefulWidget> createState() => _WorkDetailPageState();
@@ -64,20 +66,9 @@ class _WorkDetailPageState extends State<WorkDetailPage> {
         workInfo: widget.workInfo,
         onTapUser: (userName) {
           widget.controller.autoOpen
-              ? context.read<StackChangeNotifier>().addStack(
-                  userName,
-                  UserDetailPage(
-                    controller: widget.controller,
-                    userName: userName,
-                    pixivDb: widget.pixivDb,
-                    // TODO 同步信息
-                    onWorkBookmarked: (isLiked, workId, userName) =>
-                        context.read<WorkBookmarkModel>().changebookmark(
-                              isLiked,
-                              workId,
-                              userName,
-                            ),
-                  ))
+              ? context
+                  .read<AddStackNotifier>()
+                  .addStack<UserDetailPage>(userName, {'userName': userName})
               : {};
         },
         onTapTag: (tag) {},
@@ -144,10 +135,8 @@ class _WorkDetailPageState extends State<WorkDetailPage> {
                     // Use callback to update info.
                     _isLiked.value = !widget.workInfo.isLiked;
                     widget.workInfo.isLiked = !widget.workInfo.isLiked;
-                    context.read<WorkBookmarkModel>().changebookmark(
-                        widget.workInfo.isLiked,
-                        widget.workInfo.id,
-                        widget.workInfo.userName);
+                    widget.onBookmarked(widget.workInfo.isLiked,
+                        widget.workInfo.id, widget.workInfo.userName);
                   },
                   icon: Icon(Icons.favorite_border),
                   selectedIcon: Icon(Icons.favorite),
