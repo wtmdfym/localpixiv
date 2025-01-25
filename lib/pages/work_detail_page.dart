@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-
-import 'package:mongo_dart/mongo_dart.dart' show Db;
 import 'package:provider/provider.dart';
 
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 import '../models.dart';
 import '../containers/info_container.dart';
 import '../settings/settings_controller.dart';
@@ -19,13 +17,11 @@ class WorkDetailPage extends StatefulWidget {
     super.key,
     required this.controller,
     required this.workInfo,
-    required this.pixivDb,
     required this.onBookmarked,
   });
 
   final SettingsController controller;
   final WorkInfo workInfo;
-  final Db pixivDb;
   final WorkBookmarkCallback onBookmarked;
 
   @override
@@ -141,7 +137,7 @@ class _WorkDetailPageState extends State<WorkDetailPage> {
                   icon: Icon(Icons.favorite_border),
                   selectedIcon: Icon(Icons.favorite),
                   tooltip: MyLocalizations.of(context)
-                      .like(widget.workInfo.isLiked ? 'y' : 'n'),
+                      .bookmarkToolTip(widget.workInfo.isLiked ? 'y' : 'n'),
                   color: Colors.white,
                   constraints: BoxConstraints.tightFor(
                       width: Theme.of(context).iconTheme.opticalSize!,

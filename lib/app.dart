@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
+import 'package:mongo_dart/mongo_dart.dart'
+    show Db, DbCollection, where, modify;
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:toastification/toastification.dart';
 
-import 'localization/localization_intl.dart';
+import 'localization/localization.dart';
 import 'settings/pages/basic_page.dart';
 import 'pages/home_page.dart';
 import 'pages/viewer_page.dart';
@@ -17,32 +18,48 @@ import 'widgets/super_tabview.dart';
 // import 'common/customwidgets.dart';
 
 class MyApp extends StatelessWidget {
-  const MyApp(
+  MyApp(
       {super.key,
+      required this.useMongoDB,
       required this.pixivDb,
-      required this.backupcollection,
-      required this.settingsController});
-  final mongo.Db pixivDb;
-  final mongo.DbCollection backupcollection;
-  final int mainTabCount = 5;
+      required this.backupDb,
+      required this.settingsController}) {
+    // Check whether the database connection is successful.
+    if (useMongoDB) {
+      assert(pixivDb.isConnected && backupDb.isConnected,
+          'Connect Error: Can\'t connect MongoDB server!');
+    }
+  }
+  final bool useMongoDB;
+  final Db pixivDb;
+  final Db backupDb;
+
   final SettingsController settingsController;
+  final int mainTabCount = 5;
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    late final DbCollection backupCollection;
+
     void bookmarkWork(bool isLiked, int workId, String userName) {
+      if (!useMongoDB) {
+        return;
+      }
       if (workId != 114514 && userName != 'Man') {
         // Update dtabase
         pixivDb
             .collection(userName)
-            .updateOne(mongo.where.eq('id', workId),
-                mongo.modify.set('likeData', isLiked))
+            .updateOne(where.eq('id', workId), modify.set('likeData', isLiked))
             .then((res) => res.isSuccess ? {} : throw 'update failed');
-        backupcollection
-            .updateOne(mongo.where.eq('id', workId),
-                mongo.modify.set('likeData', isLiked))
+        backupCollection
+            .updateOne(where.eq('id', workId), modify.set('likeData', isLiked))
             .then((res) => res.isSuccess ? {} : throw 'update failed');
       }
+    }
+
+    if (useMongoDB) {
+      backupCollection = backupDb.collection('backup of pixiv infos');
     }
 
     return MultiProvider(
@@ -59,7 +76,7 @@ class MyApp extends StatelessWidget {
         listenable: settingsController,
         builder: (context, child) => ToastificationWrapper(
           child: MaterialApp(
-            title: 'Local Pixiv',
+            onGenerateTitle: (context) => MyLocalizations.of(context).appTitle,
             // Providing a restorationScopeId allows the Navigator built by the
             // MaterialApp to restore the navigation stack when a user leaves and
             // returns to the app after it has been killed while running in the
@@ -109,49 +126,84 @@ class MyApp extends StatelessWidget {
               );
             },
             home: Scaffold(
-              // backgroundColor: const Color.fromARGB(255, 212, 252, 255),
-              body: SuperTabView(
-                initialIndex: 1,
-                maintainTabDatas: [
-                  TabData(
-                      title:
-                          'Home', // MyLocalizations.of(context).tabTitle('h'),
-                      icon: Icon(Icons.home),
-                      canBeClosed: false,
-                      child: MyHomePage()),
-                  TabData(
-                      title:
-                          'Viewer', //MyLocalizations.of(context).tabTitle('v'),
-                      icon: Icon(Icons.view_quilt_rounded),
-                      canBeClosed: false,
-                      child: ViewerPage(
+                // backgroundColor: const Color.fromARGB(255, 212, 252, 255),
+                body: useMongoDB
+                    ? SuperTabView(
+                        initialIndex: 1,
+                        maintainTabDatas: [
+                          TabData(
+                              title:
+                                  'Home', // MyLocalizations.of(context).tabTitle('h'),
+                              icon: Icon(Icons.home),
+                              canBeClosed: false,
+                              child: MyHomePage()),
+                          TabData(
+                              title:
+                                  'Viewer', //MyLocalizations.of(context).tabTitle('v'),
+                              icon: Icon(Icons.view_quilt_rounded),
+                              canBeClosed: false,
+                              child: ViewerPage(
+                                controller: settingsController,
+                                useMongoDB: useMongoDB,
+                                backupcollection: backupCollection,
+                                onBookmarked: bookmarkWork,
+                              )),
+                          TabData(
+                              title:
+                                  'Followings', //MyLocalizations.of(context).tabTitle('f'),
+                              icon: Icon(Icons.view_list),
+                              canBeClosed: false,
+                              child: FollowingsDisplayer(
+                                controller: settingsController,
+                                pixivDb: pixivDb,
+                                onBookmarked: bookmarkWork,
+                              )),
+                          TabData(
+                              title:
+                                  'Settings', //MyLocalizations.of(context).tabTitle('s'),
+                              icon: Icon(Icons.settings),
+                              canBeClosed: false,
+                              child: SettingsView(
+                                controller: settingsController,
+                              )),
+                        ],
+                        preloadIndex: [1],
+                      )
+                    : /*Builder(
+                      builder: (context) {
+                        final TextEditingController controller =
+                            TextEditingController();
+                        showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                                  title: Text('No MongoDB Connection'),
+                                  content: Column(
+                                    children: [
+                                      Text(
+                                          'Enter your mongoDB server path, or you can only use basic function.'),
+                                      TextField(
+                                        controller: controller,
+                                      ),
+                                      ElevatedButton(
+                                          onPressed: () {},
+                                          child: Text('Connect')),
+                                    ],
+                                  ),
+                                  actions: [
+                                    ElevatedButton(
+                                        onPressed: () {}, child: Text('OK')),
+                                  ],
+                                ));
+                        return ViewerPage(
+                            controller: settingsController,
+                            useMongoDB: useMongoDB,
+                            onBookmarked: bookmarkWork);
+                      },
+                    ),*/
+                    ViewerPage(
                         controller: settingsController,
-                        pixivDb: pixivDb,
-                        backupcollection: backupcollection,
-                        onBookmarked: bookmarkWork,
-                      )),
-                  TabData(
-                      title:
-                          'Followings', //MyLocalizations.of(context).tabTitle('f'),
-                      icon: Icon(Icons.view_list),
-                      canBeClosed: false,
-                      child: FollowingsDisplayer(
-                        controller: settingsController,
-                        pixivDb: pixivDb,
-                        onBookmarked: bookmarkWork,
-                      )),
-                  TabData(
-                      title:
-                          'Settings', //MyLocalizations.of(context).tabTitle('s'),
-                      icon: Icon(Icons.settings),
-                      canBeClosed: false,
-                      child: SettingsView(
-                        controller: settingsController,
-                      )),
-                ],
-                preloadIndex: [1],
-              ),
-            ),
+                        useMongoDB: useMongoDB,
+                        onBookmarked: bookmarkWork)),
           ),
         ),
       ),

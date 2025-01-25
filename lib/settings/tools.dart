@@ -24,27 +24,40 @@ class ConfigFileHander {
   const ConfigFileHander(this.filepath);
 
   /// Read config file.
-  Future<Settings> readSettings() async {
+  Future<Settings> readSettings(bool loadDefault) async {
     final Map<String, dynamic> mainJson;
-    if (File('${filepath}config.json').existsSync()) {
-      mainJson = jsonDecode(File('${filepath}config.json').readAsStringSync());
-    } else {
+    if (loadDefault) {
       mainJson =
           jsonDecode(await rootBundle.loadString('jsons/default_config.json'));
+      return Settings.fromJson(
+          mainJson, await readWebCrawlerSettings(loadDefault));
     }
-    return Settings.fromJson(mainJson, await readWebCrawlerSettings());
+    if (!await File('${filepath}config.json').exists()) {
+      mainJson =
+          jsonDecode(await rootBundle.loadString('jsons/default_config.json'));
+      return Settings.fromJson(
+          mainJson, await readWebCrawlerSettings(loadDefault));
+    }
+    mainJson = jsonDecode(await File('${filepath}config.json').readAsString());
+    return Settings.fromJson(
+        mainJson, await readWebCrawlerSettings(loadDefault));
   }
 
   /// Read webCrawler config file
-  Future<WebCrawlerSettings> readWebCrawlerSettings() async {
+  Future<WebCrawlerSettings> readWebCrawlerSettings(bool loadDefault) async {
     final Map<String, dynamic> webCrawlerJson;
-    if (File('${filepath}webCrawler_config.json').existsSync()) {
-      webCrawlerJson = jsonDecode(
-          File('${filepath}webCrawler_config.json').readAsStringSync());
-    } else {
+    if (loadDefault) {
       webCrawlerJson = jsonDecode(
           await rootBundle.loadString('jsons/default_webCrawler_config.json'));
+      return WebCrawlerSettings.fromJson(webCrawlerJson);
     }
+    if (!await File('${filepath}webCrawler_config.json').exists()) {
+      webCrawlerJson = jsonDecode(
+          await rootBundle.loadString('jsons/default_webCrawler_config.json'));
+      return WebCrawlerSettings.fromJson(webCrawlerJson);
+    }
+    webCrawlerJson = jsonDecode(
+        await File('${filepath}webCrawler_config.json').readAsString());
     return WebCrawlerSettings.fromJson(webCrawlerJson);
   }
 

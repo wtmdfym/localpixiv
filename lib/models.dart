@@ -118,11 +118,19 @@ class UserInfo {
   }
 }
 
-/// 总配置信息
+/// Settings of the app.
 class Settings {
+  /// The path of pixiv filedir, used to load and save works etc.
   final String hostPath;
-  //BasicConfigs basicConfigs;
+
+  /// The language user use.
   final Locale locale;
+
+  /// If don't use mongoDB, app can only support to view local images.
+  final bool useMongoDB;
+
+  /// Must correct to connect to MongoDB server.
+  final String serverHost;
   final ThemeMode themeMode;
   final Color color;
 
@@ -143,7 +151,8 @@ class Settings {
   Settings({
     this.hostPath = "C:/pixiv/",
     this.fontSize = 16,
-    //required this.basicConfigs,
+    this.useMongoDB = true,
+    this.serverHost = '',
     required this.locale,
     required this.themeMode,
     required this.color,
@@ -157,7 +166,7 @@ class Settings {
 
   factory Settings.fromJson(Map<String, dynamic> json,
       [WebCrawlerSettings? webCrawlerSettings]) {
-    Map<String, ThemeMode> themeModeMap = {
+    final Map<String, ThemeMode> themeModeMap = {
       'system': ThemeMode.system,
       'light': ThemeMode.light,
       'dark': ThemeMode.dark
@@ -166,7 +175,8 @@ class Settings {
     return Settings(
       hostPath: json['host_path'],
       fontSize: json['fontSize'],
-      //basicConfigs: BasicConfigs.fromJson(json['BasicConfigs']),
+      useMongoDB: json['useMongoDB'],
+      serverHost: json['serverHost'],
       locale: Locale(json['locale']),
       themeMode: themeModeMap[json['themeMode']]!,
       color: Color.from(
@@ -174,15 +184,11 @@ class Settings {
           red: json['color']['r'],
           green: json['color']['g'],
           blue: json['color']['b']),
-
       autoOpen: json['autoSearch'],
       autoSearch: json['autoSearch'],
-
       imageCacheRate: json['imageCacheRate'],
-
       webCrawlerSettings: webCrawlerSettings ??
           WebCrawlerSettings.fromJson(json['WebCrawlerSettings']),
-      //uiConfigs: UIConfigs.fromJson(json['UIConfigs'])
     );
   }
 
@@ -190,7 +196,8 @@ class Settings {
     final Map<String, dynamic> data = <String, dynamic>{};
     data['host_path'] = hostPath;
     data['fontSize'] = fontSize;
-    //data['BasicConfigs'] = basicConfigs.toJson();
+    data['useMongoDB'] = useMongoDB;
+    data['serverHost'] = serverHost;
     data['locale'] = locale.languageCode;
     data['themeMode'] = themeMode.name;
     data['color'] = {'a': color.a, 'r': color.r, 'g': color.g, 'b': color.b};
@@ -202,7 +209,6 @@ class Settings {
     if (withWebCrawlerSettings) {
       data['WebCrawlerSettings'] = webCrawlerSettings.toJson();
     }
-    //data['UIConfigs'] = uiConfigs.toJson();
     return data;
   }
 }

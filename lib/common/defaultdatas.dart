@@ -1,6 +1,6 @@
 import '../models.dart';
 
-const _defaultworkdata = {
+const defaultworkdata = {
   "type": "illust",
   "id": 114514,
   "title": "꒰ঌ(🎀 ᗜ`˰´ᗜ 🌸)໒꒱💈❌",
@@ -22,9 +22,9 @@ const _defaultworkdata = {
   "imageCount": 1,
   "relative_path": ["what can I say"]
 };
-final WorkInfo defaultWorkInfo = WorkInfo.fromJson(_defaultworkdata);
+final WorkInfo defaultWorkInfo = WorkInfo.fromJson(defaultworkdata);
 
-final Map<String, dynamic> _defaultuserdata = {
+final Map<String, dynamic> defaultuserdata = {
   "userId": "114514",
   "userName": "Man",
   'profileImage': '',
@@ -36,4 +36,4 @@ final Map<String, dynamic> _defaultuserdata = {
     defaultWorkInfo,
   ]
 };
-final UserInfo defaultUserInfo = UserInfo.fromJson(_defaultuserdata);
+final UserInfo defaultUserInfo = UserInfo.fromJson(defaultuserdata);

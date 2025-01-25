@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
+import 'package:mongo_dart/mongo_dart.dart' show Db;
 //import 'package:window_manager_plus/window_manager_plus.dart';
 
 import 'app.dart';
@@ -29,23 +29,28 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
   });
-  // Connect to database
-  mongo.Db pixivDb = mongo.Db('mongodb://localhost:27017/pixiv');
-  await pixivDb.open();
-  mongo.Db backupdb = mongo.Db('mongodb://localhost:27017/backup');
-  await backupdb.open();
-  mongo.DbCollection backupcollection =
-      backupdb.collection('backup of pixiv infos');
   // read config files
   final settingsController = SettingsController(SettingsService());
   // Load the user's preferred settings while the splash screen is displayed.
   // This prevents a sudden theme change when the app is first displayed.
   await settingsController.loadSettings();
-  runApp(MyApp(
-    pixivDb: pixivDb,
-    backupcollection: backupcollection,
-    settingsController: settingsController,
-  ));
+  // Connect to database
+  bool useMongoDB = settingsController.useMongoDB;
+  final Db pixivDb = Db('mongodb://localhost:27017/pixiv');
+  final Db backupDb = Db('mongodb://localhost:27017/backup');
+  try {
+    await pixivDb.open();
+    await backupDb.open();
+  } on Exception {
+    useMongoDB = false;
+  } finally {
+    runApp(MyApp(
+      useMongoDB: useMongoDB,
+      pixivDb: pixivDb,
+      backupDb: backupDb,
+      settingsController: settingsController,
+    ));
+  }
 }
 
 /*

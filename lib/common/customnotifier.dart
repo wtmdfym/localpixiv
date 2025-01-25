@@ -149,7 +149,6 @@ class AddStackNotifier with ChangeNotifier {
       _newStack = WorkDetailPage(
         controller: _controller,
         workInfo: arguments['workInfo'],
-        pixivDb: _pixivDb,
         onBookmarked: _onWorkBookmarked,
       );
     } else if (T == UserDetailPage) {

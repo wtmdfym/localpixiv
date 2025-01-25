@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../localization/localization_intl.dart';
+import '../../localization/localization.dart';
 import '../back_appbar.dart';
 import '../settings_controller.dart';
 
@@ -14,19 +14,26 @@ class PerformanceSettingsPage extends StatefulWidget {
 }
 
 class _PerformanceSettingsPageState extends State<PerformanceSettingsPage> {
+  // localized text
+  late String Function(String) _localizationMap;
   late double _cacheRate;
+
   @override
   void initState() {
     _cacheRate = widget.controller.imageCacheRate;
-
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).performancePage;
+    super.didChangeDependencies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: BackAppBar(
-            title: MyLocalizations.of(context).settingsTitle('performance')),
+        appBar: BackAppBar(title: _localizationMap('title')),
         body: Padding(
             padding: const EdgeInsets.all(8),
             child:
@@ -34,13 +41,13 @@ class _PerformanceSettingsPageState extends State<PerformanceSettingsPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(MyLocalizations.of(context).settingsContain('icr')),
+                  Text(_localizationMap('image_cache_rate')),
                   Expanded(
                       child: Slider(
                     max: 4,
                     divisions: 8,
                     label: _cacheRate == 0
-                        ? MyLocalizations.of(context).settingsContain('nl')
+                        ? _localizationMap('not_limited')
                         : '$_cacheRate',
                     value: _cacheRate,
                     onChanged: (value) {

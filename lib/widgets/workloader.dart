@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 import '../common/tools.dart';
 
 /// 图片异步加载器
@@ -20,6 +20,9 @@ class ImageLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // localized text
+    final String Function(String) localizationMap =
+        MyLocalizations.of(context).loader;
     return FutureBuilder<ImageProvider>(
         future: imageFileLoader(
           path,
@@ -41,7 +44,7 @@ class ImageLoader extends StatelessWidget {
                       .contains('possibly due to invalid image data.')) {
                     File(path).delete();
                     return Text(
-                      MyLocalizations.of(context).loader('ii'),
+                      localizationMap('invalid'),
                       style: TextStyle(color: Colors.redAccent),
                     );
                   } else {
@@ -53,8 +56,7 @@ class ImageLoader extends StatelessWidget {
                 },
               );
             } else {
-              return Center(
-                  child: Text(MyLocalizations.of(context).loader('ei')));
+              return Center(child: Text(localizationMap('error')));
             }
           } else {
             return const Center(child: CircularProgressIndicator());

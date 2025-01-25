@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 
 typedef ChangePageCallback = void Function(int index);
 
@@ -18,6 +18,9 @@ class PageControllerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // localized text
+    late final String Function(String) localizationMap =
+        MyLocalizations.of(context).pageController;
     int page = 1;
     _pageController.text = '$page/$maxpage';
 
@@ -62,7 +65,7 @@ class PageControllerRow extends StatelessWidget {
             size: Theme.of(context).iconTheme.size,
           ),
           label: Text(
-            MyLocalizations.of(context).pageController('p'),
+            localizationMap('prev'),
           ),
         ),
         ConstrainedBox(
@@ -70,7 +73,7 @@ class PageControllerRow extends StatelessWidget {
             child: Row(
               spacing: 20,
               children: [
-                Text(MyLocalizations.of(context).pageController('i')),
+                Text(localizationMap('input')),
                 Expanded(
                     child: TextField(
                   controller: _pageController,
@@ -86,7 +89,7 @@ class PageControllerRow extends StatelessWidget {
         ElevatedButton(
             onPressed: jumpToPage,
             child: Text(
-              MyLocalizations.of(context).pageController('j'),
+              localizationMap('jump'),
             )),
         ElevatedButton.icon(
             onPressed: nextPage,
@@ -96,7 +99,7 @@ class PageControllerRow extends StatelessWidget {
             ),
             iconAlignment: IconAlignment.end,
             label: Text(
-              MyLocalizations.of(context).pageController('n'),
+              localizationMap('next'),
             )),
       ],
     ));

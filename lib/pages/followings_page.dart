@@ -71,8 +71,10 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     // 当有足够数据或加载完成时显示
     Timer.periodic(Durations.medium1, (timer) {
       if ((userInfos.length > pagesize) || (userInfos.length == reslength)) {
-        changePage(1);
-        timer.cancel();
+        setState(() {
+          changePage(1);
+          timer.cancel();
+        });
       }
     });
   }
@@ -110,35 +112,35 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
     }
 
     return Padding(
-        padding: const EdgeInsets.all(8),
-        child: ValueListenableBuilder(
-          valueListenable: userInfosNotifer,
-          builder: (context, userInfos, child) => Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Expanded(
-                  child: ListView.builder(
-                padding: const EdgeInsets.only(right: 12),
-                shrinkWrap: true,
-                itemCount: pagesize,
-                cacheExtent: 240,
-                itemBuilder: (context, index) => UserContainer(
-                  height: 240,
-                  controller: widget.controller,
-                  userInfo: userInfos[index],
-                  onTab: (userName) => openTabCallback(userName),
-                  onWorkBookmarked: widget.onBookmarked,
-                ),
-              )),
-              // 翻页控件
-              PageControllerRow(
-                maxpage: maxpage,
-                pagesize: pagesize,
-                onPageChange: (page) => changePage(page),
-              )
-            ],
-          ),
-        ));
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Expanded(
+              child: ValueListenableBuilder(
+                  valueListenable: userInfosNotifer,
+                  builder: (context, userInfos, child) => ListView.builder(
+                        padding: const EdgeInsets.only(right: 12),
+                        shrinkWrap: true,
+                        itemCount: pagesize,
+                        cacheExtent: 240,
+                        itemBuilder: (context, index) => UserContainer(
+                          height: 240,
+                          controller: widget.controller,
+                          userInfo: userInfos[index],
+                          onTab: (userName) => openTabCallback(userName),
+                          onWorkBookmarked: widget.onBookmarked,
+                        ),
+                      ))),
+          // 翻页控件
+          PageControllerRow(
+            maxpage: maxpage,
+            pagesize: pagesize,
+            onPageChange: (page) => changePage(page),
+          )
+        ],
+      ),
+    );
   }
 }

@@ -1,11 +1,13 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:localpixiv/localization/localization_intl.dart';
 import 'package:mongo_dart/mongo_dart.dart'
-    show Db, DbCollection, SelectorBuilder, where;
+    show DbCollection, SelectorBuilder, where;
 import 'package:provider/provider.dart';
+import 'package:filepicker_windows/filepicker_windows.dart';
 
+import '../localization/localization.dart';
 import '../common/defaultdatas.dart';
 import '../common/customnotifier.dart';
 import '../models.dart';
@@ -18,16 +20,20 @@ import '../containers/work_container.dart';
 import 'user_detail_page.dart';
 
 class ViewerPage extends StatefulWidget {
-  const ViewerPage({
+  ViewerPage({
     super.key,
     required this.controller,
-    required this.pixivDb,
-    required this.backupcollection,
+    this.backupcollection,
+    required this.useMongoDB,
     required this.onBookmarked,
-  });
+  }) {
+    if (useMongoDB) {
+      assert(backupcollection != null);
+    }
+  }
   final SettingsController controller;
-  final Db pixivDb;
-  final DbCollection backupcollection;
+  final DbCollection? backupcollection;
+  final bool useMongoDB;
   final WorkBookmarkCallback onBookmarked;
 
   @override
@@ -38,10 +44,11 @@ class ViewerPage extends StatefulWidget {
 
 class _ViewerPageState extends State<ViewerPage> {
   // 初始化
+  // localized text
+  late String Function(String) _localizationMap;
   final ValueNotifier<bool> pageControllerUpdater = ValueNotifier(false);
   final int pagesize = 8;
   bool cancelevent = false;
-  final List<dynamic> searchedInfos = [];
   final ListNotifier<WorkInfo> workInfosNotifer =
       ListNotifier([for (int i = 0; i < 8; i++) defaultWorkInfo]);
   final List<dynamic> searchResults = [];
@@ -55,66 +62,76 @@ class _ViewerPageState extends State<ViewerPage> {
   final ValueNotifier<WorkInfo> showingInfo = ValueNotifier(defaultWorkInfo);
   bool onsearching = false;
 
-  // 构造界面
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).viewerPage;
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
     return DividedStack(
       padding: const EdgeInsets.all(8),
-      leftWidget: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // 搜索控件
-          TextField(
-            controller: _searchController,
-            maxLength: 100,
-            decoration: InputDecoration(
-              labelText: "Ciallo~(∠・ω< )⌒☆",
-              icon: Icon(
-                Icons.search,
-              ),
+      leftWidget: widget.useMongoDB
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 搜索控件
+                TextField(
+                  controller: _searchController,
+                  maxLength: 100,
+                  decoration: InputDecoration(
+                    labelText: "Ciallo~(∠・ω< )⌒☆",
+                    icon: Icon(
+                      Icons.search,
+                    ),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: searchAnalyzer,
+                  icon: Icon(
+                    Icons.search,
+                  ),
+                  label: Text(
+                    _localizationMap('search'),
+                  ),
+                ),
+                SizedBox(
+                  height: 10,
+                ),
+                TextButton(
+                    onPressed: () {
+                      advancedSearch(context).then((advancedtext) {
+                        // TODO 高级搜索
+                        searchAnalyzer(advancedtext: advancedtext);
+                      });
+                    },
+                    child: Text(_localizationMap('advanced_search'))),
+                Divider(),
+                // 信息显示部件
+                ValueListenableBuilder(
+                    valueListenable: showingInfo,
+                    builder: (context, workInfo, child) => Expanded(
+                            child: WorkInfoContainer(
+                          workInfo: workInfo,
+                          onTapUser: (userName) => widget.controller.autoOpen
+                              ? context
+                                  .read<AddStackNotifier>()
+                                  .addStack<UserDetailPage>(
+                                      userName, {'userName': userName})
+                              : {},
+                          onTapTag: (tag) => widget.controller.autoSearch
+                              ? searchAnalyzer(
+                                  advancedtext: null,
+                                  finishedselector: where.exists('tags.$tag'))
+                              : {},
+                        ))),
+              ],
+            )
+          : ElevatedButton(
+              onPressed: dirWalker,
+              child: Text('Select a directory'),
             ),
-          ),
-          ElevatedButton.icon(
-            onPressed: searchAnalyzer,
-            icon: Icon(
-              Icons.search,
-            ),
-            label: Text(
-              MyLocalizations.of(context).viewerPage('s'),
-            ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          ElevatedButton(
-              onPressed: () {
-                advancedSearch(context).then((advancedtext) {
-                  // TODO 高级搜索
-                  searchAnalyzer(advancedtext: advancedtext);
-                });
-              },
-              child: Text(MyLocalizations.of(context).viewerPage('as'))),
-          Divider(),
-          // 信息显示部件
-          ValueListenableBuilder(
-              valueListenable: showingInfo,
-              builder: (context, workInfo, child) => Expanded(
-                      child: WorkInfoContainer(
-                    workInfo: workInfo,
-                    onTapUser: (userName) => widget.controller.autoOpen
-                        ? context
-                            .read<AddStackNotifier>()
-                            .addStack<UserDetailPage>(
-                                userName, {'userName': userName})
-                        : {},
-                    onTapTag: (tag) => widget.controller.autoSearch
-                        ? searchAnalyzer(
-                            advancedtext: null,
-                            finishedselector: where.exists('tags.$tag'))
-                        : {},
-                  )))
-        ],
-      ),
       rightWidget:
           // Grid like view to show works.
           Column(children: [
@@ -132,7 +149,9 @@ class _ViewerPageState extends State<ViewerPage> {
                         for (int i = j * 4; i < pagesize - (1 - j) * 4; i++)
                           Expanded(
                             child: WorkContainer(
-                                hostPath: widget.controller.hostPath,
+                                hostPath: widget.useMongoDB
+                                    ? widget.controller.hostPath
+                                    : '',
                                 workInfo: workInfos[i],
                                 cacheRate: widget.controller.imageCacheRate,
                                 onTab: () => showingInfo.value = workInfos[i],
@@ -169,8 +188,7 @@ class _ViewerPageState extends State<ViewerPage> {
                           child: CircularProgressIndicator(
                             color: Colors.blueAccent,
                             strokeWidth: 6,
-                            semanticsLabel:
-                                MyLocalizations.of(context).viewerPage('l'),
+                            semanticsLabel: _localizationMap('loading'),
                           ),
                         ),
                       ]));
@@ -333,7 +351,7 @@ class _ViewerPageState extends State<ViewerPage> {
     }
     searchWork(selector).then((success) {
       if (success) {
-        resultDialog('Search', true, description: 'Found $reslength results!');
+        resultDialog('Search', true, description: 'Find $reslength results!');
         maxpage = (reslength / pagesize).ceil();
         pageControllerUpdater.value = !pageControllerUpdater.value;
         Timer.periodic(Durations.short2, (timer) {
@@ -353,14 +371,14 @@ class _ViewerPageState extends State<ViewerPage> {
 
   Future<bool> searchWork(SelectorBuilder selector) async {
     onsearching = true;
-    reslength = await widget.backupcollection.count(selector);
+    reslength = await widget.backupcollection!.count(selector);
     if (reslength == 0) {
       _isLoading.value = false;
       onsearching = false;
       return false;
     } else {
       searchResults.clear();
-      widget.backupcollection
+      widget.backupcollection!
           .find(selector.sortBy('id', descending: true).excludeFields(['_id']))
           .forEach((info) {
         if (cancelevent) {
@@ -393,5 +411,28 @@ class _ViewerPageState extends State<ViewerPage> {
       }
     }
     workInfosNotifer.setList(workInfos);
+  }
+
+  Future<void> dirWalker() async {
+    late final Directory? dir;
+    final file = DirectoryPicker()..title = 'Select a directory';
+    dir = file.getDirectory();
+    if (dir == null) {
+      return;
+    }
+    _isLoading.value = true;
+    searchResults.clear();
+    dir.list().forEach((action) {
+      Map<String, dynamic> info = Map.from(defaultworkdata);
+      info["relative_path"] = [action.path];
+      searchResults.add(info);
+    }).then((_) {
+      reslength = searchResults.length;
+      maxpage = (reslength / pagesize).ceil();
+      pageControllerUpdater.value = !pageControllerUpdater.value;
+      _isLoading.value = false;
+      resultDialog('Walk dir', true, description: 'Find $reslength results.');
+      changePage(1);
+    });
   }
 }

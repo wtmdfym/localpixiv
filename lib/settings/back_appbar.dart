@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
+/// Called before pop the route. Call [Navigator.pop] if return `true`.
+typedef OnWillPopCallback = bool Function();
+
 class BackAppBar extends StatelessWidget implements PreferredSizeWidget {
   const BackAppBar({
     super.key,
     this.toolbarHeight,
     required this.title,
-    this.onPop,
+    this.onWillPop,
     this.backgroundColor,
   });
   final double? toolbarHeight;
   final String title;
-  final VoidCallback? onPop;
+  final OnWillPopCallback? onWillPop;
   final Color? backgroundColor;
 
   @override
@@ -20,8 +23,11 @@ class BackAppBar extends StatelessWidget implements PreferredSizeWidget {
         backgroundColor: backgroundColor,
         leading: IconButton(
           onPressed: () {
-            if (onPop != null) {
-              onPop!();
+            if (onWillPop != null) {
+              final bool needPop = onWillPop!();
+              if (!needPop) {
+                return;
+              }
             }
             Navigator.pop(context);
           },

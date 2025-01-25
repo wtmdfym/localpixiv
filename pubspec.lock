@@ -70,6 +70,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.2.3"
+  card_settings_ui:
+    dependency: "direct main"
+    description:
+      name: card_settings_ui
+      sha256: "3c0677c31b68ac654e7efc85a4adfec4375445f8c67a1dbe88aa8cf115e52533"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   characters:
     dependency: transitive
     description:
@@ -134,14 +142,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.3"
-  dynamic_tabbar:
-    dependency: "direct main"
-    description:
-      name: dynamic_tabbar
-      sha256: "017be3705f70e353e579b7a7d56bb19b5c112072b4532bc8bd68767c4a6fc3fe"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.9"
   equatable:
     dependency: transitive
     description:
@@ -158,6 +158,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.2"
+  ffi:
+    dependency: transitive
+    description:
+      name: ffi
+      sha256: "16ed7b077ef01ad6170a3d0c57caa4a112a38d7a2ed5602e0aca9ca6f3d98da6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.3"
   file:
     dependency: transitive
     description:
@@ -166,6 +174,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "7.0.1"
+  filepicker_windows:
+    dependency: "direct main"
+    description:
+      name: filepicker_windows
+      sha256: "278d13044c18c2a634e8bf7efa89db1b50faefbae33a039cf1a2cfc34ff3a723"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.4"
   fixnum:
     dependency: transitive
     description:
@@ -234,14 +250,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_widgetz:
-    dependency: "direct main"
-    description:
-      name: flutter_widgetz
-      sha256: "989be30ddc9e5cd3e6e1bdd644041a8f4cdeaeb58e2aae2e84b251ead11ab717"
-      url: "https://pub.dev"
-    source: hosted
-    version: "10.3.1"
   glob:
     dependency: transitive
     description:
@@ -554,6 +562,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.0"
+  settings_ui:
+    dependency: "direct main"
+    description:
+      name: settings_ui
+      sha256: d9838037cb554b24b4218b2d07666fbada3478882edefae375ee892b6c820ef3
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.0.2"
   simple_html_css:
     dependency: "direct main"
     description:
@@ -759,6 +775,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  win32:
+    dependency: transitive
+    description:
+      name: win32
+      sha256: "154360849a56b7b67331c21f09a386562d88903f90a1099c5987afc1912e1f29"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.10.0"
   window_manager:
     dependency: "direct main"
     description:

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:localpixiv/common/customnotifier.dart';
-import 'package:localpixiv/models.dart';
-import 'package:localpixiv/pages/work_detail_page.dart';
 import 'package:provider/provider.dart';
+
+import '../common/customnotifier.dart';
+import '../models.dart';
+import '../pages/work_detail_page.dart';
 
 typedef OnChangeTabCallback = void Function(int index, bool isMaintainTabBar);
 
@@ -178,7 +179,10 @@ class SuperTabViewState extends State<SuperTabView>
     dynamicChildren.removeAt(index);
     dynamicTab.removeAt(index);
     // Update index
-    if (dynamicChildren.length == dynamicTabIndex) {
+    if (dynamicTabIndex > index) {
+      dynamicTabIndex -= 1;
+    }
+    if (dynamicTabIndex == dynamicChildren.length) {
       dynamicTabIndex -= 1;
     }
     // Update keys
@@ -240,13 +244,14 @@ class SuperTabViewState extends State<SuperTabView>
   void dispose() {
     _dargEOController.dispose();
     maintainTabController.dispose();
+    dynamicTabController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(final BuildContext context) {
-    return Consumer<AddStackNotifier>(builder: (a, b, child) {
-      TabData? data = b.newData;
+    return Consumer<AddStackNotifier>(builder: (context, notifier, child) {
+      TabData? data = notifier.newData;
       if (data != null) {
         addTab(data);
       }
@@ -266,13 +271,6 @@ class SuperTabViewState extends State<SuperTabView>
             onAcceptWithDetails: (details) => {
               context.read<AddStackNotifier>().addStack<WorkDetailPage>(
                   details.data.title, {'workInfo': details.data}),
-              /*_addTab(TabData(
-                          title: details.data.title,
-                          canBeClosed: true,
-                          child: WorkDetailPage(
-                              controller: controller,
-                              workInfo: details.data,
-                              pixivDb: pixivDb))),*/
               _dargEOController.reverse()
             },
             builder: (context, candidateData, rejectedData) {

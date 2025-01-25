@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../localization/localization_intl.dart';
+import '../../localization/localization.dart';
 import '../back_appbar.dart';
 import '../settings_controller.dart';
 
@@ -14,16 +14,23 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
+  // localized text
+  late String Function(String) _localizationMap;
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).aboutPage;
+    super.didChangeDependencies();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: BackAppBar(
-            title: MyLocalizations.of(context).settingsTitle('about')),
+        appBar: BackAppBar(title: _localizationMap('title')),
         body: Padding(
             padding: const EdgeInsets.all(8),
             child: Column(
                 mainAxisSize: MainAxisSize.min,
                 spacing: 20,
-                children: [Text('About......')])));
+                children: [Text(_localizationMap('about'))])));
   }
 }

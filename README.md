@@ -30,9 +30,14 @@ samples, guidance on mobile development, and a full API reference.
  - [ ] 完整的高级搜索功能
  - [x] pixivcat代理
  - [ ] 数据分块加载
- - [ ] 支持不使用mongoDB
+ - [x] 支持不使用mongoDB
 
 ## Update History
+ - Version 1.1.3
+
+    - 修复了bug。
+    - 更换了多语言支持的方式，放弃使用Intl，改为使用Map。
+    - 支持不使用mongoDb（仅有本地图片浏览功能）
  - Version 1.1.2
 
     - 移除了不必要的provider。

@@ -1,7 +1,9 @@
 {
     "host_path": "C:/pixiv/",
-    "fontSize": 16.0,
     "locale": "en",
+    "useMongoDB": true,
+    "serverHost": "mongodb://localhost:27017",
+    "fontSize": 16.0,
     "themeMode": "light",
     "color": {
         "a": 1.0,

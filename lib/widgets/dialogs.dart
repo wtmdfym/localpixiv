@@ -5,7 +5,7 @@ import 'package:toastification/toastification.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../common/tools.dart';
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 
 // Advanced search input dialog
 Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
@@ -209,7 +209,7 @@ Future<String> addClient(
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: Text(MyLocalizations.of(context).account('i')),
+        title: Text(MyLocalizations.of(context).account('info')),
         content: SizedBox(
             height: 640,
             width: 1080,
@@ -217,8 +217,9 @@ Future<String> addClient(
               TextField(
                 controller: accountNameController,
                 decoration: InputDecoration(
-                  hintText: MyLocalizations.of(context)
-                      .inputHintText(MyLocalizations.of(context).account('ne')),
+                  labelText:
+                      MyLocalizations.of(context).account('name_or_email'),
+                  hintText: MyLocalizations.of(context).inputHintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -229,8 +230,8 @@ Future<String> addClient(
                 minLines: 10,
                 maxLines: 10,
                 decoration: InputDecoration(
-                  hintText: MyLocalizations.of(context)
-                      .inputHintText(MyLocalizations.of(context).account('c')),
+                  labelText: MyLocalizations.of(context).account('cookie'),
+                  hintText: MyLocalizations.of(context).inputHintText,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                   ),
@@ -240,7 +241,7 @@ Future<String> addClient(
         actions: <Widget>[
           TextButton(
             child: Text(
-              MyLocalizations.of(context).actions('a'),
+              MyLocalizations.of(context).actions('apply'),
             ),
             onPressed: () {
               Map<String, String> cookies =
@@ -256,7 +257,7 @@ Future<String> addClient(
           ),
           TextButton(
             child: Text(
-              MyLocalizations.of(context).actions('c'),
+              MyLocalizations.of(context).actions('cancel'),
             ),
             onPressed: () {
               Navigator.of(context).pop();
@@ -299,7 +300,7 @@ void openLinkDialog(BuildContext context, Uri url) async {
       actions: <Widget>[
         TextButton(
           child: Text(
-            MyLocalizations.of(context).actions('y'),
+            MyLocalizations.of(context).actions('yes'),
           ),
           onPressed: () {
             launchUrl(url).then((success) =>
@@ -309,7 +310,7 @@ void openLinkDialog(BuildContext context, Uri url) async {
         ),
         TextButton(
           child: Text(
-            MyLocalizations.of(context).actions('n'),
+            MyLocalizations.of(context).actions('no'),
           ),
           onPressed: () {
             Navigator.of(context).pop();

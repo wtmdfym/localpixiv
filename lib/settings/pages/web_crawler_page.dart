@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 
 import '../../common/tools.dart';
-import '../../localization/localization_intl.dart';
+import '../../localization/localization.dart';
 import '../../models.dart';
 import '../../widgets/dialogs.dart';
 import '../back_appbar.dart';
@@ -20,14 +20,23 @@ class WebCrawlerSettingsPage extends StatefulWidget {
 }
 
 class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
+  // localized text
+  late String Function(String) _localizationMap;
   // cookie
   final TextEditingController _cookiecontroller = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
   // 删除Client
   void _removeClient(int index) {
     setState(() {
       widget.controller.webCrawlerSettings.clientPool.removeAt(index);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).webCrawlerPage;
+    super.didChangeDependencies();
   }
 
   @override
@@ -41,15 +50,11 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
     final WebCrawlerSettings webCrawlerSettings =
         widget.controller.webCrawlerSettings;
     _cookiecontroller.text = webCrawlerSettings.cookies.toString();
-    String Function(String hintText) getinputHintText =
-        MyLocalizations.of(context).inputHintText;
-    String Function(String hintText) getiinvalidFormatText =
-        MyLocalizations.of(context).invalidFormat;
-    String Function(String choice) getText =
-        MyLocalizations.of(context).settingsContain;
+    final String inputHintText = MyLocalizations.of(context).inputHintText;
+    final String invalidFormatText = MyLocalizations.of(context).invalidFormat;
     return Scaffold(
         appBar: BackAppBar(
-          title: MyLocalizations.of(context).settingsTitle('webCrawler'),
+          title: _localizationMap('title'),
         ),
         body: Form(
             key: _formKey,
@@ -67,7 +72,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: SingleChildScrollView(
                 child: Padding(
-                    padding:const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       spacing: 20,
@@ -77,8 +82,8 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           minLines: 5,
                           maxLines: 5,
                           decoration: InputDecoration(
-                            labelText: 'Cookies',
-                            hintText: getinputHintText('Cookies'),
+                            labelText: _localizationMap('cookies'),
+                            hintText: inputHintText,
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(5)),
@@ -86,13 +91,13 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return getinputHintText('Cookies');
+                              return inputHintText;
                             } else if (value !=
                                 webCrawlerSettings.cookies.toString()) {
                               Map<String, String> formatted =
                                   cookiesFormater(value);
                               if (formatted['PHPSESSID'] == null) {
-                                return getiinvalidFormatText('Cookies');
+                                return invalidFormatText;
                               } else {
                                 _cookiecontroller.text = formatted.toString();
                                 return null;
@@ -111,7 +116,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                         ),
                         SwitchListTile(
                           title: Text(
-                            '${getText('enable')} ${getText('proxy')}',
+                            _localizationMap('enable_proxy'),
                           ),
                           value: webCrawlerSettings.enableProxy,
                           onChanged: (value) {
@@ -124,8 +129,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           initialValue: webCrawlerSettings.httpProxies,
                           maxLength: 30,
                           decoration: getInputDecoration(
-                              'Http ${getText('proxy')}',
-                              getinputHintText('Http ${getText('proxy')}')),
+                              _localizationMap('http_proxy'), inputHintText),
                           enabled: webCrawlerSettings.enableProxy,
                           onChanged: (value) {
                             // 处理文本变化
@@ -133,8 +137,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           validator: (value) {
                             if (webCrawlerSettings.enableProxy) {
                               if (value == null || value.isEmpty) {
-                                return getinputHintText(
-                                    'Http ${getText('proxy')}');
+                                return inputHintText;
                               } else {
                                 var ipv4re = RegExp(
                                     r'http://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
@@ -145,8 +148,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                                     value
                                         .replaceAll(localhostre, '')
                                         .isNotEmpty) {
-                                  return getiinvalidFormatText(
-                                      'Http ${getText('proxy')}');
+                                  return invalidFormatText;
                                 }
                               }
                             }
@@ -162,8 +164,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           initialValue: webCrawlerSettings.httpsProxies,
                           maxLength: 30,
                           decoration: getInputDecoration(
-                              'Https ${getText('proxy')}',
-                              getinputHintText(getText('proxy'))),
+                              _localizationMap('https_proxy'), inputHintText),
                           enabled: webCrawlerSettings.enableProxy,
                           onChanged: (value) {
                             // 处理文本变化
@@ -171,8 +172,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           validator: (value) {
                             if (webCrawlerSettings.enableProxy) {
                               if (value == null || value.isEmpty) {
-                                return getinputHintText(
-                                    'Https ${getText('proxy')}');
+                                return inputHintText;
                               } else {
                                 var regExp1 = RegExp(
                                     r'http://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
@@ -182,8 +182,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                                     value
                                         .replaceAll(localhostre, '')
                                         .isNotEmpty) {
-                                  return getiinvalidFormatText(
-                                      'Https ${getText('proxy')}');
+                                  return invalidFormatText;
                                 }
                               }
                             }
@@ -197,7 +196,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                         ),
                         SwitchListTile(
                           title: Text(
-                            '${getText('enable')} ${getText('resverseProxy')}',
+                            _localizationMap('enable_resverse_proxy'),
                           ),
                           value: webCrawlerSettings.enableIPixiv,
                           onChanged: (value) {
@@ -210,8 +209,8 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           initialValue: webCrawlerSettings.ipixivHostPath,
                           maxLength: 30,
                           decoration: getInputDecoration(
-                              getText('resverseProxyExample'),
-                              getinputHintText(getText('resverseProxy'))),
+                              _localizationMap('resverse_proxy_example'),
+                              inputHintText),
                           enabled: webCrawlerSettings.enableIPixiv,
                           onChanged: (value) {
                             // 处理文本变化
@@ -219,8 +218,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           validator: (value) {
                             if (webCrawlerSettings.enableIPixiv) {
                               if (value == null || value.isEmpty) {
-                                return getinputHintText(
-                                    getText('resverseProxy'));
+                                return inputHintText;
                               } else {
                                 return null;
                               }
@@ -234,81 +232,78 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                           },
                         ),
                         Text(
-                          getText('downloadstyle'),
+                          _localizationMap('download_style'),
                         ),
-                        CheckboxListTile(
+                        SwitchListTile(
                           title: Text(
-                            'Illust',
+                            _localizationMap('illust'),
                           ),
                           value: webCrawlerSettings.downloadType.illust,
                           onChanged: (value) {
                             setState(() {
-                              webCrawlerSettings.downloadType.illust = value!;
+                              webCrawlerSettings.downloadType.illust = value;
                             });
                           },
                         ),
-                        CheckboxListTile(
+                        SwitchListTile(
                           title: Text(
-                            'Manga',
+                            _localizationMap('manga'),
                           ),
                           value: webCrawlerSettings.downloadType.manga,
                           onChanged: (value) {
                             setState(() {
-                              webCrawlerSettings.downloadType.manga = value!;
+                              webCrawlerSettings.downloadType.manga = value;
                             });
                           },
                         ),
-                        CheckboxListTile(
+                        SwitchListTile(
                           title: Text(
-                            'Novel',
+                            _localizationMap('novel'),
                           ),
                           value: webCrawlerSettings.downloadType.novel,
                           onChanged: (value) {
                             setState(() {
-                              webCrawlerSettings.downloadType.novel = value!;
+                              webCrawlerSettings.downloadType.novel = value;
                             });
                           },
                         ),
-                        CheckboxListTile(
+                        SwitchListTile(
                           title: Text(
-                            'Ugoira',
+                            _localizationMap('ugoira'),
                           ),
                           value: webCrawlerSettings.downloadType.ugoira,
                           onChanged: (value) {
                             setState(() {
-                              webCrawlerSettings.downloadType.ugoira = value!;
+                              webCrawlerSettings.downloadType.ugoira = value;
                             });
                           },
                         ),
-                        CheckboxListTile(
+                        SwitchListTile(
                           title: Text(
-                            'Series',
+                            _localizationMap('series'),
                           ),
                           value: webCrawlerSettings.downloadType.series,
                           onChanged: (value) {
                             setState(() {
-                              webCrawlerSettings.downloadType.series = value!;
+                              webCrawlerSettings.downloadType.series = value;
                             });
                           },
                         ),
                         TextFormField(
-                          initialValue: '2',
+                          initialValue: webCrawlerSettings.semaphore.toString(),
                           maxLength: 2,
-                          decoration: getInputDecoration(getText('concurrency'),
-                              getinputHintText(getText('concurrency'))),
-                          onChanged: (value) {
-                            // 处理文本变化
-                          },
+                          decoration: getInputDecoration(
+                              _localizationMap('concurrency'), inputHintText),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return getinputHintText(getText('concurrency'));
+                              return inputHintText;
                             } else {
                               if (RegExp(r'\d{1,2}').matchAsPrefix(value) ==
                                   null) {
-                                return getinputHintText(getText('number'));
+                                return inputHintText;
                               } else {
                                 if (int.parse(value) < 1) {
-                                  return getText('largerThanOne');
+                                  return _localizationMap('larger_than_one');
                                 }
                               }
                             }
@@ -324,7 +319,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                               Expanded(
                                   child: SwitchListTile(
                                 title: Text(
-                                  '${getText('enable')} ${getText('clientPool')}',
+                                  _localizationMap('client_pool'),
                                 ),
                                 value: webCrawlerSettings.enableClientPool,
                                 onChanged: (value) {
@@ -351,7 +346,7 @@ class _WebCrawlerSettingsPageState extends State<WebCrawlerSettingsPage> {
                                       })
                                     : {},
                                 child: Text(
-                                  getText('add'),
+                                  _localizationMap('add'),
                                 ),
                               ),
                             ]),

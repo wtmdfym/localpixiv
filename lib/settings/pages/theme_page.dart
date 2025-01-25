@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 
-import '../../localization/localization_intl.dart';
+import '../../localization/localization.dart';
 import '../back_appbar.dart';
 import '../settings_controller.dart';
 
@@ -16,13 +16,21 @@ class ThemeSettingsPage extends StatefulWidget {
 }
 
 class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
+  // localized text
+  late String Function(String) _localizationMap;
   // The color which is using now.
   late Color _color;
 
   @override
   void initState() {
-    super.initState();
     _color = widget.controller.color;
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).themePage;
+    super.didChangeDependencies();
   }
 
   @override
@@ -40,15 +48,15 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
         runSpacing: 5,
         wheelDiameter: 155,
         heading: Text(
-          'Select color',
+          _localizationMap('select_color'),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         subheading: Text(
-          'Select color shade',
+          _localizationMap('select_color_shade'),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         wheelSubheading: Text(
-          'Selected color and its shades',
+          _localizationMap('selected'),
           style: Theme.of(context).textTheme.titleSmall,
         ),
 
@@ -94,7 +102,7 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
 
     return Scaffold(
         appBar: BackAppBar(
-          title: MyLocalizations.of(context).settingsTitle('theme'),
+          title: _localizationMap('title'),
           backgroundColor: _color,
         ),
         body: Padding(
@@ -111,21 +119,20 @@ class _ThemeSettingsPageState extends State<ThemeSettingsPage> {
                 items: [
                   DropdownMenuItem(
                     value: ThemeMode.system,
-                    child: Text(MyLocalizations.of(context).theme('system')),
+                    child: Text(_localizationMap('system')),
                   ),
                   DropdownMenuItem(
                     value: ThemeMode.light,
-                    child: Text(MyLocalizations.of(context).theme('light')),
+                    child: Text(_localizationMap('light')),
                   ),
                   DropdownMenuItem(
                     value: ThemeMode.dark,
-                    child: Text(MyLocalizations.of(context).theme('dark')),
+                    child: Text(_localizationMap('dark')),
                   )
                 ],
               ),
               ListTile(
-                title: Text(
-                    MyLocalizations.of(context).settingsContain('chooseColor')),
+                title: Text(_localizationMap('click_choose_color')),
                 onTap: () async {
                   // Store current color before we open the dialog.
                   final Color colorBeforeDialog = _color;

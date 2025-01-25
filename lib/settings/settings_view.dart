@@ -1,6 +1,7 @@
+import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:flutter/material.dart';
 
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 import 'pages/basic_page.dart';
 import 'pages/theme_page.dart';
 import 'pages/search_page.dart';
@@ -20,17 +21,96 @@ class SettingsView extends StatelessWidget {
   static const routeName = '/settings';
 
   final SettingsController controller;
+
   @override
   Widget build(BuildContext context) {
+    // localized text
+    final String Function(String) localizationMap =
+        MyLocalizations.of(context).settingsPage;
     return Padding(
       padding: const EdgeInsets.all(8),
-      // Glue the SettingsController to the theme selection DropdownButton.
-      //
-      // When a user selects a theme from the dropdown list, the
-      // SettingsController is updated, which rebuilds the MaterialApp.
+      //'basic' 'theme' 'search' 'performance' 'webCrawler' 'other' 'about'
       child: Column(
         children: [
-          ListTile(
+          SettingsSection(tiles: [
+            SettingsTile.navigation(
+              leading: Icon(Icons.border_all),
+              title: Text(
+                localizationMap('basic'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          BasicSettingsPage(controller: controller))),
+            ),
+            SettingsTile.navigation(
+              leading: Icon(Icons.color_lens_outlined),
+              title: Text(
+                localizationMap('theme'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          ThemeSettingsPage(controller: controller))),
+            ),
+            SettingsTile.navigation(
+              leading: Icon(Icons.search),
+              title: Text(
+                localizationMap('search'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          SearchSettingsPage(controller: controller))),
+            ),
+            SettingsTile.navigation(
+              leading: Icon(Icons.abc),
+              title: Text(
+                localizationMap('performance'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          PerformanceSettingsPage(controller: controller))),
+            ),
+            SettingsTile.navigation(
+              leading: Icon(Icons.bug_report),
+              title: Text(
+                localizationMap('webCrawler'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          WebCrawlerSettingsPage(controller: controller))),
+            ),
+            SettingsTile.navigation(
+              leading: Icon(Icons.start),
+              title: Text(
+                localizationMap('other'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) =>
+                          OtherSettingsPage(controller: controller))),
+            ),
+            SettingsTile.navigation(
+              leading: Icon(Icons.info_outline),
+              title: Text(
+                localizationMap('about'),
+              ),
+              onPressed: (context) => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AboutPage(controller: controller))),
+            ),
+          ])
+          /*ListTile(
               onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -95,7 +175,7 @@ class SettingsView extends StatelessWidget {
             title: Text(MyLocalizations.of(context).settingsTitle('about'),
                 style: Theme.of(context).textTheme.titleMedium),
             trailing: Icon(Icons.navigate_next),
-          ),
+          ),*/
         ],
       ),
     );

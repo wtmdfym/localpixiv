@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_animate/flutter_animate.dart';
 
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 import '../settings/settings_controller.dart';
 import '../models.dart';
 import '../widgets/workloader.dart';
@@ -114,6 +114,7 @@ class _UserContainerState extends State<UserContainer>
                     width: widget.height + 20,
                     height: widget.height,
                     cacheRate: widget.controller.imageCacheRate,
+                    onTab: () => {},
                     onBookmarked: (isLiked, workId, userName) =>
                         widget.onWorkBookmarked(
                       isLiked,

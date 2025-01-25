@@ -11,7 +11,8 @@ class SettingsService {
   ConfigFileHander configFileHander = ConfigFileHander('jsons/');
 
   ///Loads the User's preferred settings from local or remote storage.
-  Future<Settings> settings() async => configFileHander.readSettings();
+  Future<Settings> settings([bool loadDefault = false]) async =>
+      configFileHander.readSettings(loadDefault);
 
   /// Saves the User's preferred settings to local or remote storage.
   Future<bool> updateSettings(Settings settings) async {

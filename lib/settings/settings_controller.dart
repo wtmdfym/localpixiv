@@ -22,6 +22,8 @@ class SettingsController with ChangeNotifier {
   // Basic
   late String _hostPath;
   late Locale _locale;
+  late bool _useMongoDB;
+  late String _serverHost;
   // Theme
   late ThemeData _themeData;
   late ThemeData _darkThemeData;
@@ -43,6 +45,8 @@ class SettingsController with ChangeNotifier {
   // Basic
   String get hostPath => _hostPath;
   Locale get locale => _locale;
+  bool get useMongoDB => _useMongoDB;
+  String get serverHost => _serverHost;
   // Theme
   ThemeData get themeData => _themeData;
   ThemeData get darkThemeData => _darkThemeData;
@@ -62,11 +66,13 @@ class SettingsController with ChangeNotifier {
   /// Load the user's settings from the SettingsService. It may load from a
   /// local database or the internet. The controller only knows it can load the
   /// settings from the service.
-  Future<void> loadSettings() async {
-    Settings settings = await _settingsService.settings();
+  Future<void> loadSettings([bool loadDefault = false]) async {
+    Settings settings = await _settingsService.settings(loadDefault);
     // Basic
     _hostPath = settings.hostPath;
     _locale = settings.locale;
+    _useMongoDB = settings.useMongoDB;
+    _serverHost = settings.serverHost;
     // Theme
     _themeMode = settings.themeMode;
     _fontsize = settings.fontSize;
@@ -123,6 +129,21 @@ class SettingsController with ChangeNotifier {
     _locale = newLocale;
     notifyListeners();
     await _save();
+  }
+
+  Future<void> updateMongoDb(bool? useMongoDB, {String? serverHost}) async {
+    if (useMongoDB == null) return;
+    if (!useMongoDB) {
+      if (_useMongoDB == useMongoDB) return;
+      _useMongoDB = useMongoDB;
+    } else {
+      if (serverHost == null) return;
+      if (_serverHost == serverHost) return;
+      _useMongoDB = useMongoDB;
+      _serverHost = serverHost;
+    }
+    //notifyListeners();
+    //await _save();
   }
 
   // Theme
@@ -264,9 +285,15 @@ class SettingsController with ChangeNotifier {
             context.mounted ? context : null, 'Save configs', false));*/
     return await _settingsService.updateSettings(Settings(
       hostPath: _hostPath,
+      fontSize: _fontsize,
+      useMongoDB: _useMongoDB,
+      serverHost: _serverHost,
       locale: _locale,
       themeMode: _themeMode,
       color: _color,
+      autoOpen: _autoOpen,
+      autoSearch: _autoSearch,
+      imageCacheRate: _imageCacheRate,
       webCrawlerSettings: _webCrawlerSettings,
     ));
   }

@@ -9,7 +9,7 @@ import '../common/tools.dart';
 import '../models.dart';
 import '../widgets/divided_stack.dart';
 import '../widgets/should_rebuild_widget.dart';
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 
 /// A page to show detail information about a user.
 class UserDetailPage extends StatefulWidget {
@@ -35,6 +35,8 @@ class UserDetailPage extends StatefulWidget {
 }
 
 class _UserDetailPageState extends State<UserDetailPage> {
+  // localized text
+  late String Function(String) _localizationMap;
   int rawCount = 6;
   final int onceLoad = 4;
   late final ScrollController _scrollController = ScrollController();
@@ -42,6 +44,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
   final ValueNotifier<int> pages = ValueNotifier(0);
   final List<WorkInfo> loadedList = [];
   UserInfo _userInfo = defaultUserInfo;
+
   // TODO 优化数据加载
   void _retrieveData() {
     Future.delayed(Durations.medium1, () {
@@ -61,7 +64,6 @@ class _UserDetailPageState extends State<UserDetailPage> {
   late int totalloadCount;
   @override
   void initState() {
-    super.initState();
     totalloadCount = (_userInfo.workInfos.length / rawCount / onceLoad).ceil();
     /*_scrollController.addListener(() {
       if (_scrollController.offset >
@@ -88,6 +90,13 @@ class _UserDetailPageState extends State<UserDetailPage> {
         });
       });
     }
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).userDetialPage;
+    super.didChangeDependencies();
   }
 
   @override
@@ -145,7 +154,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                             child: SizedBox(
                               height: 48,
                               child: Text(
-                                MyLocalizations.of(context).noMoreData,
+                                _localizationMap('no_more_data'),
                               ),
                             ),
                           );
@@ -172,6 +181,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                                     hostPath: widget.controller.hostPath,
                                     workInfo: info,
                                     cacheRate: widget.controller.imageCacheRate,
+                                    onTab: () => {},
                                     onBookmarked: (isLiked, workId, userName) =>
                                         widget.onWorkBookmarked(
                                       isLiked,
@@ -252,7 +262,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
               },
             ));
       }),
-      additionalWidgets: [
+      /*additionalWidgets: [
         Positioned(
             right: 5,
             bottom: 5,
@@ -263,7 +273,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                       const Color.fromARGB(125, 158, 158, 158))),
               onPressed: () => _scrollController.jumpTo(0),
             ))
-      ],
+      ],*/
     );
   }
 }

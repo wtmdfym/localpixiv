@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 // import 'package:flutter_animate/flutter_animate.dart';
 
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 import '../models.dart';
 import '../widgets/workloader.dart';
 
@@ -97,28 +97,30 @@ class _WorkContainerState extends State<WorkContainer>
                           borderRadius: BorderRadius.circular(6),
                         ))),
                         Positioned.fill(
-                            top: 4,
-                            left: 4,
-                            bottom: 4,
-                            right: 4,
                             child: RepaintBoundary(
-                              child: widget.workInfo.type == 'novel'
-                                  ? NovelLoader(
-                                      coverImagePath:
-                                          '${widget.hostPath}${widget.workInfo.coverImagePath!}',
-                                      title: widget.workInfo.title,
-                                      width: widget.width,
-                                      height: widget.height,
-                                      cacheRate: widget.cacheRate,
-                                    )
-                                  : ImageLoader(
-                                      path:
-                                          '${widget.hostPath}${widget.workInfo.imagePath![0]}',
-                                      width: widget.width,
-                                      height: widget.height,
-                                      cacheRate: widget.cacheRate,
-                                    ),
-                            )),
+                                child: InkWell(
+                          onTap: widget.onTab,
+                          borderRadius: BorderRadius.circular(6),
+                          child: Padding(
+                            padding: EdgeInsets.all(6),
+                            child: widget.workInfo.type == 'novel'
+                                ? NovelLoader(
+                                    coverImagePath:
+                                        '${widget.hostPath}${widget.workInfo.coverImagePath!}',
+                                    title: widget.workInfo.title,
+                                    width: widget.width,
+                                    height: widget.height,
+                                    cacheRate: widget.cacheRate,
+                                  )
+                                : ImageLoader(
+                                    path:
+                                        '${widget.hostPath}${widget.workInfo.imagePath![0]}',
+                                    width: widget.width,
+                                    height: widget.height,
+                                    cacheRate: widget.cacheRate,
+                                  ),
+                          ),
+                        ))),
                         // Show the number of images or the number of character in novel.
                         Positioned(
                           top: 4,
@@ -143,14 +145,6 @@ class _WorkContainerState extends State<WorkContainer>
                             ),
                           ),
                         ),
-                        // Show inkWell on the top.
-                        Positioned.fill(
-                            child: Material(
-                                type: MaterialType.transparency,
-                                child: InkWell(
-                                  onTap: widget.onTab,
-                                  borderRadius: BorderRadius.circular(6),
-                                ))),
                         // Bookmark work.
                         Positioned(
                           bottom: 4,
@@ -173,7 +167,8 @@ class _WorkContainerState extends State<WorkContainer>
                               icon: Icon(Icons.favorite_border),
                               selectedIcon: Icon(Icons.favorite),
                               tooltip: MyLocalizations.of(context)
-                                  .like(widget.workInfo.isLiked ? 'y' : 'n'),
+                                  .bookmarkToolTip(
+                                      widget.workInfo.isLiked ? 'y' : 'n'),
                               color: Colors.white,
                               constraints: BoxConstraints.tightFor(
                                   width:

@@ -4,7 +4,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../localization/localization_intl.dart';
+import '../localization/localization.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({
@@ -16,6 +16,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // localized text
+  late String Function(String) _localizationMap;
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   late final Process process;
@@ -77,11 +79,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 builder: (context) {
                   return AlertDialog(
                     title: Text(
-                      MyLocalizations.of(context).homePage('ce'),
+                      _localizationMap('connect_error'),
                     ),
                     titleTextStyle: TextStyle(color: Colors.redAccent),
                     content: Text(
-                      MyLocalizations.of(context).homePage('ped'),
+                      _localizationMap('proxy_error'),
                       textAlign: TextAlign.center,
                     ),
                   );
@@ -127,28 +129,34 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    super.initState();
     _startProcessListen();
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).homePage;
+    super.didChangeDependencies();
   }
 
   @override
   void dispose() {
-    super.dispose();
     _scrollController.dispose();
     _controller.dispose();
     process.kill();
     s1.cancel();
     s2.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final List<String> hittexts = [
-      MyLocalizations.of(context).homePage('ef'),
-      MyLocalizations.of(context).homePage('ew'),
-      MyLocalizations.of(context).homePage('eu'),
-      MyLocalizations.of(context).homePage('ek'),
-      MyLocalizations.of(context).homePage('er')
+      _localizationMap('ef'),
+      _localizationMap('ew'),
+      _localizationMap('eu'),
+      _localizationMap('ek'),
+      _localizationMap('er')
     ];
     // 0->followings
     // 1->id
@@ -163,7 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Expanded(
               child: TextField(
-                enabled: getType != 0,
+                enabled: (getType != 0) && (getType != 4),
                 controller: _controller,
                 onSubmitted: (text) {
                   _sendCommand(text);
@@ -195,7 +203,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                       setState(() => isstart = true);
                     },
-              child: Text(MyLocalizations.of(context).homePage('b')),
+              child: Text(_localizationMap('start')),
             ),
             ElevatedButton(
               onPressed: isstart
@@ -204,11 +212,11 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(() => isstart = false);
                     }
                   : () {},
-              child: Text(MyLocalizations.of(context).homePage('s')),
+              child: Text(_localizationMap('stop')),
             ),
             ElevatedButton(
               onPressed: () => outputs.value = '',
-              child: Text(MyLocalizations.of(context).homePage('c')),
+              child: Text(_localizationMap('clear')),
             ),
           ],
         ),
@@ -216,31 +224,31 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             Expanded(
                 child: CheckboxListTile(
-                    title: Text(MyLocalizations.of(context).homePage('cf')),
+                    title: Text(_localizationMap('cf')),
                     value: getType == 0 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 0 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text(MyLocalizations.of(context).homePage('ci')),
+                    title: Text(_localizationMap('ci')),
                     value: getType == 1 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 1 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text(MyLocalizations.of(context).homePage('cu')),
+                    title: Text(_localizationMap('cu')),
                     value: getType == 2 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 2 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text(MyLocalizations.of(context).homePage('ct')),
+                    title: Text(_localizationMap('ct')),
                     value: getType == 3 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 3 : {}))),
             Expanded(
                 child: CheckboxListTile(
-                    title: Text(MyLocalizations.of(context).homePage('cr')),
+                    title: Text(_localizationMap('cr')),
                     value: getType == 4 ? true : false,
                     onChanged: (value) =>
                         setState(() => value! ? getType = 4 : {}))),
