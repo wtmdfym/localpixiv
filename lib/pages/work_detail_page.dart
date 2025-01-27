@@ -63,7 +63,7 @@ class _WorkDetailPageState extends State<WorkDetailPage> {
         onTapUser: (userName) {
           widget.controller.autoOpen
               ? context
-                  .read<AddStackNotifier>()
+                  .read<SuperTabViewNotifier>()
                   .addStack<UserDetailPage>(userName, {'userName': userName})
               : {};
         },

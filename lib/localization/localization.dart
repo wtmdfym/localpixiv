@@ -26,6 +26,9 @@ class MyLocalizations {
   // General
   String get inputHintText => 'Please input......';
   String get invalidFormat => 'Invalid format!';
+  // Database operation
+  String databaseOperation(String operation) =>
+      _stringMap['database_operation'][operation] ?? 'Select key error';
   // App
   String get appTitle => _stringMap['app_title'];
 
@@ -39,7 +42,8 @@ class MyLocalizations {
       _stringMap['viewer_page'][choice] ?? 'Select key error';
   String userDetialPage(String choice) =>
       _stringMap['user_detial_page'][choice] ?? 'Select key error';
-
+  String tagPage(String choice) =>
+      _stringMap['tag_page'][choice] ?? 'Select key error';
   String settingsPage(String choice) =>
       _stringMap['settings_page'][choice] ?? 'Select key error';
   // Settings_pages

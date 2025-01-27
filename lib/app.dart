@@ -11,11 +11,11 @@ import 'settings/pages/basic_page.dart';
 import 'pages/home_page.dart';
 import 'pages/viewer_page.dart';
 import 'pages/followings_page.dart';
+import 'pages/tag_page.dart';
 import 'settings/settings_view.dart';
 import 'settings/settings_controller.dart';
 import 'common/customnotifier.dart';
 import 'widgets/super_tabview.dart';
-// import 'common/customwidgets.dart';
 
 class MyApp extends StatelessWidget {
   MyApp(
@@ -64,13 +64,16 @@ class MyApp extends StatelessWidget {
 
     return MultiProvider(
       providers: [
-        ListenableProvider<AddStackNotifier>(
+        ListenableProvider<SuperTabViewNotifier>(
           create: (context) {
-            AddStackNotifier addStackNotifier = AddStackNotifier();
+            SuperTabViewNotifier addStackNotifier = SuperTabViewNotifier();
             addStackNotifier.init(settingsController, pixivDb, bookmarkWork);
             return addStackNotifier;
           },
         ),
+        ListenableProvider<SearchNotifier>(create: (context) {
+          return SearchNotifier();
+        })
       ],
       child: ListenableBuilder(
         listenable: settingsController,
@@ -130,17 +133,18 @@ class MyApp extends StatelessWidget {
                 body: useMongoDB
                     ? SuperTabView(
                         initialIndex: 1,
+                        preloadIndex: [1],
                         maintainTabDatas: [
                           TabData(
                               title:
                                   'Home', // MyLocalizations.of(context).tabTitle('h'),
-                              icon: Icon(Icons.home),
+                              icon: Icon(Icons.home_outlined),
                               canBeClosed: false,
                               child: MyHomePage()),
                           TabData(
                               title:
                                   'Viewer', //MyLocalizations.of(context).tabTitle('v'),
-                              icon: Icon(Icons.view_quilt_rounded),
+                              icon: Icon(Icons.view_quilt_outlined),
                               canBeClosed: false,
                               child: ViewerPage(
                                 controller: settingsController,
@@ -151,23 +155,30 @@ class MyApp extends StatelessWidget {
                           TabData(
                               title:
                                   'Followings', //MyLocalizations.of(context).tabTitle('f'),
-                              icon: Icon(Icons.view_list),
+                              icon: Icon(Icons.view_list_outlined),
                               canBeClosed: false,
-                              child: FollowingsDisplayer(
+                              child: FollowingsPage(
                                 controller: settingsController,
                                 pixivDb: pixivDb,
                                 onBookmarked: bookmarkWork,
                               )),
                           TabData(
+                              title: 'Tags',
+                              icon: Icon(Icons.view_column_outlined),
+                              canBeClosed: false,
+                              child: TagPage(
+                                controller: settingsController,
+                                tagCollection: pixivDb.collection('All Tags'),
+                              )),
+                          TabData(
                               title:
                                   'Settings', //MyLocalizations.of(context).tabTitle('s'),
-                              icon: Icon(Icons.settings),
+                              icon: Icon(Icons.settings_outlined),
                               canBeClosed: false,
                               child: SettingsView(
                                 controller: settingsController,
                               )),
                         ],
-                        preloadIndex: [1],
                       )
                     : /*Builder(
                       builder: (context) {

@@ -269,7 +269,7 @@ class SettingsController with ChangeNotifier {
   Future<void> updateWebCrawlerSettings(
       WebCrawlerSettings? newWebCrawlerSettings) async {
     if (newWebCrawlerSettings == null) return;
-    if (newWebCrawlerSettings == _webCrawlerSettings) return;
+    if (newWebCrawlerSettings.toJson() == _webCrawlerSettings.toJson()) return;
     _webCrawlerSettings = newWebCrawlerSettings;
     // Just save to file, don't need to update UI.
     // notifyListeners();

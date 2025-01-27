@@ -1,4 +1,8 @@
 const Map<String, dynamic> enLocalizedValues = {
+  'database_operation': {
+    'search': 'Search',
+    'update': 'Update',
+  },
   'app_title': 'Local Pixiv',
   'tab_title': {
     'h': 'Home',
@@ -6,6 +10,7 @@ const Map<String, dynamic> enLocalizedValues = {
     'f': 'Following',
     's': 'Settings',
   },
+  // pages
   'home_page': {
     'ef': '( ･ω･)☞   (:3 」∠)',
     'ew': 'Enter work Id',
@@ -27,8 +32,22 @@ const Map<String, dynamic> enLocalizedValues = {
     'search': 'Search',
     'advanced_search': 'Advanced Search',
     'loading': 'Loading......',
+    'search_not_complete': 'Searching operation not complete!\nPlease wait.',
+    'text_fommat_incorrect': 'The search text is not formatted correctly.',
+    'result_found': 'results found.',
+    'no_result_found': 'No matching results found!',
   },
   'user_detial_page': {'no_more_data': 'No More Data'},
+  'tag_page': {
+    'search': 'Search',
+    'like': 'Like Tags',
+    'dislike': 'Dislike Tags',
+    'add_tag': 'Add Tag',
+    'tag_exist': 'Tag areadly exist.',
+    'tag_not_find': 'Tag not find.',
+    'tag_add_to_other': 'Tag areadly add to',
+    'update': 'Update',
+  },
   'settings_page': {
     'basic': 'Basic Settings',
     'theme': 'Theme Settings',
@@ -72,7 +91,7 @@ const Map<String, dynamic> enLocalizedValues = {
     'http_proxy': 'Http Proxy',
     'https_proxy': 'Https Proxy',
     'enable_resverse_proxy': 'Enable Resverse Proxy',
-    'resverse_proxy_example': 'Resverse Proxy (eg i.pximg.net)',
+    'resverse_proxy_example': 'Resverse Proxy (eg https://i.pximg.net)',
     'download_style': 'Download Style',
     'illust': 'Illust',
     'manga': 'Manga',
@@ -91,6 +110,7 @@ const Map<String, dynamic> enLocalizedValues = {
     'title': 'About',
     'about': 'About......',
   },
+  // widgets
   'loader': {
     'invalid':
         'Invalid image data! The image file may be corrupted. It will be deleted automatically.',
@@ -107,11 +127,14 @@ const Map<String, dynamic> enLocalizedValues = {
     'input': 'Page',
   },
   'not_following_warn': 'NOT FOLLOWING NOW!',
+  // dialogs
   'actions': {
     'yes': 'Yes',
     'no': 'No',
     'apply': 'Apply',
     'cancel': 'Cancel',
+    'success': 'Success',
+    'fail': 'Fail',
   },
   'account': {
     'name_or_email': 'Account Name or E-mail',

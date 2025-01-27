@@ -58,7 +58,7 @@ class PageControllerRow extends StatelessWidget {
         child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        ElevatedButton.icon(
+        TextButton.icon(
           onPressed: prevPage,
           icon: Icon(
             Icons.navigate_before,
@@ -86,12 +86,12 @@ class PageControllerRow extends StatelessWidget {
                 ))
               ],
             )),
-        ElevatedButton(
+        TextButton(
             onPressed: jumpToPage,
             child: Text(
               localizationMap('jump'),
             )),
-        ElevatedButton.icon(
+        TextButton.icon(
             onPressed: nextPage,
             icon: Icon(
               Icons.navigate_next,

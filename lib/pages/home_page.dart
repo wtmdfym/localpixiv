@@ -153,16 +153,16 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     final List<String> hittexts = [
       _localizationMap('ef'),
+      _localizationMap('er'),
       _localizationMap('ew'),
       _localizationMap('eu'),
       _localizationMap('ek'),
-      _localizationMap('er')
     ];
     // 0->followings
-    // 1->id
-    // 2->uid
-    // 3->tag
-    // 4->rank
+    // 1->rank
+    // 2->id
+    // 3->uid
+    // 4->tag
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Column(children: <Widget>[
@@ -171,7 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             Expanded(
               child: TextField(
-                enabled: (getType != 0) && (getType != 4),
+                enabled: (getType != 0) && (getType != 1),
                 controller: _controller,
                 onSubmitted: (text) {
                   _sendCommand(text);
@@ -223,39 +223,45 @@ class _MyHomePageState extends State<MyHomePage> {
         Row(
           children: [
             Expanded(
-                child: CheckboxListTile(
-                    title: Text(_localizationMap('cf')),
-                    value: getType == 0 ? true : false,
-                    onChanged: (value) =>
-                        setState(() => value! ? getType = 0 : {}))),
+                child: RadioListTile<int>(
+              title: Text(_localizationMap('cf')),
+              value: 0,
+              groupValue: getType,
+              onChanged: (value) => setState(() => getType = value!),
+            )),
             Expanded(
-                child: CheckboxListTile(
-                    title: Text(_localizationMap('ci')),
-                    value: getType == 1 ? true : false,
-                    onChanged: (value) =>
-                        setState(() => value! ? getType = 1 : {}))),
+                child: RadioListTile<int>(
+              title: Text(_localizationMap('cr')),
+              value: 1,
+              groupValue: getType,
+              onChanged: (value) => setState(() => getType = value!),
+            )),
             Expanded(
-                child: CheckboxListTile(
-                    title: Text(_localizationMap('cu')),
-                    value: getType == 2 ? true : false,
-                    onChanged: (value) =>
-                        setState(() => value! ? getType = 2 : {}))),
+                child: RadioListTile<int>(
+              title: Text(_localizationMap('ci')),
+              value: 2,
+              groupValue: getType,
+              onChanged: (value) => setState(() => getType = value!),
+            )),
             Expanded(
-                child: CheckboxListTile(
-                    title: Text(_localizationMap('ct')),
-                    value: getType == 3 ? true : false,
-                    onChanged: (value) =>
-                        setState(() => value! ? getType = 3 : {}))),
+                child: RadioListTile<int>(
+              title: Text(_localizationMap('cu')),
+              value: 3,
+              groupValue: getType,
+              onChanged: (value) => setState(() => getType = value!),
+            )),
             Expanded(
-                child: CheckboxListTile(
-                    title: Text(_localizationMap('cr')),
-                    value: getType == 4 ? true : false,
-                    onChanged: (value) =>
-                        setState(() => value! ? getType = 4 : {}))),
+                child: RadioListTile<int>(
+              title: Text(_localizationMap('ct')),
+              value: 4,
+              groupValue: getType,
+              onChanged: (value) => setState(() => getType = value!),
+            )),
           ],
         ),
         Expanded(
             child: ListView(
+          padding: const EdgeInsets.only(right: 12),
           controller: _scrollController,
           children: [
             ValueListenableBuilder(

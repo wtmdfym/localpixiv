@@ -21,7 +21,7 @@ samples, guidance on mobile development, and a full API reference.
  - [x] image viewer
  - [ ] novel viewer
  - [x] following viewer
- - [ ] tag viewer
+ - [x] tag viewer
  - [x] settings
  - [x] 自定义图片缓存大小
  - [x] 自定义字体大小
@@ -33,6 +33,13 @@ samples, guidance on mobile development, and a full API reference.
  - [x] 支持不使用mongoDB
 
 ## Update History
+ - Version 1.1.4
+
+    - 修复了bug。
+    - 调整了部分动画的显示。
+    - 优化了userdetailpage的数据加载。
+    - 实现了tag viewer，支持模糊查询。
+    - 完善了基础搜索功能。
  - Version 1.1.3
 
     - 修复了bug。

@@ -91,6 +91,11 @@ class ListNotifier<T> extends ValueNotifier<List<T>> {
     value = newList;
     notifyListeners();
   }
+
+  void addAll(List<T> addtionalList) {
+    value.addAll(addtionalList);
+    notifyListeners();
+  }
 }
 
 /*
@@ -117,13 +122,15 @@ class CmdData extends InheritedWidget {
   bool updateShouldNotify(CmdData oldWidget) => data != oldWidget.data;
 }*/
 
-class AddStackNotifier with ChangeNotifier {
+class SuperTabViewNotifier with ChangeNotifier {
   late String _newTitle;
   late Widget _newStack;
   late SettingsController _controller;
   late Db _pixivDb;
   late WorkBookmarkCallback _onWorkBookmarked;
   bool needAdd = false;
+  late int _changeTo;
+  bool needChange = false;
 
   TabData? get newData {
     if (needAdd) {
@@ -133,6 +140,8 @@ class AddStackNotifier with ChangeNotifier {
       return null;
     }
   }
+
+  int get indexNeedChange => _changeTo;
 
   void init(SettingsController controller, Db pixivDb,
       WorkBookmarkCallback onWorkBookmarked) {
@@ -163,5 +172,32 @@ class AddStackNotifier with ChangeNotifier {
     }
     needAdd = true;
     notifyListeners();
+  }
+
+  void changeToMaintainTab(int index) {
+    _changeTo = index;
+    needChange = true;
+    notifyListeners();
+  }
+}
+
+class SearchNotifier with ChangeNotifier {
+  late String _searchText;
+  bool _needSearch = false;
+
+  String get searchText => _searchText;
+  bool get needSearch => _needSearch;
+  void searchTag(String tag) {
+    _searchText = tag;
+    markNeedSearch();
+    notifyListeners();
+  }
+
+  void markNeedSearch() {
+    _needSearch = true;
+  }
+
+  void markSearched() {
+    _needSearch = false;
   }
 }

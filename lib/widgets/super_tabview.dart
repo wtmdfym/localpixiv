@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 
 import '../common/customnotifier.dart';
@@ -132,7 +131,6 @@ class SuperTabView extends StatefulWidget {
 
 class SuperTabViewState extends State<SuperTabView>
     with TickerProviderStateMixin {
-  late final AnimationController _dargEOController;
   int maintainTabIndex = 0;
   int dynamicTabIndex = 0;
   bool isMaintainTab = true;
@@ -143,6 +141,7 @@ class SuperTabViewState extends State<SuperTabView>
   final List<Widget> dynamicChildren = [];
   final List<Widget> maintainTab = [];
   final List<Widget> dynamicTab = [];
+  bool _isDragIn = false;
   late final TabController maintainTabController;
   late TabController dynamicTabController;
 
@@ -230,7 +229,6 @@ class SuperTabViewState extends State<SuperTabView>
       }
     }
     // controller
-    _dargEOController = AnimationController(vsync: this);
     maintainTabController = TabController(
         initialIndex: widget.initialIndex ?? 0,
         length: maintainChildren.length,
@@ -242,7 +240,6 @@ class SuperTabViewState extends State<SuperTabView>
 
   @override
   void dispose() {
-    _dargEOController.dispose();
     maintainTabController.dispose();
     dynamicTabController.dispose();
     super.dispose();
@@ -250,53 +247,60 @@ class SuperTabViewState extends State<SuperTabView>
 
   @override
   Widget build(final BuildContext context) {
-    return Consumer<AddStackNotifier>(builder: (context, notifier, child) {
-      TabData? data = notifier.newData;
+    return Consumer<SuperTabViewNotifier>(builder: (context, notifier, child) {
+      final TabData? data = notifier.newData;
       if (data != null) {
         addTab(data);
+      }
+      if (notifier.needChange) {
+        notifier.needChange = false;
+        maintainTabIndex = notifier.indexNeedChange;
+        if (!loadedIndex.contains(notifier.indexNeedChange)) {
+          loadedIndex.add(notifier.indexNeedChange);
+        }
+        maintainTabController.animateTo(maintainTabIndex);
       }
       return Column(
         children: [
           // Add work detail page
           RepaintBoundary(
-                  child: DragTarget<WorkInfo>(
+              child: DragTarget<WorkInfo>(
             onWillAcceptWithDetails: (details) {
-              _dargEOController.forward();
+              _isDragIn = true;
               // Always accept add new tab.
               return true;
             },
             onLeave: (data) {
-              _dargEOController.reverse();
+              _isDragIn = false;
             },
-            onAcceptWithDetails: (details) => {
-              context.read<AddStackNotifier>().addStack<WorkDetailPage>(
-                  details.data.title, {'workInfo': details.data}),
-              _dargEOController.reverse()
+            onAcceptWithDetails: (details) {
+              _isDragIn = false;
+              context.read<SuperTabViewNotifier>().addStack<WorkDetailPage>(
+                  details.data.title, {'workInfo': details.data});
             },
             builder: (context, candidateData, rejectedData) {
-              return _MutiTabBar(
-                maintainChildren: maintainTab,
-                dynamicChildren: dynamicTab,
-                maintainTabController: maintainTabController,
-                dynamicTabController:
-                    dynamicTab.isNotEmpty ? dynamicTabController : null,
-                onChangeTab: (index, isMaintainTabBar) {
-                  // Update tab
-                  isMaintainTab = isMaintainTabBar;
-                  // Update index
-                  if (isMaintainTabBar) {
-                    maintainTabIndex = index;
-                    loadedIndex.add(index);
-                  } else {
-                    dynamicTabIndex = index;
-                  }
-                  setState(() {});
-                },
-              );
+              return Ink(
+                  color: _isDragIn ? Theme.of(context).hoverColor : null,
+                  child: _MutiTabBar(
+                      maintainChildren: maintainTab,
+                      dynamicChildren: dynamicTab,
+                      maintainTabController: maintainTabController,
+                      dynamicTabController:
+                          dynamicTab.isNotEmpty ? dynamicTabController : null,
+                      onChangeTab: (index, isMaintainTabBar) {
+                        // Update tab
+                        isMaintainTab = isMaintainTabBar;
+                        // Update index
+                        if (isMaintainTabBar) {
+                          maintainTabIndex = index;
+                          loadedIndex.add(index);
+                        } else {
+                          dynamicTabIndex = index;
+                        }
+                        setState(() {});
+                      }));
             },
-          ))
-              .animate(controller: _dargEOController, autoPlay: false)
-              .color(blendMode: BlendMode.darken),
+          )),
 
           Expanded(
             child: Stack(

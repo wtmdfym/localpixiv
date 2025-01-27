@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:card_settings_ui/card_settings_ui.dart';
 import 'package:filepicker_windows/filepicker_windows.dart';
+import 'package:localpixiv/models.dart';
 
 import '../../localization/localization.dart';
 import '../settings_controller.dart';
@@ -137,7 +138,7 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
               ),
               TextFormField(
                 enabled: useMongoDB,
-                initialValue: widget.controller.serverHost,
+                initialValue: widget.controller.serverHost.substring(10),
                 maxLength: 100,
                 decoration: getInputDecoration(_localizationMap('server_host'),
                     MyLocalizations.of(context).inputHintText),
@@ -145,21 +146,17 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                   if (value == null || value.isEmpty) {
                     return MyLocalizations.of(context).inputHintText;
                   } else {
-                    var mongoipv4re = RegExp(
-                        r'mongodb://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
-                    var mongolocalhostre =
-                        RegExp(r'mongodb://localhost:\d{1,5}');
-                    // TODO ipv6 (?<=]:).*\w+
-                    if (value.replaceAll(mongoipv4re, '').isNotEmpty &&
-                        value.replaceAll(mongolocalhostre, '').isNotEmpty) {
+                    if (value.replaceAll(RegExp(ipv4re), '').isNotEmpty &&
+                        value.replaceAll(RegExp(ipv6re), '').isNotEmpty &&
+                        value.replaceAll(RegExp(localhostre), '').isNotEmpty) {
                       return MyLocalizations.of(context).invalidFormat;
                     }
                   }
                   return null;
                 },
                 onSaved: (newValue) {
-                  widget.controller
-                      .updateMongoDb(useMongoDB, serverHost: newValue);
+                  widget.controller.updateMongoDb(useMongoDB,
+                      serverHost: 'mongodb://$newValue');
                 },
               ),
               Expanded(
@@ -242,7 +239,7 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                       SettingsTile.navigation(
                         title: Text('MongoDB Server Host'),
                         description: Text(
-                            'Current Url: ${widget.controller.serverHost}'),
+                            'Current Url: ${widget.controller.serverHost.substring(10)}'),
                         enabled: useMongoDB,
                         onPressed: (context) async {
                           String? newHostPath = await inputDialog(
@@ -257,15 +254,14 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                                 return MyLocalizations.of(context)
                                     .inputHintText;
                               } else {
-                                var mongoipv4re = RegExp(
-                                    r'mongodb://((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}');
-                                var mongolocalhostre =
-                                    RegExp(r'mongodb://localhost:\d{1,5}');
                                 if (value
-                                        .replaceAll(mongoipv4re, '')
+                                        .replaceAll(RegExp(ipv4re), '')
                                         .isNotEmpty &&
                                     value
-                                        .replaceAll(mongolocalhostre, '')
+                                        .replaceAll(RegExp(ipv6re), '')
+                                        .isNotEmpty &&
+                                    value
+                                        .replaceAll(RegExp(localhostre), '')
                                         .isNotEmpty) {
                                   return MyLocalizations.of(context)
                                       .invalidFormat;
@@ -275,7 +271,7 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                             },
                           );
                           widget.controller.updateMongoDb(useMongoDB,
-                              serverHost: newHostPath);
+                              serverHost: 'mongodb://$newHostPath');
                         },
                       ),
                     ],

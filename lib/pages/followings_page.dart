@@ -13,8 +13,9 @@ import '../settings/settings_controller.dart';
 import '../widgets/page_controller_row.dart';
 import 'user_detail_page.dart';
 
-class FollowingsDisplayer extends StatefulWidget {
-  const FollowingsDisplayer({
+/// A page to show brief information about following users.
+class FollowingsPage extends StatefulWidget {
+  const FollowingsPage({
     super.key,
     required this.controller,
     required this.pixivDb,
@@ -25,16 +26,16 @@ class FollowingsDisplayer extends StatefulWidget {
   final WorkBookmarkCallback onBookmarked;
 
   @override
-  State<StatefulWidget> createState() => _FollowingsDisplayerState();
+  State<StatefulWidget> createState() => _FollowingsPageState();
 }
 
-class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
+class _FollowingsPageState extends State<FollowingsPage> {
   // 初始化
   int maxpage = 1;
   int reslength = 0;
   final int pagesize = 8;
-  final int workCountOnSisplay = 4;
-  late final ListNotifier<UserInfo> userInfosNotifer;
+  final int workCountOnShow = 4;
+  final ListNotifier<UserInfo> userInfosNotifer = ListNotifier<UserInfo>([]);
   final List<UserInfo> userInfos = [];
 
   void dataLoader() async {
@@ -53,10 +54,10 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
             WorkInfo.fromJson(workinfojson)
         ];
         // 检查workInfos数量是否正常
-        assert(workInfo.length <= pagesize);
-        if (workInfo.length < pagesize) {
+        assert(workInfo.length <= workCountOnShow);
+        if (workInfo.length < workCountOnShow) {
           workInfo.addAll([
-            for (int i = workInfo.length; i <= workCountOnSisplay; i++)
+            for (int i = workInfo.length; i <= workCountOnShow; i++)
               defaultWorkInfo
           ]);
         }
@@ -82,8 +83,6 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   @override
   void initState() {
     super.initState();
-    userInfosNotifer =
-        ListNotifier([for (int i = 0; i <= pagesize; i++) defaultUserInfo]);
     dataLoader();
   }
 
@@ -107,7 +106,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
   Widget build(BuildContext context) {
     void openTabCallback(String userName) {
       context
-          .read<AddStackNotifier>()
+          .read<SuperTabViewNotifier>()
           .addStack<UserDetailPage>(userName, {'userName': userName});
     }
 
@@ -122,8 +121,7 @@ class _FollowingsDisplayerState extends State<FollowingsDisplayer> {
                   valueListenable: userInfosNotifer,
                   builder: (context, userInfos, child) => ListView.builder(
                         padding: const EdgeInsets.only(right: 12),
-                        shrinkWrap: true,
-                        itemCount: pagesize,
+                        itemCount: userInfos.length,
                         cacheExtent: 240,
                         itemBuilder: (context, index) => UserContainer(
                           height: 240,

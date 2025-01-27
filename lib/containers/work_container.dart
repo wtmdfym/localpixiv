@@ -70,12 +70,10 @@ class _WorkContainerState extends State<WorkContainer>
         onEnter: (details) => _mouseEOAnimationController.forward(),
         onExit: (details) => _mouseEOAnimationController.reverse(),
         child:*/
-          LongPressDraggable<WorkInfo>(
+          Draggable<WorkInfo>(
               data: widget.workInfo,
-              delay: Durations.medium2,
               dragAnchorStrategy: (draggable, context, position) =>
                   Offset(-12, 32),
-              childWhenDragging: SizedBox(),
               feedback: Material(
                   type: MaterialType.card,
                   child: Text(

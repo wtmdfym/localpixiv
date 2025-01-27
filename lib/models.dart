@@ -118,6 +118,30 @@ class UserInfo {
   }
 }
 
+class TagInfo {
+  final String name;
+  final String translation;
+  final int workCount;
+  final List<dynamic> workIds;
+  final bool? isLiked;
+  TagInfo({
+    required this.name,
+    required this.translation,
+    required this.workCount,
+    required this.workIds,
+    this.isLiked,
+  });
+  factory TagInfo.fromJson(Map<String, dynamic> json) {
+    return TagInfo(
+      name: json['name'],
+      translation: json['translate'] ?? '',
+      workCount: json['works_count'],
+      workIds: json['workids'],
+      isLiked: json['like'],
+    );
+  }
+}
+
 /// Settings of the app.
 class Settings {
   /// The path of pixiv filedir, used to load and save works etc.
@@ -226,7 +250,7 @@ class WebCrawlerSettings {
   DownloadType downloadType;
   String lastRecordTime;
   bool enableClientPool;
-  List<ClientPool?> clientPool;
+  List<ClientPool> clientPool;
   WebCrawlerSettings({
     required this.hostPath,
     required this.cookies,
@@ -283,7 +307,7 @@ class WebCrawlerSettings {
     data['download_type'] = downloadType.toJson();
     data['last_record_time'] = lastRecordTime;
     data['enable_client_pool'] = enableClientPool;
-    data['client_pool'] = clientPool.map((v) => v?.toJson() ?? {}).toList();
+    data['client_pool'] = clientPool.map((v) => v.toJson()).toList();
     return data;
   }
 }
@@ -386,3 +410,11 @@ class StackData {
 typedef OpenTabCallback = void Function(String userName);
 typedef WorkBookmarkCallback = void Function(
     bool isLiked, int workId, String userName);
+
+const String ipv4re =
+    r'((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})(\.((2(5[0-5]|[0-4]\d))|[0-1]?\d{1,2})){3}:\d{1,5}';
+const String ipv6re =
+    r'^\s*((([0-9A-Fa-f]{1,4}:){7}(([0-9A-Fa-f]{1,4})|:))|(([0-9A-Fa-f]{1,4}:){6}(:|((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})|(:[0-9A-Fa-f]{1,4})))|(([0-9A-Fa-f]{1,4}:){5}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(([0-9A-Fa-f]{1,4}:){4}(:[0-9A-Fa-f]{1,4}){0,1}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(([0-9A-Fa-f]{1,4}:){3}(:[0-9A-Fa-f]{1,4}){0,2}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(([0-9A-Fa-f]{1,4}:){2}(:[0-9A-Fa-f]{1,4}){0,3}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(([0-9A-Fa-f]{1,4}:)(:[0-9A-Fa-f]{1,4}){0,4}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(:(:[0-9A-Fa-f]{1,4}){0,5}((:((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})?)|((:[0-9A-Fa-f]{1,4}){1,2})))|(((25[0-5]|2[0-4]\d|[01]?\d{1,2})(\.(25[0-5]|2[0-4]\d|[01]?\d{1,2})){3})))(%.+)?\s*$';
+const String localhostre = r'localhost:\d{1,5}';
+const String urlre =
+    r'(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]';

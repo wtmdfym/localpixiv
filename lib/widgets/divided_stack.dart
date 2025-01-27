@@ -12,12 +12,20 @@ class DividedStack extends StatefulWidget {
       this.dividerSpacing = 8,
       this.minLeftOccupied = 0.2,
       this.maxLeftOccupied = 0.4,
-      this.defaultLeftOccupied = 0.2,
+      double defaultLeftOccupied = 0.2,
       this.isFoldable = true}) {
     assert((0 <= minLeftOccupied) || (minLeftOccupied < maxLeftOccupied),
         'The value of minLeftOccupied must be positive and smaller than maxLeftOccupied');
     assert((0 < maxLeftOccupied) || (maxLeftOccupied <= 1),
         'The value of maxLeftOccupied must be in (0, 1]');
+    // Make sure the default value is between min and max value.
+    if (defaultLeftOccupied < minLeftOccupied) {
+      _defaultLeftOccupied = minLeftOccupied;
+    } else if (defaultLeftOccupied > maxLeftOccupied) {
+      _defaultLeftOccupied = maxLeftOccupied;
+    } else {
+      _defaultLeftOccupied = defaultLeftOccupied;
+    }
   }
   final EdgeInsetsGeometry? padding;
   final Widget? leftWidget;
@@ -28,7 +36,7 @@ class DividedStack extends StatefulWidget {
   final int dividerSpacing;
   final double minLeftOccupied;
   final double maxLeftOccupied;
-  final double defaultLeftOccupied;
+  late final double _defaultLeftOccupied;
 
   /// Fold the widget if drag to the edge of stack.
   final bool isFoldable;
@@ -50,7 +58,7 @@ class _DividedStackState extends State<DividedStack> {
   @override
   void initState() {
     super.initState();
-    _dividerPosition = widget.defaultLeftOccupied;
+    _dividerPosition = widget._defaultLeftOccupied;
     _movingdividerPosition = _dividerPosition;
     isLeftRight = widget.dividedDirection == Axis.horizontal ? true : false;
   }

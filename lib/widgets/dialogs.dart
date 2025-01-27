@@ -8,7 +8,7 @@ import '../common/tools.dart';
 import '../localization/localization.dart';
 
 // Advanced search input dialog
-Future<Map<String, dynamic>> advancedSearch(BuildContext context) async {
+Future<Map<String, dynamic>> advancedSearchDialog(BuildContext context) async {
   Map<String, dynamic> submitContent = {};
   final andkeywords = TextEditingController();
   final notkeywords = TextEditingController();
@@ -275,7 +275,7 @@ Future<String> addClient(
   }
 }
 
-void resultDialog(String operation, bool success, {String? description}) async {
+void resultDialog(String operation, bool success, {String? description}) {
   toastification.show(
     type: success ? ToastificationType.success : ToastificationType.error,
     style: ToastificationStyle.flatColored,
@@ -288,6 +288,19 @@ void resultDialog(String operation, bool success, {String? description}) async {
   );
 }
 
+/*
+void resultDialog(String title, ToastificationType type, {String? description}) {
+  toastification.show(
+    type: type,
+    style: ToastificationStyle.flatColored,
+    alignment: Alignment.bottomLeft,
+    autoCloseDuration: Duration(seconds: 3),
+    title: Text(
+      title,
+    ),
+    description: description != null ? Text(description) : null,
+  );
+}*/
 void openLinkDialog(BuildContext context, Uri url) async {
   final String title = MyLocalizations.of(context).openLink;
   await showDialog(
