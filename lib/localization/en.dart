@@ -32,7 +32,6 @@ const Map<String, dynamic> enLocalizedValues = {
     'search': 'Search',
     'advanced_search': 'Advanced Search',
     'loading': 'Loading......',
-    'search_not_complete': 'Searching operation not complete!\nPlease wait.',
     'text_fommat_incorrect': 'The search text is not formatted correctly.',
     'result_found': 'results found.',
     'no_result_found': 'No matching results found!',

@@ -32,7 +32,12 @@ samples, guidance on mobile development, and a full API reference.
  - [ ] 数据分块加载
  - [x] 支持不使用mongoDB
 
-## Update History
+## Update History 
+ - Version 1.1.5
+
+    - 修复了bug。
+    - 优化了ViewerPage的数据加载，删除了不必要的参数和功能。
+    - 实现了pageDisplayer整合page布局。
  - Version 1.1.4
 
     - 修复了bug。

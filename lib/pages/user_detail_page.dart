@@ -140,6 +140,13 @@ class _UserDetailPageState extends State<UserDetailPage> {
             shouldRebuild: (oldWidget, newWidget) {
               if (rowCount == newRowCount) return false;
               if (newRowCount == 0) return false;
+              // To keep the position when change rowCount
+              final double newPosition =
+                  (_scrollController.position.extentBefore +
+                          _scrollController.position.extentInside / rowCount) *
+                      rowCount /
+                      newRowCount;
+              _scrollController.position.jumpTo(newPosition);
               rowCount = newRowCount;
               // Change buffer will cause some data not be loaded.
               // buffer = onceLoad * rowCount;

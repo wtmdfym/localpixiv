@@ -148,7 +148,6 @@ class MyApp extends StatelessWidget {
                               canBeClosed: false,
                               child: ViewerPage(
                                 controller: settingsController,
-                                useMongoDB: useMongoDB,
                                 backupcollection: backupCollection,
                                 onBookmarked: bookmarkWork,
                               )),
@@ -211,9 +210,8 @@ class MyApp extends StatelessWidget {
                             onBookmarked: bookmarkWork);
                       },
                     ),*/
-                    ViewerPage(
+                    ViewerPageNoMongoDB(
                         controller: settingsController,
-                        useMongoDB: useMongoDB,
                         onBookmarked: bookmarkWork)),
           ),
         ),

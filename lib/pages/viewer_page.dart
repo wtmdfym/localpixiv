@@ -2,18 +2,20 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+
 import 'package:mongo_dart/mongo_dart.dart'
     show DbCollection, SelectorBuilder, where;
 import 'package:provider/provider.dart';
 import 'package:filepicker_windows/filepicker_windows.dart';
 
+import '../common/tools.dart';
 import '../localization/localization.dart';
 import '../common/defaultdatas.dart';
 import '../common/customnotifier.dart';
 import '../models.dart';
 import '../settings/settings_controller.dart';
 import '../widgets/divided_stack.dart';
-import '../widgets/page_controller_row.dart';
+import '../widgets/page_displayer.dart';
 import '../widgets/dialogs.dart';
 import '../containers/info_container.dart';
 import '../containers/work_container.dart';
@@ -22,20 +24,14 @@ import 'user_detail_page.dart';
 /// A page to show brief information about works,
 /// and enable user to search work they want to look.
 class ViewerPage extends StatefulWidget {
-  ViewerPage({
+  const ViewerPage({
     super.key,
     required this.controller,
-    this.backupcollection,
-    required this.useMongoDB,
+    required this.backupcollection,
     required this.onBookmarked,
-  }) {
-    if (useMongoDB) {
-      assert(backupcollection != null);
-    }
-  }
+  });
   final SettingsController controller;
-  final DbCollection? backupcollection;
-  final bool useMongoDB;
+  final DbCollection backupcollection;
   final WorkBookmarkCallback onBookmarked;
 
   @override
@@ -47,23 +43,31 @@ class ViewerPage extends StatefulWidget {
 class _ViewerPageState extends State<ViewerPage> {
   // localized text
   late String Function(String) _localizationMap;
-  final ValueNotifier<bool> pageControllerUpdater = ValueNotifier(false);
+  // page
   final int pagesize = 8;
-
+  int maxpage = 1;
+  // info
+  final ValueNotifier<WorkInfo> showingInfo = ValueNotifier(defaultWorkInfo);
   final ListNotifier<WorkInfo> workInfosNotifer =
       ListNotifier<WorkInfo>([for (int i = 0; i < 8; i++) defaultWorkInfo]);
-  final List<dynamic> searchResults = [];
+  // search
   final TextEditingController _searchController = TextEditingController();
-  final ValueNotifier<int> searchType =
-      ValueNotifier(0); //0 => id  1 => uid 2 => tag
+  //0 => id  1 => uid 2 => tag
+  final ValueNotifier<int> searchType = ValueNotifier(0);
   int reslength = 0;
-  int maxpage = 1;
-  // 优化数据库加载
-  // final int buffer = 200;
+  // Load 20 pages of data at a time.
+  final int buffer = 160;
+  late DataController dataController;
   final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
-  final ValueNotifier<WorkInfo> showingInfo = ValueNotifier(defaultWorkInfo);
-  bool cancelevent = false;
-  bool onsearching = false;
+  @override
+  void initState() {
+    dataController = DataController(
+      backupcollection: widget.backupcollection,
+      buffer: buffer,
+      pageSize: pagesize,
+    );
+    super.initState();
+  }
 
   @override
   void didChangeDependencies() {
@@ -87,133 +91,112 @@ class _ViewerPageState extends State<ViewerPage> {
       child: DividedStack(
         padding: const EdgeInsets.all(8),
         minLeftOccupied: 0.235,
-        leftWidget: widget.useMongoDB
-            ? Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(mainAxisSize: MainAxisSize.min, children: [
-                    Expanded(
-                        child: TextField(
-                      controller: _searchController,
-                      maxLength: 100,
-                      decoration: InputDecoration(
-                        labelText: "Ciallo~(∠・ω< )⌒☆",
-                        icon: Icon(
-                          Icons.search,
-                        ),
-                      ),
-                    )),
-                    TextButton(
-                      onPressed: simpleSearch,
-                      child: Text(
-                        _localizationMap('search'),
-                      ),
-                    ),
-                  ]),
-                  ValueListenableBuilder(
-                      valueListenable: searchType,
-                      builder: (context, type, child) =>
-                          Row(mainAxisSize: MainAxisSize.min, children: [
-                            Expanded(
-                                child: RadioListTile<int>(
-                              value: 0,
-                              groupValue: type,
-                              onChanged: (value) {
-                                searchType.value = value!;
-                              },
-                              title: Text('ID'),
-                            )),
-                            Expanded(
-                                child: RadioListTile<int>(
-                              value: 1,
-                              groupValue: type,
-                              onChanged: (value) {
-                                searchType.value = value!;
-                              },
-                              title: Text('UID'),
-                            )),
-                            Expanded(
-                                child: RadioListTile<int>(
-                              value: 2,
-                              groupValue: type,
-                              onChanged: (value) {
-                                searchType.value = value!;
-                              },
-                              title: Text('Tag'),
-                            )),
-                          ])),
-                  SizedBox(
-                    height: 10,
+        leftWidget: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(mainAxisSize: MainAxisSize.min, children: [
+              Expanded(
+                  child: TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  labelText: "Ciallo~(∠・ω< )⌒☆",
+                  icon: Icon(
+                    Icons.search,
                   ),
-                  TextButton(
-                      onPressed: () async {
-                        final Map<String, dynamic> advancedtext =
-                            await advancedSearchDialog(context);
-                        advancedSearch(advancedtext);
-                      },
-                      child: Text(_localizationMap('advanced_search'))),
-                  Divider(),
-                  ValueListenableBuilder(
-                      valueListenable: showingInfo,
-                      builder: (context, workInfo, child) => Expanded(
-                              child: WorkInfoContainer(
-                            workInfo: workInfo,
-                            onTapUser: (userName) => widget.controller.autoOpen
-                                ? context
-                                    .read<SuperTabViewNotifier>()
-                                    .addStack<UserDetailPage>(
-                                        userName, {'userName': userName})
-                                : {},
-                            onTapTag: (tag) {
-                              if (widget.controller.autoSearch) {
-                                _searchController.text = tag;
-                                simpleSearch(tag);
-                              }
-                            },
-                          ))),
-                ],
-              )
-            : ElevatedButton(
-                onPressed: dirWalker,
-                child: Text('Select a directory'),
+                ),
+              )),
+              TextButton(
+                onPressed: simpleSearch,
+                child: Text(
+                  _localizationMap('search'),
+                ),
               ),
+            ]),
+            ValueListenableBuilder(
+                valueListenable: searchType,
+                builder: (context, type, child) =>
+                    Row(mainAxisSize: MainAxisSize.min, children: [
+                      Expanded(
+                          child: RadioListTile<int>(
+                        value: 0,
+                        groupValue: type,
+                        onChanged: (value) {
+                          searchType.value = value!;
+                        },
+                        title: Text('ID'),
+                      )),
+                      Expanded(
+                          child: RadioListTile<int>(
+                        value: 1,
+                        groupValue: type,
+                        onChanged: (value) {
+                          searchType.value = value!;
+                        },
+                        title: Text('UID'),
+                      )),
+                      Expanded(
+                          child: RadioListTile<int>(
+                        value: 2,
+                        groupValue: type,
+                        onChanged: (value) {
+                          searchType.value = value!;
+                        },
+                        title: Text('Tag'),
+                      )),
+                    ])),
+            SizedBox(
+              height: 10,
+            ),
+            TextButton(
+                onPressed: () async {
+                  final Map<String, dynamic> advancedtext =
+                      await advancedSearchDialog(context);
+                  advancedSearch(advancedtext);
+                },
+                child: Text(_localizationMap('advanced_search'))),
+            Divider(),
+            ValueListenableBuilder(
+                valueListenable: showingInfo,
+                builder: (context, workInfo, child) => Expanded(
+                        child: WorkInfoContainer(
+                      workInfo: workInfo,
+                      onTapUser: (userName) => widget.controller.autoOpen
+                          ? context
+                              .read<SuperTabViewNotifier>()
+                              .addStack<UserDetailPage>(
+                                  userName, {'userName': userName})
+                          : {},
+                      onTapTag: (tag) {
+                        if (widget.controller.autoSearch) {
+                          _searchController.text = tag;
+                          simpleSearch(tag);
+                        }
+                      },
+                    ))),
+          ],
+        ),
         rightWidget:
             // Grid like view to show works.
-            Column(children: [
-          for (int j = 0; j < pagesize / 4; j++)
-            Expanded(
-                child: Padding(
-              padding:
-                  EdgeInsets.only(top: j == 0 ? 0 : 6, bottom: j == 1 ? 0 : 6),
-              child: ValueListenableBuilder(
-                  valueListenable: workInfosNotifer,
-                  builder: (context, workInfos, child) => Row(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        spacing: 12,
-                        children: [
-                          for (int i = j * 4; i < pagesize - (1 - j) * 4; i++)
-                            Expanded(
-                              child: WorkContainer(
-                                  hostPath: widget.useMongoDB
-                                      ? widget.controller.hostPath
-                                      : '',
-                                  workInfo: workInfos[i],
-                                  cacheRate: widget.controller.imageCacheRate,
-                                  onTab: () => showingInfo.value = workInfos[i],
-                                  onBookmarked: widget.onBookmarked),
-                            ),
-                        ],
-                      )),
-            )),
-          ValueListenableBuilder(
-            valueListenable: pageControllerUpdater,
-            builder: (context, value, child) => PageControllerRow(
-              maxpage: maxpage,
-              pagesize: pagesize,
+            ValueListenableBuilder(
+          valueListenable: workInfosNotifer,
+          builder: (context, workInfos, child) => PageDisplayer(
+              maxPage: maxpage,
+              pageSize: pagesize,
+              columnCount: 4,
+              columnSpace: 12,
+              rowSpace: 12,
               onPageChange: (page) => changePage(page),
-            ),
-          )
-        ]),
+              scrollable: false,
+              children: [
+                for (int i = 0; i < pagesize; i++)
+                  WorkContainer(
+                      hostPath: widget.controller.hostPath,
+                      workInfo: workInfos[i],
+                      cacheRate: widget.controller.imageCacheRate,
+                      onTab: () => showingInfo.value = workInfos[i],
+                      onBookmarked: widget.onBookmarked),
+              ]),
+        ),
         additionalWidgets: [
           // Loading indicator
           Positioned.fill(
@@ -224,10 +207,8 @@ class _ViewerPageState extends State<ViewerPage> {
                         offstage: !value,
                         child: Stack(children: [
                           ModalBarrier(
-                            color: const Color.fromARGB(150, 160, 160, 160),
-                            dismissible: true,
-                            onDismiss: () =>
-                                {cancelevent = true, _isLoading.value = false},
+                            color: Theme.of(context).disabledColor,
+                            dismissible: false,
                           ),
                           Center(
                             child: CircularProgressIndicator(
@@ -245,19 +226,16 @@ class _ViewerPageState extends State<ViewerPage> {
 
   // Search functions
   void simpleSearch([String? tag]) {
-    if (onsearching) {
-      resultDialog(_localizationMap('search'), false,
-          description: _localizationMap('search_not_complete'));
-      return;
-    }
-
-    late final SelectorBuilder selector;
+    _isLoading.value = true;
+    late SelectorBuilder selector;
     late final String searchText;
     late final int type;
     if (tag != null) {
       searchText = tag;
       type = 2;
     } else if (_searchController.text.isEmpty) {
+      selector = where.exists('id');
+      searchWork(selector);
       return;
     } else {
       searchText = _searchController.text;
@@ -289,19 +267,10 @@ class _ViewerPageState extends State<ViewerPage> {
       throw ('Search Type Error');
     }
 
-    if (cancelevent) {
-      cancelevent = false;
-      return;
-    }
     searchWork(selector);
   }
 
   void advancedSearch(Map<String, dynamic> advancedtext) {
-    if (onsearching) {
-      resultDialog(_localizationMap('search'), false,
-          description: _localizationMap('search_not_complete'));
-      return;
-    }
     _isLoading.value = true;
     SelectorBuilder selector = where.exists('id');
     if (advancedtext.isNotEmpty) {
@@ -399,52 +368,188 @@ class _ViewerPageState extends State<ViewerPage> {
       _isLoading.value = false;
       return;
     }
-    if (cancelevent) {
-      cancelevent = false;
-      return;
-    }
     searchWork(selector);
   }
 
   void searchWork(SelectorBuilder selector) async {
-    onsearching = true;
     late final bool success;
-    reslength = await widget.backupcollection!.count(selector);
+    reslength = await widget.backupcollection.count(selector);
     if (reslength == 0) {
       _isLoading.value = false;
-      onsearching = false;
       success = false;
     } else {
-      searchResults.clear();
-      await widget.backupcollection!
-          .find(selector.sortBy('id', descending: true).excludeFields(['_id']))
-          .forEach((info) {
-        if (cancelevent) {
-          cancelevent = false;
-          return;
-        }
-        searchResults.add(info);
-      });
-      onsearching = false;
-      success = true;
+      maxpage = (reslength / pagesize).ceil();
+      success = dataController.set(
+          selector.sortBy('id', descending: true).excludeFields(['_id']),
+          maxpage);
     }
     if (success) {
       resultDialog(_localizationMap('search'), true,
           description: '$reslength ${_localizationMap('result_found')}');
-      maxpage = (reslength / pagesize).ceil();
-      pageControllerUpdater.value = !pageControllerUpdater.value;
-      Timer.periodic(Durations.short2, (timer) {
-        if ((searchResults.length >= 8) ||
-            (searchResults.length == reslength)) {
-          _isLoading.value = false;
-          changePage(1);
-          timer.cancel();
-        }
-      });
+      changePage(1);
+      _isLoading.value = false;
     } else {
       resultDialog(_localizationMap('search'), false,
           description: _localizationMap('no_result_found'));
     }
+  }
+
+  void changePage(int page) async {
+    final List<WorkInfo> workInfos = [];
+    /*if ((searchResults.length < page * pagesize) &&
+        (searchResults.length < reslength)) {
+      _isLoading.value = true;
+      Timer.periodic(Durations.medium1, (timer) {
+        if ((searchResults.length >= page * pagesize) ||
+            (searchResults.length == reslength)) {
+          timer.cancel();
+
+          if (page < maxpage) {
+            List<dynamic> info =
+                searchResults.sublist((page - 1) * pagesize, page * pagesize);
+            for (int i = 0; i < pagesize; i++) {
+              workInfos.add(WorkInfo.fromJson(info[i]));
+            }
+          } else {
+            List<dynamic> info =
+                searchResults.sublist((page - 1) * pagesize, reslength);
+            for (int i = 0; i < pagesize; i++) {
+              try {
+                workInfos.add(WorkInfo.fromJson(info[i]));
+              } on RangeError {
+                workInfos.add(defaultWorkInfo);
+              }
+            }
+          }
+          _isLoading.value = false;
+          workInfosNotifer.setList(workInfos);
+        }
+      });
+    } else {
+      if (page < maxpage) {
+        List<dynamic> info =
+            searchResults.sublist((page - 1) * pagesize, page * pagesize);
+        for (int i = 0; i < pagesize; i++) {
+          workInfos.add(WorkInfo.fromJson(info[i]));
+        }
+      } else {
+        List<dynamic> info =
+            searchResults.sublist((page - 1) * pagesize, reslength);
+        for (int i = 0; i < pagesize; i++) {
+          try {
+            workInfos.add(WorkInfo.fromJson(info[i]));
+          } on RangeError {
+            workInfos.add(defaultWorkInfo);
+          }
+        }
+      }
+      workInfosNotifer.setList(workInfos);
+    }*/
+    final List<dynamic> info = await dataController.getPageData(page);
+    for (int i = 0; i < pagesize; i++) {
+      try {
+        workInfos.add(WorkInfo.fromJson(info[i]));
+      } on RangeError {
+        workInfos.add(defaultWorkInfo);
+      }
+    }
+    workInfosNotifer.setList(workInfos);
+  }
+}
+
+/// A page to show brief information about works,
+/// and enable user to search work they want to look.
+class ViewerPageNoMongoDB extends StatefulWidget {
+  const ViewerPageNoMongoDB({
+    super.key,
+    required this.controller,
+    required this.onBookmarked,
+  });
+  final SettingsController controller;
+  final WorkBookmarkCallback onBookmarked;
+
+  @override
+  State<StatefulWidget> createState() {
+    return _ViewerPageStateNoMongoDB();
+  }
+}
+
+class _ViewerPageStateNoMongoDB extends State<ViewerPageNoMongoDB> {
+  // localized text
+  late String Function(String) _localizationMap;
+  // page
+  final int pagesize = 8;
+  int maxpage = 1;
+  // info
+  // final ValueNotifier<WorkInfo> showingInfo = ValueNotifier(defaultWorkInfo);
+  final ListNotifier<WorkInfo> workInfosNotifer =
+      ListNotifier<WorkInfo>([for (int i = 0; i < 8; i++) defaultWorkInfo]);
+  // search
+  final List searchResults = [];
+  int reslength = 0;
+  final ValueNotifier<bool> _isLoading = ValueNotifier<bool>(false);
+
+  @override
+  void didChangeDependencies() {
+    _localizationMap = MyLocalizations.of(context).viewerPage;
+    super.didChangeDependencies();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DividedStack(
+      padding: const EdgeInsets.all(8),
+      minLeftOccupied: 0.235,
+      leftWidget: ElevatedButton(
+        onPressed: dirWalker,
+        child: Text('Select a directory'),
+      ),
+      rightWidget:
+          // Grid like view to show works.
+          ValueListenableBuilder(
+        valueListenable: workInfosNotifer,
+        builder: (context, workInfos, child) => PageDisplayer(
+            maxPage: maxpage,
+            pageSize: pagesize,
+            columnCount: 4,
+            columnSpace: 12,
+            rowSpace: 12,
+            onPageChange: (page) => changePage(page),
+            scrollable: false,
+            children: [
+              for (int i = 0; i < pagesize; i++)
+                WorkContainer(
+                    hostPath: '',
+                    workInfo: workInfos[i],
+                    cacheRate: widget.controller.imageCacheRate,
+                    // onTab: () => showingInfo.value = workInfos[i],
+                    onBookmarked: widget.onBookmarked),
+            ]),
+      ),
+      additionalWidgets: [
+        // Loading indicator
+        Positioned.fill(
+            child: ValueListenableBuilder(
+                valueListenable: _isLoading,
+                builder: (context, value, child) {
+                  return Offstage(
+                      offstage: !value,
+                      child: Stack(children: [
+                        ModalBarrier(
+                          color: Theme.of(context).disabledColor,
+                          dismissible: false,
+                        ),
+                        Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.blueAccent,
+                            strokeWidth: 6,
+                            semanticsLabel: _localizationMap('loading'),
+                          ),
+                        ),
+                      ]));
+                })),
+      ],
+    );
   }
 
   void changePage(int page) async {
@@ -486,10 +591,65 @@ class _ViewerPageState extends State<ViewerPage> {
     }).then((_) {
       reslength = searchResults.length;
       maxpage = (reslength / pagesize).ceil();
-      pageControllerUpdater.value = !pageControllerUpdater.value;
       _isLoading.value = false;
       resultDialog('Walk dir', true, description: 'Find $reslength results.');
       changePage(1);
     });
   }
 }
+
+/*
+class DataLoader {
+  final DbCollection backupcollection;
+  final int buffer;
+  final Duration loadDuration;
+  int counter = 0;
+  int loadIndex = 0;
+  bool onLoad = false;
+  late StreamSubscription<Map<String, dynamic>> _subscription;
+  final VoidCallback onLoadStart;
+  final void Function(Map<String, dynamic>) onData;
+  final VoidCallback onLoadEnd;
+
+  DataLoader({
+    required this.backupcollection,
+    required this.buffer,
+    required this.loadDuration,
+    required this.onLoadStart,
+    required this.onData,
+    required this.onLoadEnd,
+  });
+
+  bool startLoad(SelectorBuilder selector) {
+    if (onLoad) return false;
+    onLoad = true;
+    //onLoadStart();
+    _subscription = backupcollection.find(selector).listen(
+      (data) async {
+        counter++;
+        // await compute<Map<String, dynamic>, void>(onData, data);
+        onData(data);
+        if (counter == buffer) {
+          counter = 0;
+          _subscription.pause();
+          Timer(loadDuration, () {
+            _subscription.resume();
+          });
+        }
+      },
+      onDone: () {
+        onLoad = false;
+        onLoadEnd();
+      },
+    );
+    return true;
+  }
+
+  Future<void> cancleLoad() async {
+    if (!onLoad) return;
+    await _subscription.cancel();
+    onLoad = false;
+    onLoadEnd();
+  }
+}
+*/

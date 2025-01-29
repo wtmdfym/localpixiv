@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:mongo_dart/mongo_dart.dart' show Db, DbCollection, where;
 import 'package:provider/provider.dart';
 
+import '../widgets/page_displayer.dart';
 import '../containers/user_container.dart';
 import '../common/customnotifier.dart';
 import '../common/defaultdatas.dart';
 import '../common/tools.dart';
 import '../models.dart';
 import '../settings/settings_controller.dart';
-import '../widgets/page_controller_row.dart';
 import 'user_detail_page.dart';
 
 /// A page to show brief information about following users.
@@ -111,34 +111,31 @@ class _FollowingsPageState extends State<FollowingsPage> {
     }
 
     return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-              child: ValueListenableBuilder(
-                  valueListenable: userInfosNotifer,
-                  builder: (context, userInfos, child) => ListView.builder(
-                        padding: const EdgeInsets.only(right: 12),
-                        itemCount: userInfos.length,
-                        cacheExtent: 240,
-                        itemBuilder: (context, index) => UserContainer(
-                          height: 240,
-                          controller: widget.controller,
-                          userInfo: userInfos[index],
-                          onTab: (userName) => openTabCallback(userName),
-                          onWorkBookmarked: widget.onBookmarked,
-                        ),
-                      ))),
-          // 翻页控件
-          PageControllerRow(
-            maxpage: maxpage,
-            pagesize: pagesize,
-            onPageChange: (page) => changePage(page),
-          )
-        ],
-      ),
-    );
+        padding: const EdgeInsets.all(8),
+        child: ValueListenableBuilder(
+            valueListenable: userInfosNotifer,
+            builder: (context, userInfos, child) {
+              if (userInfos.length < pagesize) {
+                return SizedBox();
+              }
+
+              return PageDisplayer(
+                maxPage: maxpage,
+                pageSize: pagesize,
+                columnCount: 1,
+                onPageChange: (page) => changePage(page),
+                scrollable: true,
+                children: [
+                  for (UserInfo userInfo in userInfos)
+                    UserContainer(
+                      height: 240,
+                      controller: widget.controller,
+                      userInfo: userInfo,
+                      onTab: (userName) => openTabCallback(userName),
+                      onWorkBookmarked: widget.onBookmarked,
+                    ),
+                ],
+              );
+            }));
   }
 }

@@ -1,7 +1,8 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:mongo_dart/mongo_dart.dart' as mongo;
+import 'package:mongo_dart/mongo_dart.dart'
+    show Db, DbCollection, SelectorBuilder, where;
 
 import '../models.dart';
 
@@ -55,12 +56,12 @@ Future<ImageProvider> imageFileLoader(String imagePath,
 
 /// 从数据库获取UserInfo
 Future<UserInfo> fetchUserInfo(
-    Map<String, dynamic> following, mongo.Db pixivDb) async {
+    Map<String, dynamic> following, Db pixivDb) async {
   final List<WorkInfo> workInfos = [];
-  mongo.DbCollection userCollection = pixivDb.collection(following['userName']);
+  DbCollection userCollection = pixivDb.collection(following['userName']);
   // TODO 按照上传时间排序
   await userCollection
-      .find(mongo.where
+      .find(where
           .exists('id')
           .excludeFields(['_id']).sortBy('id', descending: true))
       .forEach((info) {
@@ -111,4 +112,73 @@ String linkConverter(String link) {
     link = link.replaceAll(entry.value, entry.key);
   }
   return link;
+}
+
+class DataController {
+  final DbCollection backupcollection;
+
+  /// Amount of data loaded at a time
+  final int buffer;
+  late int _maxPage;
+
+  /// Actual displayed page size
+  final int pageSize;
+
+  /// Make sure all data is updated before next load
+  bool _onLoad = false;
+  late SelectorBuilder _selector;
+  final List<int> _loadedIndexs = [];
+  final Map<int, List> _results = {};
+
+  DataController({
+    required this.backupcollection,
+    required this.buffer,
+    required this.pageSize,
+  }) {
+    // Make sure the buffer is an integer multiple of the pageSize.
+    assert(buffer % pageSize == 0);
+    assert(buffer > pageSize);
+  }
+
+  Future<void> _bufferLoader(int page) async {
+    final int loadIndex = (pageSize * (page - 1) / buffer).floor();
+    if (_loadedIndexs.contains(loadIndex)) {
+      return;
+    }
+
+    final List bufferResults = [];
+    await backupcollection
+        .find(_selector.skip(loadIndex * buffer).limit(buffer))
+        .forEach((data) => bufferResults.add(data));
+    _results[loadIndex] = bufferResults;
+    _loadedIndexs.add(loadIndex);
+  }
+
+  Future<List<dynamic>> getPageData(int page) async {
+    final int loadIndex = (pageSize * (page - 1) / buffer).floor();
+    if (!_loadedIndexs.contains(loadIndex)) await _bufferLoader(page);
+    if (page == _maxPage) {
+      return _results[loadIndex]!
+          .sublist((page - 1) * pageSize - loadIndex * buffer);
+    }
+    return _results[loadIndex]!.sublist(
+        (page - 1) * pageSize - loadIndex * buffer,
+        page * pageSize - loadIndex * buffer);
+  }
+
+  bool set(SelectorBuilder selector, int maxPage) {
+    if (_onLoad) return false;
+    _onLoad = true;
+    _reset();
+    _selector = selector;
+    _maxPage = maxPage;
+    return true;
+  }
+
+  void _reset() {
+    if (!_onLoad) return;
+    _onLoad = false;
+    _loadedIndexs.clear();
+    _results.clear();
+  }
 }

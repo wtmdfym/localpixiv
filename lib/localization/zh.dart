@@ -31,7 +31,6 @@ const Map<String, dynamic> zhlocalizedValues = {
     'search': '搜索',
     'advanced_search': '高级搜索',
     'loading': '加载中......',
-    'search_not_complete': '搜索操作未完成！\n请稍候。',
     'text_fommat_incorrect': '搜索文本格式不正确。',
     'result_found': '找到结果。',
     'no_result_found': '未找到匹配结果！',
