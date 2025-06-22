@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-
 import 'package:mongo_dart/mongo_dart.dart'
     show DbCollection, SelectorBuilder, where;
 import 'package:provider/provider.dart';
@@ -175,9 +174,7 @@ class _ViewerPageState extends State<ViewerPage> {
                     ))),
           ],
         ),
-        rightWidget:
-            // Grid like view to show works.
-            ValueListenableBuilder(
+        rightWidget: ValueListenableBuilder(
           valueListenable: workInfosNotifer,
           builder: (context, workInfos, child) => PageDisplayer(
               maxPage: maxpage,
@@ -188,12 +185,12 @@ class _ViewerPageState extends State<ViewerPage> {
               onPageChange: (page) => changePage(page),
               scrollable: false,
               children: [
-                for (int i = 0; i < pagesize; i++)
+                for (WorkInfo workInfo in workInfos)
                   WorkContainer(
                       hostPath: widget.controller.hostPath,
-                      workInfo: workInfos[i],
+                      workInfo: workInfo,
                       cacheRate: widget.controller.imageCacheRate,
-                      onTab: () => showingInfo.value = workInfos[i],
+                      onTap: () => showingInfo.value = workInfo,
                       onBookmarked: widget.onBookmarked),
               ]),
         ),
@@ -212,7 +209,6 @@ class _ViewerPageState extends State<ViewerPage> {
                           ),
                           Center(
                             child: CircularProgressIndicator(
-                              color: Colors.blueAccent,
                               strokeWidth: 6,
                               semanticsLabel: _localizationMap('loading'),
                             ),
@@ -233,6 +229,8 @@ class _ViewerPageState extends State<ViewerPage> {
     if (tag != null) {
       searchText = tag;
       type = 2;
+      // Update search Type
+      searchType.value = 2;
     } else if (_searchController.text.isEmpty) {
       selector = where.exists('id');
       searchWork(selector);
@@ -247,6 +245,7 @@ class _ViewerPageState extends State<ViewerPage> {
       if (id == null) {
         resultDialog(_localizationMap('search'), false,
             description: _localizationMap('text_fommat_incorrect'));
+        _isLoading.value = false;
         return;
       }
       selector = where.eq('id', id);
@@ -256,6 +255,7 @@ class _ViewerPageState extends State<ViewerPage> {
       if (id == null) {
         resultDialog(_localizationMap('search'), false,
             description: _localizationMap('text_fommat_incorrect'));
+        _isLoading.value = false;
         return;
       }
       selector = where.eq('userId', id.toString());
@@ -386,65 +386,16 @@ class _ViewerPageState extends State<ViewerPage> {
     if (success) {
       resultDialog(_localizationMap('search'), true,
           description: '$reslength ${_localizationMap('result_found')}');
-      changePage(1);
-      _isLoading.value = false;
+      changePage(1).then((_) => _isLoading.value = false);
     } else {
       resultDialog(_localizationMap('search'), false,
           description: _localizationMap('no_result_found'));
+      _isLoading.value = false;
     }
   }
 
-  void changePage(int page) async {
+  Future<void> changePage(int page) async {
     final List<WorkInfo> workInfos = [];
-    /*if ((searchResults.length < page * pagesize) &&
-        (searchResults.length < reslength)) {
-      _isLoading.value = true;
-      Timer.periodic(Durations.medium1, (timer) {
-        if ((searchResults.length >= page * pagesize) ||
-            (searchResults.length == reslength)) {
-          timer.cancel();
-
-          if (page < maxpage) {
-            List<dynamic> info =
-                searchResults.sublist((page - 1) * pagesize, page * pagesize);
-            for (int i = 0; i < pagesize; i++) {
-              workInfos.add(WorkInfo.fromJson(info[i]));
-            }
-          } else {
-            List<dynamic> info =
-                searchResults.sublist((page - 1) * pagesize, reslength);
-            for (int i = 0; i < pagesize; i++) {
-              try {
-                workInfos.add(WorkInfo.fromJson(info[i]));
-              } on RangeError {
-                workInfos.add(defaultWorkInfo);
-              }
-            }
-          }
-          _isLoading.value = false;
-          workInfosNotifer.setList(workInfos);
-        }
-      });
-    } else {
-      if (page < maxpage) {
-        List<dynamic> info =
-            searchResults.sublist((page - 1) * pagesize, page * pagesize);
-        for (int i = 0; i < pagesize; i++) {
-          workInfos.add(WorkInfo.fromJson(info[i]));
-        }
-      } else {
-        List<dynamic> info =
-            searchResults.sublist((page - 1) * pagesize, reslength);
-        for (int i = 0; i < pagesize; i++) {
-          try {
-            workInfos.add(WorkInfo.fromJson(info[i]));
-          } on RangeError {
-            workInfos.add(defaultWorkInfo);
-          }
-        }
-      }
-      workInfosNotifer.setList(workInfos);
-    }*/
     final List<dynamic> info = await dataController.getPageData(page);
     for (int i = 0; i < pagesize; i++) {
       try {
@@ -457,8 +408,7 @@ class _ViewerPageState extends State<ViewerPage> {
   }
 }
 
-/// A page to show brief information about works,
-/// and enable user to search work they want to look.
+/// A page to show brief information about local images.
 class ViewerPageNoMongoDB extends StatefulWidget {
   const ViewerPageNoMongoDB({
     super.key,
@@ -499,7 +449,6 @@ class _ViewerPageStateNoMongoDB extends State<ViewerPageNoMongoDB> {
   Widget build(BuildContext context) {
     return DividedStack(
       padding: const EdgeInsets.all(8),
-      minLeftOccupied: 0.235,
       leftWidget: ElevatedButton(
         onPressed: dirWalker,
         child: Text('Select a directory'),

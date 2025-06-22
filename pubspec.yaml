@@ -48,6 +48,7 @@ dependencies:
   url_launcher: ^6.3.1
   card_settings_ui: ^1.1.1
   filepicker_windows: ^2.1.4
+  contextmenu: ^3.0.0
   # xterm: ^4.0.0
 
 dev_dependencies:

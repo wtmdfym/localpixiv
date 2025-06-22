@@ -182,3 +182,13 @@ class DataController {
     _results.clear();
   }
 }
+
+Future<void> openFileExplorerAndSelectFile(String filePath,
+    {bool isFile = true}) async {
+  filePath = filePath.replaceAll(RegExp("/"), "\\");
+  // print(filePath);
+  // 使用EXPLORER.EXE命令行参数来打开文件资源管理器并选中指定文件
+  isFile
+      ? await Process.run('explorer.exe', ['/select,', filePath])
+      : await Process.run('explorer.exe', ['/root,', filePath]);
+}

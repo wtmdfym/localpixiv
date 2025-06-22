@@ -1,4 +1,3 @@
 motor
-parsel
 httpx
 pillow

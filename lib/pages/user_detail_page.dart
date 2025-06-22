@@ -1,7 +1,9 @@
 import 'dart:async' show Timer;
 
+import 'package:contextmenu/contextmenu.dart' show ContextMenuArea;
 import 'package:flutter/material.dart';
 import 'package:mongo_dart/mongo_dart.dart' show Db, where;
+import 'package:url_launcher/url_launcher.dart' show launchUrl;
 
 import '../containers/info_container.dart';
 import '../containers/work_container.dart';
@@ -9,6 +11,7 @@ import '../settings/settings_controller.dart';
 import '../common/tools.dart';
 import '../common/customnotifier.dart';
 import '../models.dart';
+import '../widgets/dialogs.dart' show resultDialog;
 import '../widgets/divided_stack.dart';
 import '../widgets/should_rebuild_widget.dart';
 import '../localization/localization.dart';
@@ -127,10 +130,34 @@ class _UserDetailPageState extends State<UserDetailPage> {
     return DividedStack(
       padding: const EdgeInsets.all(8),
       dividedDirection: Axis.vertical,
-      leftWidget: UserInfoContainer(
-          userInfo: _userInfo,
-          hostPath: widget.controller.hostPath,
-          imageCacheRate: widget.controller.imageCacheRate),
+      leftWidget: ContextMenuArea(
+          builder: (context) => [
+                ListTile(
+                  title: Text('Open in file explorer'),
+                  onTap: () {
+                    openFileExplorerAndSelectFile(
+                        '${widget.controller.hostPath}picture/${_userInfo.userId}',
+                        isFile: false);
+                  },
+                ),
+                ListTile(
+                  title: Text('Open in browser'),
+                  onTap: () {
+                    launchUrl(Uri.parse(
+                            "https://www.pixiv.net/users/${_userInfo.userId}"))
+                        .then((success) => success
+                            ? {}
+                            : {
+                                resultDialog(
+                                    _userInfo.userName.toLowerCase(), success)
+                              });
+                  },
+                )
+              ],
+          child: UserInfoContainer(
+              userInfo: _userInfo,
+              hostPath: widget.controller.hostPath,
+              imageCacheRate: widget.controller.imageCacheRate)),
       rightWidget: LayoutBuilder(builder: (context, constraints) {
         final int newRowCount = (constraints.maxWidth / workWidth).round();
         if (rowCount == 0) {
@@ -207,7 +234,7 @@ class _UserDetailPageState extends State<UserDetailPage> {
                                     width: workWidth,
                                     workInfo: info,
                                     cacheRate: widget.controller.imageCacheRate,
-                                    onTab: () => {},
+                                    onTap: () => {},
                                     onBookmarked: (isLiked, workId, userName) =>
                                         widget.onWorkBookmarked(
                                       isLiked,

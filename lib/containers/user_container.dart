@@ -1,4 +1,9 @@
+import 'package:contextmenu/contextmenu.dart' show ContextMenuArea;
 import 'package:flutter/material.dart';
+import 'package:localpixiv/common/tools.dart'
+    show openFileExplorerAndSelectFile;
+import 'package:localpixiv/widgets/dialogs.dart' show resultDialog;
+import 'package:url_launcher/url_launcher.dart' show launchUrl;
 // import 'package:flutter_animate/flutter_animate.dart';
 
 import '../localization/localization.dart';
@@ -60,79 +65,81 @@ class _UserContainerState extends State<UserContainer>
 
   @override
   Widget build(BuildContext context) {
-    Widget mainStack = Stack(children: [
-      // Show DecoratedBox on the bottom to enhance visual effect.
-      Positioned.fill(
-          child: DecoratedBox(
-              decoration: BoxDecoration(
-        color: Theme.of(context).hoverColor,
-        borderRadius: BorderRadius.circular(6),
-      ))),
-      Positioned.fill(
-        child: InkWell(
-          onTap: () => widget.onTab(widget.userInfo.userName),
+    Widget current = Container(
+        height: widget.height.toDouble(),
+        // Show DecoratedBox on the bottom to enhance visual effect.
+        decoration: BoxDecoration(
+          color: Theme.of(context).hoverColor,
           borderRadius: BorderRadius.circular(6),
-          child: Row(mainAxisSize: MainAxisSize.min, spacing: 20, children: [
-            // User profile image.
-            Expanded(
-                flex: 3,
-                child: ImageLoader(
-                  path:
-                      '${widget.controller.hostPath}${widget.userInfo.profileImage}',
-                  width: widget.height,
-                  height: widget.height,
-                  cacheRate: widget.controller.imageCacheRate,
-                )),
-            // User's name and description.
-            Expanded(
-                flex: 6,
-                child: Column(
-                  spacing: 10,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.userInfo.userName,
-                      style: Theme.of(context).textTheme.titleMedium,
-                      maxLines: 1,
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                          child: Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: Text(widget.userInfo.userComment),
-                      )),
-                    ),
-                  ],
-                )),
-            // The latest works from the user.
-            for (int i = 0; i < widget.rowCount; i++)
-              Expanded(
-                  flex: 4,
-                  child: WorkContainer(
-                    hostPath: widget.controller.hostPath,
-                    workInfo: workInfos[i],
-                    width: widget.height + 20,
-                    height: widget.height,
-                    cacheRate: widget.controller.imageCacheRate,
-                    onTab: () => {},
-                    onBookmarked: (isLiked, workId, userName) =>
-                        widget.onWorkBookmarked(
-                      isLiked,
-                      workId,
-                      userName,
-                    ),
-                  ))
-          ]),
         ),
-      ),
-    ]);
+        padding: const EdgeInsets.all(8),
+        child: Stack(children: [
+          Positioned.fill(
+            child: InkWell(
+              onTap: () => widget.onTab(widget.userInfo.userName),
+              borderRadius: BorderRadius.circular(6),
+              child:
+                  Row(mainAxisSize: MainAxisSize.min, spacing: 20, children: [
+                // User profile image.
+                Expanded(
+                    flex: 3,
+                    child: ImageLoader(
+                      path:
+                          '${widget.controller.hostPath}${widget.userInfo.profileImage}',
+                      width: widget.height,
+                      height: widget.height,
+                      cacheRate: widget.controller.imageCacheRate,
+                    )),
+                // User's name and description.
+                Expanded(
+                    flex: 6,
+                    child: Column(
+                      spacing: 10,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.userInfo.userName,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          maxLines: 1,
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                              child: Padding(
+                            padding: const EdgeInsets.only(right: 12),
+                            child: Text(widget.userInfo.userComment),
+                          )),
+                        ),
+                      ],
+                    )),
+                // The latest works from the user.
+                for (int i = 0; i < widget.rowCount; i++)
+                  Expanded(
+                      flex: 4,
+                      child: WorkContainer(
+                        hostPath: widget.controller.hostPath,
+                        workInfo: workInfos[i],
+                        width: widget.height + 20,
+                        height: widget.height,
+                        cacheRate: widget.controller.imageCacheRate,
+                        onTap: () => {},
+                        onBookmarked: (isLiked, workId, userName) =>
+                            widget.onWorkBookmarked(
+                          isLiked,
+                          workId,
+                          userName,
+                        ),
+                      ))
+              ]),
+            ),
+          ),
+        ]));
 
     if (widget.userInfo.notFollowingNow) {
-      mainStack = Tooltip(
+      current = Tooltip(
         message: MyLocalizations.of(context).notFollowingWarn,
         child: ColoredBox(
           color: Color.fromARGB(160, 255, 0, 0),
-          child: mainStack,
+          child: current,
         ),
       );
     }
@@ -141,10 +148,32 @@ class _UserContainerState extends State<UserContainer>
       onEnter: (details) => _mouseEOAnimationController.forward(),
       onExit: (details) => _mouseEOAnimationController.reverse(),
       child:*/
-        Container(
-            height: widget.height.toDouble(),
-            padding: const EdgeInsets.all(8),
-            child: mainStack)
+        ContextMenuArea(
+            builder: (context) => [
+                  ListTile(
+                    title: Text('Open in file explorer'),
+                    onTap: () {
+                      openFileExplorerAndSelectFile(
+                          '${widget.controller.hostPath}picture/${widget.userInfo.userId}',
+                          isFile: false);
+                    },
+                  ),
+                  ListTile(
+                    title: Text('Open in browser'),
+                    onTap: () {
+                      launchUrl(Uri.parse(
+                              "https://www.pixiv.net/users/${widget.userInfo.userId}"))
+                          .then((success) => success
+                              ? {}
+                              : {
+                                  resultDialog(
+                                      widget.userInfo.userName.toLowerCase(),
+                                      success)
+                                });
+                    },
+                  )
+                ],
+            child: current)
         /*.animate(controller: _mouseEOAnimationController, autoPlay: false)
           .scaleX(begin: 1.0, end: 1.01, duration: 100.ms)
           .scaleY(begin: 1.0, end: 1.02, duration: 100.ms),

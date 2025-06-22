@@ -106,9 +106,9 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                   ),
                   Expanded(
                       child: Slider(
-                    min: 8,
-                    max: 24,
-                    divisions: 8,
+                    min: 10,
+                    max: 20,
+                    divisions: 5,
                     label: '$_fontSize',
                     value: _fontSize,
                     onChanged: (value) {
@@ -183,9 +183,9 @@ class _BasicSettingsPageState extends State<BasicSettingsPage> {
                           style: TextStyle(fontSize: _fontSize),
                         ),
                         trailing: Slider(
-                          min: 8,
-                          max: 24,
-                          divisions: 8,
+                          min: 10,
+                          max: 20,
+                          divisions: 5,
                           label: '$_fontSize',
                           value: _fontSize,
                           onChanged: (value) {

@@ -204,10 +204,7 @@ class MyApp extends StatelessWidget {
                                         onPressed: () {}, child: Text('OK')),
                                   ],
                                 ));
-                        return ViewerPage(
-                            controller: settingsController,
-                            useMongoDB: useMongoDB,
-                            onBookmarked: bookmarkWork);
+                        return 
                       },
                     ),*/
                     ViewerPageNoMongoDB(

@@ -19,7 +19,7 @@ samples, guidance on mobile development, and a full API reference.
  - [x] 自动启动pythonapp
  - [ ] 实现不同数据需求的支持（id, tag......）
  - [x] image viewer
- - [ ] novel viewer
+ - [x] novel viewer（simple version）
  - [x] following viewer
  - [x] tag viewer
  - [x] settings
@@ -28,11 +28,19 @@ samples, guidance on mobile development, and a full API reference.
  - [x] 多主题，暗色模式
  - [x] 多语言支持
  - [ ] 完整的高级搜索功能
- - [x] pixivcat代理
- - [ ] 数据分块加载
+ - [ ] pixivcat代理
+ - [X] 数据分块加载
  - [x] 支持不使用mongoDB
+ - [x] 打开链接，文件位置
 
 ## Update History 
+ - Version 1.1.6
+
+    - 优化了部分组件，减少不必要的组件
+    - 实现打开作品/作者的文件目录和网页
+    - 修复了搜索出错时ModalBarrier不消失的问题
+    - 修复了tag跳转搜索时，搜索设置没有自动更新为tag的问题
+    - 移除pythonapp中的多余文件，仅保留有差异的文件
  - Version 1.1.5
 
     - 修复了bug。

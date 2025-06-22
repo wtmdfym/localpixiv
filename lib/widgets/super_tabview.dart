@@ -254,6 +254,7 @@ class SuperTabViewState extends State<SuperTabView>
       }
       if (notifier.needChange) {
         notifier.needChange = false;
+        isMaintainTab = true;
         maintainTabIndex = notifier.indexNeedChange;
         if (!loadedIndex.contains(notifier.indexNeedChange)) {
           loadedIndex.add(notifier.indexNeedChange);

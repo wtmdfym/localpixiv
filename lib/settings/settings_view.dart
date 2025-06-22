@@ -34,7 +34,7 @@ class SettingsView extends StatelessWidget {
         children: [
           SettingsSection(tiles: [
             SettingsTile.navigation(
-              leading: Icon(Icons.border_all),
+              leading: Icon(Icons.border_all_outlined),
               title: Text(
                 localizationMap('basic'),
               ),
@@ -56,7 +56,7 @@ class SettingsView extends StatelessWidget {
                           ThemeSettingsPage(controller: controller))),
             ),
             SettingsTile.navigation(
-              leading: Icon(Icons.search),
+              leading: Icon(Icons.image_search_outlined),
               title: Text(
                 localizationMap('search'),
               ),
@@ -67,7 +67,7 @@ class SettingsView extends StatelessWidget {
                           SearchSettingsPage(controller: controller))),
             ),
             SettingsTile.navigation(
-              leading: Icon(Icons.abc),
+              leading: Icon(Icons.av_timer_outlined),
               title: Text(
                 localizationMap('performance'),
               ),
@@ -78,7 +78,7 @@ class SettingsView extends StatelessWidget {
                           PerformanceSettingsPage(controller: controller))),
             ),
             SettingsTile.navigation(
-              leading: Icon(Icons.bug_report),
+              leading: Icon(Icons.bug_report_outlined),
               title: Text(
                 localizationMap('webCrawler'),
               ),
@@ -89,7 +89,7 @@ class SettingsView extends StatelessWidget {
                           WebCrawlerSettingsPage(controller: controller))),
             ),
             SettingsTile.navigation(
-              leading: Icon(Icons.start),
+              leading: Icon(Icons.start_outlined),
               title: Text(
                 localizationMap('other'),
               ),
